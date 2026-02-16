@@ -3,22 +3,22 @@ output "vpc_id" {
   value       = module.vpc.vpc_id
 }
 
-output "public_subnet_ids" {
-  description = "Public subnet IDs"
-  value       = module.vpc.public_subnet_ids
+output "cluster_name" {
+  description = "EKS cluster name"
+  value       = aws_eks_cluster.main.name
 }
 
-output "private_subnet_ids" {
-  description = "Private subnet IDs"
-  value       = module.vpc.private_subnet_ids
+output "cluster_endpoint" {
+  description = "EKS cluster endpoint"
+  value       = aws_eks_cluster.main.endpoint
 }
 
-output "instance_ids" {
-  description = "EC2 instance IDs"
-  value       = module.ec2.instance_ids
+output "cluster_security_group_id" {
+  description = "Security group ID attached to the EKS cluster"
+  value       = aws_eks_cluster.main.vpc_config[0].cluster_security_group_id
 }
 
-output "instance_private_ips" {
-  description = "EC2 private IPs"
-  value       = module.ec2.instance_private_ips
+output "node_group_id" {
+  description = "EKS node group ID"
+  value       = aws_eks_node_group.main.id
 }
