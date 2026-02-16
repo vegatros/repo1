@@ -1,16 +1,8 @@
-name: Multi-Environment Terraform
+name: Terraform Dev
 
 on:
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Environment to deploy'
-        required: true
-        type: choice
-        options:
-          - dev
-          - qa
-          - prod
       action:
         description: 'Terraform action'
         required: true
@@ -27,9 +19,9 @@ permissions:
 
 jobs:
   terraform:
-    name: ${{ github.event.inputs.environment }} - ${{ github.event.inputs.action }}
+    name: Dev - ${{ github.event.inputs.action }}
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: dev
     
     steps:
       - name: Checkout
@@ -48,12 +40,12 @@ jobs:
         working-directory: terraform/ec2
         run: |
           terraform init \
-            -backend-config="key=ec2/${{ inputs.environment }}/terraform.tfstate" \
+            -backend-config="key=ec2/dev/terraform.tfstate" \
             -reconfigure
       
       - name: Terraform Plan
         working-directory: terraform/ec2
-        run: terraform plan -var-file="${{ inputs.environment }}.tfvars" -out=tfplan
+        run: terraform plan -var-file="dev.tfvars" -out=tfplan
       
       - name: Terraform Apply
         if: inputs.action == 'apply'
@@ -63,4 +55,4 @@ jobs:
       - name: Terraform Destroy
         if: inputs.action == 'destroy'
         working-directory: terraform/ec2
-        run: terraform destroy -var-file="${{ inputs.environment }}.tfvars" -auto-approve
+        run: terraform destroy -var-file="dev.tfvars" -auto-approve
