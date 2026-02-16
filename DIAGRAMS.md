@@ -39,9 +39,8 @@ graph TD
     B2 --> B2C[iam/]
     B2 --> B2D[bedrock/]
     
-    C --> C1[terraform.yml]
-    C --> C2[checkov.yml]
-    C --> C3[sonarqube.yml]
+    C --> C1[terraform-app1.yml]
+    C --> C2[code-scan.yml]
     
     style A fill:#e1f5ff
     style B fill:#fff4e1
@@ -57,40 +56,33 @@ graph TD
 
 ```mermaid
 flowchart TD
-    Start([Developer Push/PR]) --> Trigger{Trigger Type?}
+    Start([Manual Workflow Dispatch]) --> Select[Select Environment & Action]
     
-    Trigger -->|Pull Request| PR[PR to master]
-    Trigger -->|Push| Push[Push to master]
-    Trigger -->|Manual| Manual[workflow_dispatch]
-    
-    PR --> Checkout[Checkout Code]
-    Push --> Checkout
-    Manual --> Checkout
-    
+    Select --> Checkout[Checkout Code]
     Checkout --> Auth[AWS OIDC Authentication]
-    Auth --> Init[Terraform Init]
-    Init --> Format[Terraform Format Check]
-    Format --> Validate[Terraform Validate]
-    Validate --> Plan[Terraform Plan]
+    Auth --> Init[Terraform Init with Env State]
+    Init --> Scan1[Run Checkov Security Scan]
+    Scan1 --> Scan2[Run SonarCloud Scan]
+    Scan2 --> Plan[Terraform Plan with Env tfvars]
     
-    Plan --> IsPR{Is Pull Request?}
-    IsPR -->|Yes| Comment[Post Plan to PR]
-    IsPR -->|No| IsMaster{Is Master Branch?}
-    Comment --> End1([End])
+    Plan --> Action{Action Type?}
+    Action -->|plan| End1([Plan Complete])
+    Action -->|apply| Apply[Terraform Apply]
+    Action -->|destroy| Destroy[Terraform Destroy]
     
-    IsMaster -->|Yes| Approval[Wait for Manual Approval]
-    IsMaster -->|No| End2([End])
-    
-    Approval --> Apply[Terraform Apply]
     Apply --> Deploy[Deploy to AWS]
-    Deploy --> End3([Success])
+    Deploy --> End2([Success])
+    
+    Destroy --> Remove[Remove Infrastructure]
+    Remove --> End3([Destroyed])
     
     style Start fill:#4caf50
     style End1 fill:#2196f3
-    style End2 fill:#2196f3
-    style End3 fill:#4caf50
-    style Approval fill:#ff9800
+    style End2 fill:#4caf50
+    style End3 fill:#f44336
     style Deploy fill:#9c27b0
+    style Scan1 fill:#ff9800
+    style Scan2 fill:#ff9800
 ```
 
 ### Detailed Terraform Workflow Steps
@@ -103,22 +95,32 @@ sequenceDiagram
     participant AWS as AWS
     participant S3 as S3 Backend
     
-    Dev->>GH: Push code / Create PR
-    GH->>GHA: Trigger workflow
+    Dev->>GH: Trigger workflow (select env + action)
+    GH->>GHA: Start workflow
     
-    GHA->>GHA: Checkout code
+    GHA->>GHA: Checkout code (full history)
     GHA->>AWS: Request OIDC token
     AWS-->>GHA: Return temporary credentials
     
-    GHA->>S3: terraform init (load state)
+    GHA->>S3: terraform init (env-specific state)
     S3-->>GHA: Return current state
     
-    GHA->>GHA: terraform fmt -check
-    GHA->>GHA: terraform validate
-    GHA->>GHA: terraform plan
+    GHA->>GHA: Run Checkov security scan
+    GHA->>GHA: Run SonarCloud quality scan
+    GHA->>GHA: terraform plan (with env.tfvars)
     
-    alt Pull Request
-        GHA->>GH: Post plan as PR comment
+    alt Action: plan
+        GHA->>GH: Display plan output
+    else Action: apply
+        GHA->>AWS: terraform apply
+        AWS-->>GHA: Resources created/updated
+        GHA->>S3: Update state file
+    else Action: destroy
+        GHA->>AWS: terraform destroy
+        AWS-->>GHA: Resources deleted
+        GHA->>S3: Update state file
+    end
+```
         GH-->>Dev: Notify developer
     else Push to Master
         GHA->>GH: Create approval issue
@@ -470,24 +472,15 @@ gantt
     Checkout Code           :a1, 2024-01-01, 1d
     AWS Authentication      :a2, after a1, 1d
     
-    section App1 Module
-    Init App1               :b1, after a2, 1d
-    Validate App1           :b2, after b1, 1d
-    Plan App1               :b3, after b2, 1d
+    section Security Scans
+    Checkov Scan           :b1, after a2, 1d
+    SonarCloud Scan        :b2, after b1, 1d
     
-    section EKS Module
-    Init EKS               :c1, after a2, 1d
-    Validate EKS           :c2, after c1, 1d
-    Plan EKS               :c3, after c2, 1d
-    
-    section ECS Module
-    Init ECS               :d1, after a2, 1d
-    Validate ECS           :d2, after d1, 1d
-    Plan ECS               :d3, after d2, 1d
-    
-    section Approval & Deploy
-    Manual Approval        :crit, e1, after b3, 2d
-    Apply Changes          :e2, after e1, 1d
+    section App1 Deployment
+    Init App1              :c1, after b2, 1d
+    Plan App1              :c2, after c1, 1d
+    Apply App1             :c3, after c2, 1d
+```
 ```
 
 ---
