@@ -21,6 +21,16 @@ resource "aws_vpc" "main" {
     Name = "${var.project_name}-vpc"
   }
 }
+
+# Restrict default security group
+resource "aws_default_security_group" "default" {
+  vpc_id = aws_vpc.main.id
+
+  # No ingress or egress rules - blocks all traffic
+  tags = {
+    Name = "${var.project_name}-default-sg-restricted"
+  }
+}
 # 
 # # Internet Gateway
 # resource "aws_internet_gateway" "main" {
