@@ -1,4 +1,4 @@
-name: Terraform QA
+name: Terraform QA ${{ github.event.inputs.action }}
 
 on:
   workflow_dispatch:
