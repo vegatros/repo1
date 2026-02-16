@@ -22,16 +22,20 @@ graph TD
     A --> D[cloudtrail/]
     A --> E[install.sh]
     
-    B --> B1[ec2/]
+    B --> B1[stacks/]
     B --> B2[eks/]
     B --> B3[ecs/]
     B --> B4[iam/]
     B --> B5[bedrock/]
     
-    B1 --> B1A[main.tf]
-    B1 --> B1B[variables.tf]
-    B1 --> B1C[outputs.tf]
-    B1 --> B1D[backend.tf]
+    B1 --> B1A[app1/]
+    B1A --> B1A1[main.tf]
+    B1A --> B1A2[variables.tf]
+    B1A --> B1A3[outputs.tf]
+    B1A --> B1A4[backend.tf]
+    B1A --> B1A5[dev.tfvars]
+    B1A --> B1A6[qa.tfvars]
+    B1A --> B1A7[prod.tfvars]
     
     C --> C1[terraform.yml]
     C --> C2[checkov.yml]
@@ -134,7 +138,7 @@ sequenceDiagram
 flowchart LR
     A([PR/Push to Master]) --> B[Checkout Code]
     B --> C[Run Checkov Scan]
-    C --> D{Scan terraform/ec2}
+    C --> D{Scan terraform/stacks/app1}
     
     D --> E[Check Security Issues]
     E --> F[Check Compliance]
@@ -249,7 +253,7 @@ mindmap
 
 ## AWS Infrastructure Architecture
 
-### EC2 Module Architecture
+### App1 Module Architecture
 
 ```mermaid
 graph TB
@@ -290,7 +294,7 @@ graph TB
 ```mermaid
 graph LR
     subgraph Terraform Modules
-        A[EC2 Module] --> AWS1[EC2 Instances]
+        A[App1 Module] --> AWS1[EC2 Instances]
         B[EKS Module] --> AWS2[Kubernetes Cluster]
         C[ECS Module] --> AWS3[Container Service]
         D[IAM Module] --> AWS4[Roles & Policies]
@@ -464,10 +468,10 @@ gantt
     Checkout Code           :a1, 2024-01-01, 1d
     AWS Authentication      :a2, after a1, 1d
     
-    section EC2 Module
-    Init EC2               :b1, after a2, 1d
-    Validate EC2           :b2, after b1, 1d
-    Plan EC2               :b3, after b2, 1d
+    section App1 Module
+    Init App1               :b1, after a2, 1d
+    Validate App1           :b2, after b1, 1d
+    Plan App1               :b3, after b2, 1d
     
     section EKS Module
     Init EKS               :c1, after a2, 1d

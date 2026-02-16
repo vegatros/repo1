@@ -41,16 +41,16 @@ jobs:
         uses: hashicorp/setup-terraform@v3
       
       - name: Terraform Init
-        working-directory: terraform/ec2
+        working-directory: terraform/stacks/app1
         run: |
           terraform init \
-            -backend-config="key=ec2/dev/terraform.tfstate" \
+            -backend-config="key=stacks/app1/dev/terraform.tfstate" \
             -reconfigure
       
       - name: Run Checkov Security Scan
         uses: bridgecrewio/checkov-action@master
         with:
-          directory: terraform/ec2
+          directory: terraform/stacks/app1
           framework: terraform
           output_format: cli
           soft_fail: true
@@ -62,15 +62,15 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       
       - name: Terraform Plan
-        working-directory: terraform/ec2
+        working-directory: terraform/stacks/app1
         run: terraform plan -var-file="dev.tfvars" -out=tfplan
       
       - name: Terraform Apply
         if: inputs.action == 'apply'
-        working-directory: terraform/ec2
+        working-directory: terraform/stacks/app1
         run: terraform apply -auto-approve tfplan
       
       - name: Terraform Destroy
         if: inputs.action == 'destroy'
-        working-directory: terraform/ec2
+        working-directory: terraform/stacks/app1
         run: terraform destroy -var-file="dev.tfvars" -auto-approve
