@@ -48,7 +48,8 @@ jobs:
         working-directory: terraform/ec2
         run: |
           terraform init \
-            -backend-config="key=ec2/${{ inputs.environment }}/terraform.tfstate"
+            -backend-config="key=ec2/${{ inputs.environment }}/terraform.tfstate" \
+            -reconfigure
       
       - name: Terraform Plan
         working-directory: terraform/ec2
