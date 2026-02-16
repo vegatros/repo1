@@ -27,7 +27,7 @@ jobs:
       - name: Run Checkov Security Scan
         uses: bridgecrewio/checkov-action@master
         with:
-          directory: terraform/ec2
+          directory: terraform/
           framework: terraform
           output_format: cli,sarif
           output_file_path: console,checkov-results.sarif
