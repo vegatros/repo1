@@ -23,10 +23,7 @@ graph TD
     A --> E[install.sh]
     
     B --> B1[stacks/]
-    B --> B2[eks/]
-    B --> B3[ecs/]
-    B --> B4[iam/]
-    B --> B5[bedrock/]
+    B --> B2[services/]
     
     B1 --> B1A[app1/]
     B1A --> B1A1[main.tf]
@@ -36,6 +33,11 @@ graph TD
     B1A --> B1A5[dev.tfvars]
     B1A --> B1A6[qa.tfvars]
     B1A --> B1A7[prod.tfvars]
+    
+    B2 --> B2A[eks/]
+    B2 --> B2B[ecs/]
+    B2 --> B2C[iam/]
+    B2 --> B2D[bedrock/]
     
     C --> C1[terraform.yml]
     C --> C2[checkov.yml]
