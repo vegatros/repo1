@@ -1,10 +1,10 @@
-name: Checkov Security Scan
+name: Code Quality & Security Scan
 
 on:
-  pull_request:
+  push:
     branches:
       - master
-  push:
+  pull_request:
     branches:
       - master
 
@@ -14,15 +14,17 @@ permissions:
   pull-requests: write
 
 jobs:
-  checkov:
-    name: Checkov Scan
+  scan:
+    name: Security & Quality Analysis
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       
-      - name: Run Checkov
+      - name: Run Checkov Security Scan
         uses: bridgecrewio/checkov-action@master
         with:
           directory: terraform/ec2
@@ -41,9 +43,15 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
       
-      - name: Upload Results
+      - name: Upload Checkov Results
         if: always() && steps.check_sarif.outputs.exists == 'true'
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: checkov-results.sarif
           category: checkov
+      
+      - name: Run SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
