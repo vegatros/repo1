@@ -50,10 +50,7 @@ jobs:
       
       - name: Terraform Init
         working-directory: terraform/stacks/app2
-        run: |
-          terraform init \
-            -backend-config="key=stacks/app2/${{ inputs.environment }}/terraform.tfstate" \
-            -reconfigure
+        run: terraform init -reconfigure
       
       - name: Run Checkov Security Scan
         uses: bridgecrewio/checkov-action@master
