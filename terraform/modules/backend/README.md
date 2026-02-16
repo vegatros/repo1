@@ -1,4 +1,4 @@
-# Bootstrap Infrastructure
+# Backend Infrastructure
 
 Creates the DynamoDB table for Terraform state locking.
 
@@ -7,7 +7,7 @@ Creates the DynamoDB table for Terraform state locking.
 Run this once to create the DynamoDB table:
 
 ```bash
-cd terraform/modules/bootstrap
+cd terraform/modules/backend
 terraform init
 terraform apply
 ```
