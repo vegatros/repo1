@@ -45,6 +45,14 @@ jobs:
             -backend-config="key=ec2/prod/terraform.tfstate" \
             -reconfigure
       
+      - name: Run Checkov Security Scan
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: terraform/ec2
+          framework: terraform
+          output_format: cli
+          soft_fail: true
+      
       - name: Terraform Plan
         working-directory: terraform/ec2
         run: terraform plan -var-file="prod.tfvars" -out=tfplan
