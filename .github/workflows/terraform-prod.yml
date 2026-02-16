@@ -55,6 +55,12 @@ jobs:
           output_format: cli
           soft_fail: true
       
+      - name: Run SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      
       - name: Terraform Plan
         working-directory: terraform/ec2
         run: terraform plan -var-file="prod.tfvars" -out=tfplan
