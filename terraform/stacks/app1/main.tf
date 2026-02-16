@@ -1,266 +1,38 @@
-# terraform {
-#   required_providers {
-#     aws = {
-#       source  = "hashicorp/aws"
-#       version = "~> 5.0"
-#     }
-#   }
-# }
-# 
-# provider "aws" {
-#   region = var.aws_region
-# }
-# 
-# VPC
-resource "aws_vpc" "main" {
-  cidr_block           = var.vpc_cidr
-  enable_dns_hostnames = true
-  enable_dns_support   = true
+# VPC Module
+module "vpc" {
+  source = "../../modules/vpc"
+
+  project_name             = var.project_name
+  vpc_cidr                 = var.vpc_cidr
+  enable_nat_gateway       = false
+  enable_flow_logs         = true
+  flow_logs_retention_days = 7
 
   tags = {
-    Name = "${var.project_name}-vpc"
+    Environment = var.environment
   }
 }
 
-# Restrict default security group
-resource "aws_default_security_group" "default" {
-  vpc_id = aws_vpc.main.id
+# EC2 Module
+module "ec2" {
+  source = "../../modules/ec2"
 
-  # No ingress or egress rules - blocks all traffic
-  tags = {
-    Name = "${var.project_name}-default-sg-restricted"
-  }
-}
+  project_name   = var.project_name
+  vpc_id         = module.vpc.vpc_id
+  subnet_ids     = module.vpc.private_subnet_ids
+  instance_type  = var.instance_type
+  instance_count = var.instance_count
 
-# VPC Flow Logs
-resource "aws_flow_log" "main" {
-  vpc_id          = aws_vpc.main.id
-  traffic_type    = "ALL"
-  iam_role_arn    = aws_iam_role.flow_logs.arn
-  log_destination = aws_cloudwatch_log_group.flow_logs.arn
-
-  tags = {
-    Name = "${var.project_name}-flow-logs"
-  }
-}
-
-resource "aws_cloudwatch_log_group" "flow_logs" {
-  name              = "/aws/vpc/${var.project_name}-flow-logs"
-  retention_in_days = 7
-  kms_key_id        = aws_kms_key.flow_logs.arn
+  user_data = <<-EOF
+              #!/bin/bash
+              yum update -y
+              yum install -y httpd
+              systemctl start httpd
+              systemctl enable httpd
+              echo "<h1>${var.project_name} - ${var.environment}</h1>" > /var/www/html/index.html
+              EOF
 
   tags = {
-    Name = "${var.project_name}-flow-logs"
+    Environment = var.environment
   }
 }
-
-resource "aws_kms_key" "flow_logs" {
-  description             = "KMS key for VPC Flow Logs encryption"
-  deletion_window_in_days = 10
-  enable_key_rotation     = true
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "Enable IAM User Permissions"
-        Effect = "Allow"
-        Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
-        Action   = "kms:*"
-        Resource = "*"
-      },
-      {
-        Sid    = "Allow CloudWatch Logs"
-        Effect = "Allow"
-        Principal = {
-          Service = "logs.${data.aws_region.current.name}.amazonaws.com"
-        }
-        Action = [
-          "kms:Encrypt",
-          "kms:Decrypt",
-          "kms:ReEncrypt*",
-          "kms:GenerateDataKey*",
-          "kms:CreateGrant",
-          "kms:DescribeKey"
-        ]
-        Resource = "*"
-        Condition = {
-          ArnLike = {
-            "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:*"
-          }
-        }
-      }
-    ]
-  })
-
-  tags = {
-    Name = "${var.project_name}-flow-logs-kms"
-  }
-}
-
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
-
-resource "aws_kms_alias" "flow_logs" {
-  name          = "alias/${var.project_name}-flow-logs"
-  target_key_id = aws_kms_key.flow_logs.key_id
-}
-
-resource "aws_iam_role" "flow_logs" {
-  name = "${var.project_name}-flow-logs-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "vpc-flow-logs.amazonaws.com"
-      }
-    }]
-  })
-}
-
-resource "aws_iam_role_policy" "flow_logs" {
-  name = "${var.project_name}-flow-logs-policy"
-  role = aws_iam_role.flow_logs.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:DescribeLogGroups",
-        "logs:DescribeLogStreams"
-      ]
-      Effect = "Allow"
-      Resource = [
-        aws_cloudwatch_log_group.flow_logs.arn,
-        "${aws_cloudwatch_log_group.flow_logs.arn}:*"
-      ]
-    }]
-  })
-}
-# 
-# # Internet Gateway
-# resource "aws_internet_gateway" "main" {
-#   vpc_id = aws_vpc.main.id
-# 
-#   tags = {
-#     Name = "${var.project_name}-igw"
-#   }
-# }
-# 
-# # Public Subnets
-# resource "aws_subnet" "public" {
-#   count                   = 2
-#   vpc_id                  = aws_vpc.main.id
-#   cidr_block              = cidrsubnet(var.vpc_cidr, 8, count.index)
-#   availability_zone       = data.aws_availability_zones.available.names[count.index]
-#   map_public_ip_on_launch = true
-# 
-#   tags = {
-#     Name = "${var.project_name}-public-${count.index + 1}"
-#   }
-# }
-# 
-# # Private Subnets
-# resource "aws_subnet" "private" {
-#   count             = 2
-#   vpc_id            = aws_vpc.main.id
-#   cidr_block        = cidrsubnet(var.vpc_cidr, 8, count.index + 2)
-#   availability_zone = data.aws_availability_zones.available.names[count.index]
-
-#   tags = {
-#     Name = "${var.project_name}-private-${count.index + 1}"
-#   }
-# }
-# 
-# # Public Route Table
-# resource "aws_route_table" "public" {
-#   vpc_id = aws_vpc.main.id
-# 
-#   route {
-#     cidr_block = "0.0.0.0/0"
-#     gateway_id = aws_internet_gateway.main.id
-#   }
-# 
-#   tags = {
-#     Name = "${var.project_name}-public-rt"
-#   }
-# }
-# 
-# # Public Route Table Association
-# resource "aws_route_table_association" "public" {
-#   count          = 2
-#   subnet_id      = aws_subnet.public[count.index].id
-#   route_table_id = aws_route_table.public.id
-# }
-# 
-# # Security Group for EC2
-# resource "aws_security_group" "ec2" {
-#   name        = "${var.project_name}-ec2-sg"
-#   description = "Security group for EC2 instances"
-#   vpc_id      = aws_vpc.main.id
-# 
-#   ingress {
-#     from_port   = 80
-#     to_port     = 80
-#     protocol    = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-# 
-#   egress {
-#     from_port   = 0
-#     to_port     = 0
-#     protocol    = "-1"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-# 
-#   tags = {
-#     Name = "${var.project_name}-ec2-sg"
-#   }
-# }
-# 
-# # EC2 Instances
-# resource "aws_instance" "app" {
-#   count                  = 2
-#   ami                    = data.aws_ami.amazon_linux.id
-#   instance_type          = var.instance_type
-#   subnet_id              = aws_subnet.private[count.index].id
-#   vpc_security_group_ids = [aws_security_group.ec2.id]
-# 
-#   user_data = <<-EOF
-#               #!/bin/bash
-#               yum update -y
-#               yum install -y httpd
-#               systemctl start httpd
-#               systemctl enable httpd
-#               echo "<h1>Server ${count.index + 1}</h1>" > /var/www/html/index.html
-#               EOF
-# 
-#   tags = {
-#     Name = "${var.project_name}-ec2-${count.index + 1}"
-#   }
-# }
-# 
-# 
-# 
-# # Data Sources
-# data "aws_availability_zones" "available" {
-#   state = "available"
-# }
-# 
-# data "aws_ami" "amazon_linux" {
-#   most_recent = true
-#   owners      = ["amazon"]
-# 
-#   filter {
-#     name   = "name"
-#     values = ["amzn2-ami-hvm-*-x86_64-gp2"]
-#   }
-# }
