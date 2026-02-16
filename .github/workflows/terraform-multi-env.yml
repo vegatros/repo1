@@ -1,4 +1,4 @@
-name: Terraform - ${{ inputs.environment }} - ${{ inputs.action }}
+name: Multi-Environment Terraform
 
 on:
   workflow_dispatch:
@@ -27,7 +27,7 @@ permissions:
 
 jobs:
   terraform:
-    name: ${{ inputs.environment }} - ${{ inputs.action }}
+    name: ${{ github.event.inputs.environment }} - ${{ github.event.inputs.action }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     
