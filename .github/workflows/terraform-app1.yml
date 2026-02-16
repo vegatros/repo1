@@ -1,10 +1,18 @@
-name: Terraform Dev
+name: Terraform App1
 
-run-name: Terraform Dev ${{ inputs.action }}
+run-name: app1-${{ inputs.environment }}-${{ inputs.action }}
 
 on:
   workflow_dispatch:
     inputs:
+      environment:
+        description: 'Environment'
+        required: true
+        type: choice
+        options:
+          - dev
+          - qa
+          - prod
       action:
         description: 'Terraform action'
         required: true
@@ -21,9 +29,9 @@ permissions:
 
 jobs:
   terraform:
-    name: Dev - ${{ github.event.inputs.action }}
+    name: ${{ inputs.environment }} - ${{ inputs.action }}
     runs-on: ubuntu-latest
-    environment: dev
+    environment: ${{ inputs.environment }}
     
     steps:
       - name: Checkout
@@ -44,7 +52,7 @@ jobs:
         working-directory: terraform/stacks/app1
         run: |
           terraform init \
-            -backend-config="key=stacks/app1/dev/terraform.tfstate" \
+            -backend-config="key=stacks/app1/${{ inputs.environment }}/terraform.tfstate" \
             -reconfigure
       
       - name: Run Checkov Security Scan
@@ -63,7 +71,7 @@ jobs:
       
       - name: Terraform Plan
         working-directory: terraform/stacks/app1
-        run: terraform plan -var-file="dev.tfvars" -out=tfplan
+        run: terraform plan -var-file="${{ inputs.environment }}.tfvars" -out=tfplan
       
       - name: Terraform Apply
         if: inputs.action == 'apply'
@@ -73,4 +81,4 @@ jobs:
       - name: Terraform Destroy
         if: inputs.action == 'destroy'
         working-directory: terraform/stacks/app1
-        run: terraform destroy -var-file="dev.tfvars" -auto-approve
+        run: terraform destroy -var-file="${{ inputs.environment }}.tfvars" -auto-approve
