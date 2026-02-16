@@ -1,5 +1,7 @@
 name: Terraform QA
 
+run-name: Terraform QA ${{ inputs.action }}
+
 on:
   workflow_dispatch:
     inputs:
