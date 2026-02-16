@@ -23,7 +23,7 @@ graph TD
     A --> E[install.sh]
     
     B --> B1[stacks/]
-    B --> B2[services/]
+    B --> B2[modules/]
     
     B1 --> B1A[app1/]
     B1A --> B1A1[main.tf]
@@ -34,10 +34,12 @@ graph TD
     B1A --> B1A6[qa.tfvars]
     B1A --> B1A7[prod.tfvars]
     
-    B2 --> B2A[eks/]
-    B2 --> B2B[ecs/]
-    B2 --> B2C[iam/]
-    B2 --> B2D[bedrock/]
+    B2 --> B2A[vpc/]
+    B2 --> B2B[ec2/]
+    B2 --> B2C[eks/]
+    B2 --> B2D[ecs/]
+    B2 --> B2E[iam/]
+    B2 --> B2F[bedrock/]
     
     C --> C1[terraform-app1.yml]
     C --> C2[code-scan.yml]
