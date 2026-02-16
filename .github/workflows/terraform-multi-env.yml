@@ -1,4 +1,4 @@
-name: Multi-Environment Terraform
+name: Terraform - ${{ inputs.environment }} - ${{ inputs.action }}
 
 on:
   workflow_dispatch:
@@ -27,7 +27,7 @@ permissions:
 
 jobs:
   terraform:
-    name: Terraform ${{ inputs.action }} - ${{ inputs.environment }}
+    name: ${{ inputs.environment }} - ${{ inputs.action }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     
