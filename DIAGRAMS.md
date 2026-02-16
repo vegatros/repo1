@@ -6,9 +6,10 @@ This document contains Mermaid diagrams that explain the repository's infrastruc
 1. [Repository Structure](#repository-structure)
 2. [Terraform Workflow](#terraform-workflow)
 3. [Checkov Security Scan](#checkov-security-scan)
-4. [AWS Infrastructure Architecture](#aws-infrastructure-architecture)
-5. [GitHub Actions OIDC Authentication](#github-actions-oidc-authentication)
-6. [Complete CI/CD Pipeline](#complete-cicd-pipeline)
+4. [SonarCloud Code Quality Scan](#sonarcloud-code-quality-scan)
+5. [AWS Infrastructure Architecture](#aws-infrastructure-architecture)
+6. [GitHub Actions OIDC Authentication](#github-actions-oidc-authentication)
+7. [Complete CI/CD Pipeline](#complete-cicd-pipeline)
 
 ---
 
@@ -34,6 +35,7 @@ graph TD
     
     C --> C1[terraform.yml]
     C --> C2[checkov.yml]
+    C --> C3[sonarqube.yml]
     
     style A fill:#e1f5ff
     style B fill:#fff4e1
@@ -183,6 +185,64 @@ mindmap
       Logging
       Monitoring
       Backup
+```
+
+---
+
+## SonarCloud Code Quality Scan
+
+### SonarCloud Workflow
+
+```mermaid
+flowchart LR
+    A([PR/Push to Master]) --> B[Checkout Code]
+    B --> C[Run SonarCloud Scan]
+    C --> D{Analyze Terraform Code}
+    
+    D --> E[Code Quality Check]
+    D --> F[Security Vulnerabilities]
+    D --> G[Code Smells]
+    D --> H[Technical Debt]
+    
+    E --> I[Generate Report]
+    F --> I
+    G --> I
+    H --> I
+    
+    I --> J[Upload to SonarCloud]
+    J --> K[View Dashboard]
+    
+    K --> L([End])
+    
+    style A fill:#4caf50
+    style C fill:#ff9800
+    style J fill:#2196f3
+    style K fill:#9c27b0
+```
+
+### Code Quality Metrics
+
+```mermaid
+mindmap
+  root((SonarCloud Analysis))
+    Code Quality
+      Maintainability
+      Reliability
+      Duplications
+      Complexity
+    Security
+      Vulnerabilities
+      Security Hotspots
+      Sensitive Data
+      Injection Flaws
+    Coverage
+      Code Coverage
+      Test Results
+      Branch Coverage
+    Technical Debt
+      Debt Ratio
+      Effort to Fix
+      Code Smells
 ```
 
 ---
@@ -339,6 +399,7 @@ graph TB
     
     Trigger1 --> TF1[Terraform Workflow]
     Trigger1 --> CV1[Checkov Scan]
+    Trigger1 --> SQ1[SonarCloud Scan]
     
     TF1 --> Plan[Generate Plan]
     Plan --> Comment[Comment on PR]
@@ -346,8 +407,12 @@ graph TB
     CV1 --> Scan1[Security Scan]
     Scan1 --> Report1[Post Results]
     
+    SQ1 --> ScanSQ[Code Quality Scan]
+    ScanSQ --> ReportSQ[Upload to SonarCloud]
+    
     Comment --> Review[Code Review]
     Report1 --> Review
+    ReportSQ --> Review
     
     Review --> Approve{Approved?}
     Approve -->|No| Fix[Fix Issues]
@@ -359,6 +424,7 @@ graph TB
     
     Trigger2 --> TF2[Terraform Workflow]
     Trigger2 --> CV2[Checkov Scan]
+    Trigger2 --> SQ2[SonarCloud Scan]
     
     TF2 --> Plan2[Generate Plan]
     Plan2 --> Approval[Manual Approval Required]
@@ -372,8 +438,12 @@ graph TB
     CV2 --> Scan2[Security Scan]
     Scan2 --> Security[Update Security Tab]
     
+    SQ2 --> ScanSQ2[Code Quality Scan]
+    ScanSQ2 --> Quality[Update SonarCloud]
+    
     Deploy --> Success([Deployment Complete])
     Security --> Success
+    Quality --> Success
     Cancel --> End([Cancelled])
     
     style Start fill:#4caf50
