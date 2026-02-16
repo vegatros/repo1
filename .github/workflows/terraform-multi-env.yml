@@ -1,0 +1,65 @@
+name: Multi-Environment Terraform
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        type: choice
+        options:
+          - dev
+          - qa
+          - prod
+      action:
+        description: 'Terraform action'
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  terraform:
+    name: Terraform ${{ inputs.action }} - ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+      
+      - name: Terraform Init
+        working-directory: terraform/ec2
+        run: |
+          terraform init \
+            -backend-config="key=ec2/${{ inputs.environment }}/terraform.tfstate"
+      
+      - name: Terraform Plan
+        working-directory: terraform/ec2
+        run: terraform plan -var-file="${{ inputs.environment }}.tfvars" -out=tfplan
+      
+      - name: Terraform Apply
+        if: inputs.action == 'apply'
+        working-directory: terraform/ec2
+        run: terraform apply -auto-approve tfplan
+      
+      - name: Terraform Destroy
+        if: inputs.action == 'destroy'
+        working-directory: terraform/ec2
+        run: terraform destroy -var-file="${{ inputs.environment }}.tfvars" -auto-approve

@@ -21,3 +21,14 @@ variable "instance_type" {
   type        = string
   default     = "t2.micro"
 }
+
+variable "environment" {
+  description = "Environment name (dev, qa, prod)"
+  type        = string
+}
+
+variable "instance_count" {
+  description = "Number of EC2 instances"
+  type        = number
+  default     = 1
+}
