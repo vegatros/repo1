@@ -1,5 +1,7 @@
 name: Terraform Dev
 
+run-name: Terraform Dev ${{ inputs.action }}
+
 on:
   workflow_dispatch:
     inputs:
