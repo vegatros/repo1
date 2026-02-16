@@ -15,7 +15,7 @@ Reusable Terraform module for creating AWS VPC with public/private subnets, NAT 
 
 ```hcl
 module "vpc" {
-  source = "../../services/vpc"
+  source = "../../modules/vpc"
 
   project_name            = "myapp"
   vpc_cidr                = "10.0.0.0/16"

@@ -13,7 +13,7 @@ Reusable Terraform module for deploying EC2 instances.
 
 ```hcl
 module "ec2" {
-  source = "../../services/ec2"
+  source = "../../modules/ec2"
 
   project_name   = "myapp"
   vpc_id         = aws_vpc.main.id
