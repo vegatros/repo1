@@ -7,7 +7,7 @@ Creates the DynamoDB table for Terraform state locking.
 Run this once to create the DynamoDB table:
 
 ```bash
-cd terraform/bootstrap
+cd terraform/modules/bootstrap
 terraform init
 terraform apply
 ```
