@@ -28,8 +28,8 @@ resource "aws_security_group" "ec2" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTP access"
+    cidr_blocks = ["10.0.0.0/16"]
+    description = "HTTP from ALB"
   }
 
   egress {
@@ -56,7 +56,7 @@ resource "aws_instance" "this" {
   vpc_security_group_ids      = [aws_security_group.ec2.id]
   key_name                    = var.key_name != "" ? var.key_name : null
   user_data                   = var.user_data != "" ? var.user_data : null
-  associate_public_ip_address = true
+  associate_public_ip_address = false
 
   metadata_options {
     http_endpoint = "enabled"
