@@ -26,6 +26,8 @@ graph TD
     B --> B2[modules/]
     
     B1 --> B1A[app1/]
+    B1 --> B1B[app2/]
+    
     B1A --> B1A1[main.tf]
     B1A --> B1A2[variables.tf]
     B1A --> B1A3[outputs.tf]
@@ -33,6 +35,14 @@ graph TD
     B1A --> B1A5[dev.tfvars]
     B1A --> B1A6[qa.tfvars]
     B1A --> B1A7[prod.tfvars]
+    
+    B1B --> B1B1[main.tf]
+    B1B --> B1B2[variables.tf]
+    B1B --> B1B3[outputs.tf]
+    B1B --> B1B4[backend.tf]
+    B1B --> B1B5[dev.tfvars]
+    B1B --> B1B6[qa.tfvars]
+    B1B --> B1B7[prod.tfvars]
     
     B2 --> B2A[vpc/]
     B2 --> B2B[ec2/]
@@ -42,7 +52,8 @@ graph TD
     B2 --> B2F[bedrock/]
     
     C --> C1[terraform-app1.yml]
-    C --> C2[code-scan.yml]
+    C --> C2[terraform-app2.yml]
+    C --> C3[code-scan.yml]
     
     style A fill:#e1f5ff
     style B fill:#fff4e1
@@ -300,11 +311,12 @@ graph TB
 ```mermaid
 graph LR
     subgraph Terraform Modules
-        A[App1 Module] --> AWS1[EC2 Instances]
-        B[EKS Module] --> AWS2[Kubernetes Cluster]
+        A[App1 Module<br/>EC2] --> AWS1[EC2 Instances]
+        B[App2 Module<br/>EKS] --> AWS2[Kubernetes Cluster]
         C[ECS Module] --> AWS3[Container Service]
         D[IAM Module] --> AWS4[Roles & Policies]
         E[Bedrock Module] --> AWS5[AI/ML Services]
+        F[VPC Module] --> AWS6[Network Infrastructure]
     end
     
     subgraph AWS Account
@@ -313,6 +325,7 @@ graph LR
         AWS3
         AWS4
         AWS5
+        AWS6
     end
     
     AWS4 -.->|Provides Access| AWS1
@@ -320,11 +333,64 @@ graph LR
     AWS4 -.->|Provides Access| AWS3
     AWS4 -.->|Provides Access| AWS5
     
+    AWS6 -.->|Network for| AWS1
+    AWS6 -.->|Network for| AWS2
+    AWS6 -.->|Network for| AWS3
+    
     style A fill:#4caf50
     style B fill:#2196f3
     style C fill:#ff9800
     style D fill:#9c27b0
     style E fill:#e91e63
+    style F fill:#00bcd4
+```
+
+### App2 EKS Architecture
+
+```mermaid
+graph TB
+    subgraph AWS Cloud
+        subgraph VPC[VPC Module - 10.0.0.0/16]
+            IGW[Internet Gateway]
+            NAT[NAT Gateway]
+            
+            subgraph PublicSubnets[Public Subnets]
+                PubSub1[10.0.1.0/24]
+                PubSub2[10.0.2.0/24]
+            end
+            
+            subgraph PrivateSubnets[Private Subnets]
+                PrivSub1[10.0.101.0/24]
+                PrivSub2[10.0.102.0/24]
+                
+                subgraph EKS[EKS Cluster]
+                    CP[Control Plane]
+                    
+                    subgraph NodeGroup[Managed Node Group]
+                        Node1[Worker Node<br/>t3.medium/large]
+                    end
+                end
+            end
+        end
+        
+        IAM[IAM Roles]
+        SG[Security Groups]
+    end
+    
+    Internet((Internet)) --> IGW
+    IGW --> PublicSubnets
+    PublicSubnets --> NAT
+    NAT --> PrivateSubnets
+    
+    IAM -.->|Cluster Role| CP
+    IAM -.->|Node Role| NodeGroup
+    SG -.->|Protects| EKS
+    
+    style VPC fill:#e3f2fd
+    style PublicSubnets fill:#c8e6c9
+    style PrivateSubnets fill:#ffccbc
+    style EKS fill:#b39ddb
+    style NodeGroup fill:#90caf9
 ```
 
 ---
@@ -482,6 +548,11 @@ gantt
     Init App1              :c1, after b2, 1d
     Plan App1              :c2, after c1, 1d
     Apply App1             :c3, after c2, 1d
+    
+    section App2 Deployment
+    Init App2              :d1, after b2, 1d
+    Plan App2              :d2, after d1, 1d
+    Apply App2             :d3, after d2, 1d
 ```
 ```
 
@@ -548,8 +619,13 @@ graph LR
     end
     
     subgraph AWS
-        S3[(S3 State Bucket)]
-        Lock[(DynamoDB Lock Table)]
+        S3[(S3 State Bucket<br/>terraform-state-925185632967)]
+        Lock[(DynamoDB Lock Table<br/>terraform-state-lock)]
+        
+        subgraph State Files
+            S1[app1/terraform.tfstate]
+            S2[app2/terraform.tfstate]
+        end
     end
     
     Dev -->|terraform init| Local
@@ -560,6 +636,9 @@ graph LR
     TF <-->|Read/Write State| S3
     TF <-->|Acquire Lock| Lock
     
+    S3 --> S1
+    S3 --> S2
+    
     S3 -.->|Versioning Enabled| S3V[State History]
     S3 -.->|Encryption| S3E[AES-256]
     
@@ -567,6 +646,8 @@ graph LR
     style Lock fill:#f44336
     style S3V fill:#4caf50
     style S3E fill:#2196f3
+    style S1 fill:#90caf9
+    style S2 fill:#90caf9
 ```
 
 ---
