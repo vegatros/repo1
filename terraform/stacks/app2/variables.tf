@@ -43,3 +43,21 @@ variable "max_size" {
   type        = number
   default     = 3
 }
+
+variable "helm_replica_count" {
+  description = "Number of pod replicas"
+  type        = number
+  default     = 2
+}
+
+variable "helm_image_repository" {
+  description = "Container image repository"
+  type        = string
+  default     = "nginx"
+}
+
+variable "helm_image_tag" {
+  description = "Container image tag"
+  type        = string
+  default     = "1.21"
+}

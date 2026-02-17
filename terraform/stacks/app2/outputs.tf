@@ -22,3 +22,13 @@ output "node_group_id" {
   description = "EKS node group ID"
   value       = module.eks.node_group_id
 }
+
+output "helm_release_name" {
+  description = "Helm release name"
+  value       = helm_release.app.name
+}
+
+output "helm_release_status" {
+  description = "Helm release status"
+  value       = helm_release.app.status
+}
