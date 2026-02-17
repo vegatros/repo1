@@ -548,52 +548,6 @@ gantt
 
 ---
 
-## Workflow Permissions Model
-
-```mermaid
-graph TD
-    subgraph GitHub Actions Workflow
-        W[Workflow Execution]
-    end
-    
-    subgraph Permissions
-        P1[id-token: write]
-        P2[contents: read]
-        P3[pull-requests: write]
-        P4[security-events: write]
-    end
-    
-    subgraph Actions
-        A1[Request OIDC Token]
-        A2[Read Repository Code]
-        A3[Comment on PRs]
-        A4[Upload Security Scans]
-    end
-    
-    W --> P1
-    W --> P2
-    W --> P3
-    W --> P4
-    
-    P1 -.->|Enables| A1
-    P2 -.->|Enables| A2
-    P3 -.->|Enables| A3
-    P4 -.->|Enables| A4
-    
-    A1 --> AWS[AWS Authentication]
-    A2 --> Code[Access Code]
-    A3 --> PR[PR Comments]
-    A4 --> Sec[Security Tab]
-    
-    style W fill:#4caf50
-    style P1 fill:#2196f3
-    style P2 fill:#2196f3
-    style P3 fill:#2196f3
-    style P4 fill:#2196f3
-```
-
----
-
 ## State Management
 
 ```mermaid
