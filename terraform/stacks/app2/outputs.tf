@@ -22,13 +22,3 @@ output "node_group_id" {
   description = "EKS node group ID"
   value       = module.eks.node_group_id
 }
-
-output "helm_release_name" {
-  description = "Helm release name"
-  value       = var.enable_helm_deployment ? helm_release.app[0].name : null
-}
-
-output "helm_release_status" {
-  description = "Helm release status"
-  value       = var.enable_helm_deployment ? helm_release.app[0].status : null
-}
