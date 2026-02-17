@@ -63,9 +63,36 @@ resource "aws_eks_cluster" "main" {
     subnet_ids = var.subnet_ids
   }
 
+  access_config {
+    authentication_mode = "API_AND_CONFIG_MAP"
+  }
+
   depends_on = [aws_iam_role_policy_attachment.cluster_policy]
 
   tags = var.tags
+}
+
+# EKS Access Entry for Admin Users
+resource "aws_eks_access_entry" "admin" {
+  for_each = toset(var.admin_arns)
+
+  cluster_name      = aws_eks_cluster.main.name
+  principal_arn     = each.value
+  type              = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "admin" {
+  for_each = toset(var.admin_arns)
+
+  cluster_name  = aws_eks_cluster.main.name
+  principal_arn = each.value
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [aws_eks_access_entry.admin]
 }
 
 # EKS Node Group

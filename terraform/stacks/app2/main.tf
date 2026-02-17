@@ -24,6 +24,7 @@ module "eks" {
   desired_size  = var.desired_size
   min_size      = var.min_size
   max_size      = var.max_size
+  admin_arns    = ["arn:aws:iam::925185632967:user/admin-user"]
 
   tags = {
     Environment = var.environment
