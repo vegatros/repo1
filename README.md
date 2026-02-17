@@ -6,32 +6,68 @@ This repository contains Terraform configurations for managing AWS infrastructur
 
 ```
 .
-├── terraform/           # Terraform infrastructure modules
-│   ├── ec2/            # EC2 instance configurations
-│   ├── eks/            # EKS cluster configurations
-│   ├── ecs/            # ECS service configurations
-│   ├── iam/            # IAM roles and policies
-│   └── bedrock/        # AWS Bedrock configurations
-├── cloudtrail/         # CloudTrail logging configurations
-├── .github/workflows/  # GitHub Actions CI/CD pipelines
-└── install.sh          # Setup script
-
+├── terraform/
+│   ├── stacks/              # Application stacks
+│   │   ├── app1/           # EC2-based application
+│   │   └── app2/           # EKS-based application
+│   └── modules/            # Reusable Terraform modules
+│       ├── vpc/            # VPC with public/private subnets
+│       ├── ec2/            # EC2 instance module
+│       ├── eks/            # EKS cluster module
+│       ├── ecs/            # ECS service module
+│       ├── iam/            # IAM roles and policies
+│       └── bedrock/        # AWS Bedrock configurations
+├── cloudtrail/             # CloudTrail logging configurations
+├── .github/workflows/      # GitHub Actions CI/CD pipelines
+└── install.sh              # Setup script
 ```
 
 ## Terraform Modules
 
-### EC2 Module (`terraform/ec2/`)
-Manages EC2 instances with associated networking resources including VPC, subnets, security groups, and internet gateways.
+### VPC Module (`terraform/modules/vpc/`)
+Reusable VPC module with configurable public/private subnets, internet gateway, and optional NAT gateway.
 
 **Key Resources:**
 - VPC with DNS support
 - Public/Private subnets
 - Internet Gateway
-- Security Groups
-- EC2 instances
+- NAT Gateway (optional)
+- Route tables
 
-### EKS Module (`terraform/eks/`)
-Provisions Amazon Elastic Kubernetes Service clusters for container orchestration.
+### EC2 Module (`terraform/modules/ec2/`)
+Manages EC2 instances with security groups.
+
+**Key Resources:**
+- EC2 instances
+- Security Groups
+
+### EKS Module (`terraform/modules/eks/`)
+Provisions Amazon Elastic Kubernetes Service clusters using existing VPC infrastructure.
+
+**Key Resources:**
+- EKS cluster
+- Managed node groups
+- IAM roles for cluster and nodes
+- Security groups
+
+### Application Stacks
+
+#### App1 Stack (`terraform/stacks/app1/`)
+EC2-based application using VPC and EC2 modules.
+
+**Components:**
+- VPC module (public/private subnets)
+- EC2 module (instances in public subnet)
+- Multi-environment support (dev, qa, prod)
+
+#### App2 Stack (`terraform/stacks/app2/`)
+EKS-based application using VPC and EKS modules.
+
+**Components:**
+- VPC module (with NAT gateway for private subnets)
+- EKS module (cluster in private subnets)
+- Managed node groups (1 node per environment)
+- Multi-environment support (dev, qa, prod)
 
 ### ECS Module (`terraform/ecs/`)
 Manages Amazon Elastic Container Service for Docker container deployments.
@@ -44,30 +80,56 @@ Configurations for AWS Bedrock AI/ML services.
 
 ## GitHub Actions Workflows
 
-### Terraform Workflow (`.github/workflows/terraform.yml`)
+### Terraform App1 Workflow (`.github/workflows/terraform-app1.yml`)
 
-**Purpose:** Automates Terraform infrastructure deployment with validation, planning, and approval gates.
+**Purpose:** Automates Terraform infrastructure deployment for app1 (EC2) stack with validation, planning, and approval gates.
 
 **Triggers:**
-- Manual dispatch (`workflow_dispatch`)
-- Pull requests affecting `terraform/**` files
+- Manual dispatch (`workflow_dispatch`) with environment and action selection
+- Pull requests affecting `terraform/stacks/app1/**` files
 - Pushes to `master` branch
 
 **Workflow Steps:**
 1. **Checkout** - Retrieves repository code
 2. **AWS Authentication** - Uses OIDC to assume AWS role (no long-lived credentials)
-3. **Terraform Init** - Initializes backend and providers
+3. **Terraform Init** - Initializes backend with environment-specific state
 4. **Terraform Format** - Validates code formatting
 5. **Terraform Validate** - Checks configuration syntax
-6. **Terraform Plan** - Generates execution plan
-7. **PR Comment** - Posts plan output to pull request
-8. **Manual Approval** - Requires approval before applying (master branch only)
-9. **Terraform Apply** - Deploys infrastructure changes
+6. **Checkov Scan** - Security and compliance scanning
+7. **SonarCloud Scan** - Code quality analysis
+8. **Terraform Plan** - Generates execution plan with environment tfvars
+9. **Terraform Apply/Destroy** - Executes based on selected action
 
 **Security Features:**
 - OIDC authentication (no static credentials)
-- Manual approval gate for production changes
-- Matrix strategy for parallel module deployment
+- Environment-specific state management
+- Security and quality scanning
+- 15-minute timeout to prevent runaway jobs
+
+### Terraform App2 Workflow (`.github/workflows/terraform-app2.yml`)
+
+**Purpose:** Automates Terraform infrastructure deployment for app2 (EKS) stack with validation, planning, and approval gates.
+
+**Triggers:**
+- Manual dispatch (`workflow_dispatch`) with environment and action selection
+- Pull requests affecting `terraform/stacks/app2/**` files
+- Pushes to `master` branch
+
+**Workflow Steps:**
+1. **Checkout** - Retrieves repository code
+2. **AWS Authentication** - Uses OIDC to assume AWS role (no long-lived credentials)
+3. **Terraform Init** - Initializes backend with environment-specific state
+4. **Terraform Format** - Validates code formatting
+5. **Terraform Validate** - Checks configuration syntax
+6. **Checkov Scan** - Security and compliance scanning
+7. **SonarCloud Scan** - Code quality analysis
+8. **Terraform Plan** - Generates execution plan with environment tfvars
+9. **Terraform Apply/Destroy** - Executes based on selected action
+
+**Security Features:**
+- OIDC authentication (no static credentials)
+- Environment-specific state management
+- Security and quality scanning
 - 15-minute timeout to prevent runaway jobs
 
 ### Checkov Security Scan (`.github/workflows/checkov.yml`)
@@ -130,17 +192,20 @@ Required secrets in repository settings:
 ### Running Terraform Locally
 
 ```bash
-# Navigate to module directory
-cd terraform/ec2
+# Navigate to stack directory
+cd terraform/stacks/app1  # or app2
 
 # Initialize Terraform
 terraform init
 
-# Plan changes
-terraform plan
+# Plan changes with environment-specific variables
+terraform plan -var-file="dev.tfvars"
 
 # Apply changes
-terraform apply
+terraform apply -var-file="dev.tfvars"
+
+# Destroy infrastructure
+terraform destroy -var-file="dev.tfvars"
 ```
 
 ## Workflow Permissions
