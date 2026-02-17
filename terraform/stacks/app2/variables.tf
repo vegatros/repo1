@@ -61,3 +61,9 @@ variable "helm_image_tag" {
   type        = string
   default     = "1.21"
 }
+
+variable "enable_helm_deployment" {
+  description = "Enable Helm chart deployment"
+  type        = bool
+  default     = false
+}
