@@ -25,10 +25,9 @@ module "ec2" {
   user_data = <<-EOF
               #!/bin/bash
               yum update -y
-              yum install -y httpd
-              systemctl start httpd
-              systemctl enable httpd
-              echo "<h1>${var.project_name} - ${var.environment}</h1>" > /var/www/html/index.html
+              amazon-linux-extras install ansible2 -y
+              yum install -y git
+              echo "Ansible installed successfully" > /var/log/ansible-setup.log
               EOF
 
   tags = {
