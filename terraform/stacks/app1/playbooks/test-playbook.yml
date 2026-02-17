@@ -1,0 +1,27 @@
+---
+- name: Test Playbook
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Print message
+      debug:
+        msg: 'Ansible playbook is working!'
+    
+    - name: Get system info
+      command: uname -a
+      register: system_info
+    
+    - name: Display system info
+      debug:
+        var: system_info.stdout
+    
+    - name: Create test file
+      file:
+        path: /tmp/ansible-test.txt
+        state: touch
+        mode: '0644'
+    
+    - name: Write to test file
+      copy:
+        content: 'Ansible test successful at {{ ansible_date_time.iso8601 }}'
+        dest: /tmp/ansible-test.txt
