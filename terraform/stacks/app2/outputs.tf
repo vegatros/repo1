@@ -25,10 +25,10 @@ output "node_group_id" {
 
 output "helm_release_name" {
   description = "Helm release name"
-  value       = helm_release.app.name
+  value       = var.enable_helm_deployment ? helm_release.app[0].name : null
 }
 
 output "helm_release_status" {
   description = "Helm release status"
-  value       = helm_release.app.status
+  value       = var.enable_helm_deployment ? helm_release.app[0].status : null
 }
