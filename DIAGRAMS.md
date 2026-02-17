@@ -520,32 +520,6 @@ graph TB
     style End fill:#757575
 ```
 
-### Parallel Execution Strategy
-
-```mermaid
-gantt
-    title Terraform Workflow Execution Timeline
-    dateFormat  YYYY-MM-DD
-    section Checkout & Auth
-    Checkout Code           :a1, 2024-01-01, 1d
-    AWS Authentication      :a2, after a1, 1d
-    
-    section Security Scans
-    Checkov Scan           :b1, after a2, 1d
-    SonarCloud Scan        :b2, after b1, 1d
-    
-    section App1 Deployment
-    Init App1              :c1, after b2, 1d
-    Plan App1              :c2, after c1, 1d
-    Apply App1             :c3, after c2, 1d
-    
-    section App2 Deployment
-    Init App2              :d1, after b2, 1d
-    Plan App2              :d2, after d1, 1d
-    Apply App2             :d3, after d2, 1d
-```
-```
-
 ---
 
 ## Workflow Permissions Model
