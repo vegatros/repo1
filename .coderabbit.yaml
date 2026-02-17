@@ -1,0 +1,36 @@
+language: en-US
+early_access: false
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+  path_filters:
+    - "!**/*.md"
+    - "!**/*.txt"
+  path_instructions:
+    - path: "terraform/**/*.tf"
+      instructions: |
+        - Review Terraform configurations for security best practices
+        - Check for hardcoded credentials or sensitive data
+        - Verify resource naming conventions
+        - Ensure proper tagging strategy
+        - Check for cost optimization opportunities
+    - path: ".github/workflows/*.yml"
+      instructions: |
+        - Review GitHub Actions workflows for security
+        - Check for proper secret management
+        - Verify workflow permissions are minimal
+        - Ensure proper error handling
+    - path: "**/*.yml"
+      instructions: |
+        - Review Ansible playbooks for idempotency
+        - Check for security best practices
+        - Verify proper error handling
+chat:
+  auto_reply: true
