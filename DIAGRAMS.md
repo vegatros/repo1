@@ -652,33 +652,6 @@ graph LR
 
 ---
 
-## How to View These Diagrams
-
-### On GitHub
-Simply view this file on GitHub - Mermaid diagrams render automatically in markdown files.
-
-### Using Mermaid Live Editor
-1. Visit https://mermaid.live/
-2. Copy any diagram code block
-3. Paste into the editor
-4. Export as PNG or SVG
-
-### Using VS Code
-1. Install "Markdown Preview Mermaid Support" extension
-2. Open this file
-3. Use Ctrl+Shift+V (Cmd+Shift+V on Mac) for preview
-
-### Using CLI
-```bash
-# Install mermaid-cli
-npm install -g @mermaid-js/mermaid-cli
-
-# Generate PNG from markdown
-mmdc -i DIAGRAMS.md -o diagrams.pdf
-```
-
----
-
 ## Diagram Legend
 
 - 🟢 **Green**: Start/Success states
@@ -687,12 +660,3 @@ mmdc -i DIAGRAMS.md -o diagrams.pdf
 - 🔴 **Red**: Error/Failure states
 - 🟣 **Purple**: Deployment/Critical actions
 - ⬜ **Gray**: End/Cancelled states
-
----
-
-## Additional Resources
-
-- [Mermaid Documentation](https://mermaid.js.org/)
-- [Terraform Documentation](https://www.terraform.io/docs)
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [AWS OIDC Documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html)
