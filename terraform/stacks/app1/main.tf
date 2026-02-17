@@ -21,6 +21,7 @@ module "ec2" {
   subnet_ids     = module.vpc.public_subnet_ids
   instance_type  = var.instance_type
   instance_count = var.instance_count
+  key_name       = var.key_name
 
   user_data = <<-EOF
               #!/bin/bash

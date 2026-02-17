@@ -32,3 +32,9 @@ variable "instance_count" {
   type        = number
   default     = 1
 }
+
+variable "key_name" {
+  description = "EC2 key pair name"
+  type        = string
+  default     = ""
+}
