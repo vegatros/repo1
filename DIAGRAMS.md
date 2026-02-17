@@ -134,16 +134,6 @@ sequenceDiagram
         GHA->>S3: Update state file
     end
 ```
-        GH-->>Dev: Notify developer
-    else Push to Master
-        GHA->>GH: Create approval issue
-        GH-->>Dev: Request approval
-        Dev->>GH: Approve deployment
-        GHA->>AWS: terraform apply
-        AWS-->>GHA: Resources created
-        GHA->>S3: Update state file
-    end
-```
 
 ---
 
