@@ -22,3 +22,13 @@ output "instance_private_ips" {
   description = "EC2 private IPs"
   value       = module.ec2.instance_private_ips
 }
+
+output "instance_public_ips" {
+  description = "EC2 public IPs"
+  value       = module.ec2.instance_public_ips
+}
+
+output "nginx_url" {
+  description = "Nginx web server URL"
+  value       = length(module.ec2.instance_public_ips) > 0 ? "http://${module.ec2.instance_public_ips[0]}" : "No public IP available"
+}
