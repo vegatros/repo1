@@ -33,13 +33,14 @@ resource "aws_security_group" "ec2" {
 
 # EC2 Instances
 resource "aws_instance" "this" {
-  count                  = var.instance_count
-  ami                    = var.ami_id != "" ? var.ami_id : data.aws_ami.amazon_linux[0].id
-  instance_type          = var.instance_type
-  subnet_id              = var.subnet_ids[count.index % length(var.subnet_ids)]
-  vpc_security_group_ids = [aws_security_group.ec2.id]
-  key_name               = var.key_name != "" ? var.key_name : null
-  user_data              = var.user_data != "" ? var.user_data : null
+  count                       = var.instance_count
+  ami                         = var.ami_id != "" ? var.ami_id : data.aws_ami.amazon_linux[0].id
+  instance_type               = var.instance_type
+  subnet_id                   = var.subnet_ids[count.index % length(var.subnet_ids)]
+  vpc_security_group_ids      = [aws_security_group.ec2.id]
+  key_name                    = var.key_name != "" ? var.key_name : null
+  user_data                   = var.user_data != "" ? var.user_data : null
+  associate_public_ip_address = true
 
   metadata_options {
     http_endpoint = "enabled"
