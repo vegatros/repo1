@@ -32,3 +32,8 @@ output "node_group_arn" {
   description = "EKS node group ARN"
   value       = aws_eks_node_group.main.arn
 }
+
+output "cluster_certificate_authority_data" {
+  description = "Base64 encoded certificate data for cluster"
+  value       = aws_eks_cluster.main.certificate_authority[0].data
+}
