@@ -26,18 +26,13 @@ module "ec2" {
   user_data = <<-EOF
               #!/bin/bash
               dnf update -y
-              dnf install -y epel-release
               dnf install -y ansible git nginx
               
-              # Disable firewall
-              systemctl stop firewalld
-              systemctl disable firewalld
-              
               # Create playbooks directory
-              mkdir -p /home/centos/ansible/playbooks
+              mkdir -p /home/ec2-user/ansible/playbooks
               
               # Create nginx playbook
-              cat > /home/centos/ansible/playbooks/start-nginx.yml << 'PLAYBOOK'
+              cat > /home/ec2-user/ansible/playbooks/start-nginx.yml << 'PLAYBOOK'
               ---
               - name: Configure and start Nginx
                 hosts: localhost
@@ -50,7 +45,7 @@ module "ec2" {
                         <html>
                         <head><title>Ansible Nginx - ${var.project_name}</title></head>
                         <body>
-                          <h1>Nginx on CentOS Stream 9</h1>
+                          <h1>Nginx on Amazon Linux 2023</h1>
                           <p>Environment: ${var.environment}</p>
                           <p>Deployed with Ansible playbook</p>
                         </body>
@@ -66,10 +61,10 @@ module "ec2" {
               PLAYBOOK
               
               # Set ownership
-              chown -R centos:centos /home/centos/ansible
+              chown -R ec2-user:ec2-user /home/ec2-user/ansible
               
               # Run playbook
-              su - centos -c "ansible-playbook /home/centos/ansible/playbooks/start-nginx.yml"
+              su - ec2-user -c "ansible-playbook /home/ec2-user/ansible/playbooks/start-nginx.yml"
               
               echo "Ansible playbook executed successfully" > /var/log/ansible-setup.log
               EOF
