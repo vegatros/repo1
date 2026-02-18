@@ -1,5 +1,5 @@
 # Data source for AMI if not provided
-data "aws_ami" "amazon_linux" {
+data "aws_ami" "default" {
   count       = var.ami_id == "" ? 1 : 0
   most_recent = true
   owners      = ["309956199498"]  # Red Hat owner ID
@@ -55,7 +55,7 @@ resource "aws_security_group" "ec2" {
 # EC2 Instances
 resource "aws_instance" "this" {
   count                       = var.instance_count
-  ami                         = var.ami_id != "" ? var.ami_id : data.aws_ami.amazon_linux[0].id
+  ami                         = var.ami_id != "" ? var.ami_id : data.aws_ami.default[0].id
   instance_type               = var.instance_type
   subnet_id                   = var.subnet_ids[count.index % length(var.subnet_ids)]
   vpc_security_group_ids      = [aws_security_group.ec2.id]
