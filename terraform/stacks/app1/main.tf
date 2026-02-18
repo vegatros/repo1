@@ -29,27 +29,49 @@ module "ec2" {
               dnf install -y epel-release
               dnf install -y ansible git nginx
               
-              # Disable firewall for testing
+              # Disable firewall
               systemctl stop firewalld
               systemctl disable firewalld
               
-              # Start nginx immediately
-              systemctl start nginx
-              systemctl enable nginx
+              # Create playbooks directory
+              mkdir -p /home/centos/playbooks
               
-              # Create custom index page
-              cat > /usr/share/nginx/html/index.html << 'HTML'
-              <html>
-              <head><title>Ansible Nginx - ${var.project_name}</title></head>
-              <body>
-                <h1>Nginx on CentOS Stream 9</h1>
-                <p>Environment: ${var.environment}</p>
-                <p>Deployed with user_data</p>
-              </body>
-              </html>
-              HTML
+              # Create nginx playbook
+              cat > /home/centos/playbooks/start-nginx.yml << 'PLAYBOOK'
+              ---
+              - name: Configure and start Nginx
+                hosts: localhost
+                connection: local
+                become: yes
+                tasks:
+                  - name: Create custom index page
+                    copy:
+                      content: |
+                        <html>
+                        <head><title>Ansible Nginx - ${var.project_name}</title></head>
+                        <body>
+                          <h1>Nginx on CentOS Stream 9</h1>
+                          <p>Environment: ${var.environment}</p>
+                          <p>Deployed with Ansible playbook</p>
+                        </body>
+                        </html>
+                      dest: /usr/share/nginx/html/index.html
+                      mode: '0644'
+                  
+                  - name: Start and enable nginx
+                    service:
+                      name: nginx
+                      state: started
+                      enabled: yes
+              PLAYBOOK
               
-              echo "Nginx setup complete on CentOS" > /var/log/ansible-setup.log
+              # Set ownership
+              chown -R centos:centos /home/centos/playbooks
+              
+              # Run playbook
+              su - centos -c "ansible-playbook /home/centos/playbooks/start-nginx.yml"
+              
+              echo "Ansible playbook executed successfully" > /var/log/ansible-setup.log
               EOF
 
   tags = {
