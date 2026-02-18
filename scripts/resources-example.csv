@@ -1,0 +1,4 @@
+ResourceId,Environment,Owner,Project,CostCenter
+i-0aab0be4d9de1ee1d,dev,admin,myapp,12345
+i-0d8c85f327440cdbf,qa,devops,myapp,12345
+i-0008f4589f654810c,prod,ops,myapp,12345
