@@ -26,25 +26,21 @@ module "ec2" {
   user_data = <<-EOF
               #!/bin/bash
               dnf update -y
-              dnf install -y ansible git
+              dnf install -y epel-release
+              dnf install -y ansible git nginx
               
               # Create playbooks directory
-              mkdir -p /home/ec2-user/playbooks
+              mkdir -p /home/centos/playbooks
               
               # Create nginx playbook
-              cat > /home/ec2-user/playbooks/install-nginx.yml << 'PLAYBOOK'
+              cat > /home/centos/playbooks/install-nginx.yml << 'PLAYBOOK'
               ---
               - name: Install and configure Nginx
                 hosts: localhost
                 connection: local
                 become: yes
                 tasks:
-                  - name: Install nginx
-                    dnf:
-                      name: nginx
-                      state: present
-                  
-                  - name: Start nginx service
+                  - name: Ensure nginx is started
                     service:
                       name: nginx
                       state: started
@@ -56,7 +52,7 @@ module "ec2" {
                         <html>
                         <head><title>Ansible Nginx - ${var.project_name}</title></head>
                         <body>
-                          <h1>Nginx on Red Hat Enterprise Linux</h1>
+                          <h1>Nginx on CentOS Stream 9</h1>
                           <p>Environment: ${var.environment}</p>
                           <p>Deployed with Ansible</p>
                         </body>
@@ -66,12 +62,12 @@ module "ec2" {
               PLAYBOOK
               
               # Set ownership
-              chown -R ec2-user:ec2-user /home/ec2-user/playbooks
+              chown -R centos:centos /home/centos/playbooks
               
               # Run nginx playbook
-              su - ec2-user -c "ansible-playbook /home/ec2-user/playbooks/install-nginx.yml"
+              su - centos -c "ansible-playbook /home/centos/playbooks/install-nginx.yml"
               
-              echo "Ansible and Nginx setup complete on RHEL" > /var/log/ansible-setup.log
+              echo "Ansible and Nginx setup complete on CentOS" > /var/log/ansible-setup.log
               EOF
 
   tags = {
