@@ -2,11 +2,11 @@
 data "aws_ami" "default" {
   count       = var.ami_id == "" ? 1 : 0
   most_recent = true
-  owners      = ["125523088429"]  # CentOS official owner ID
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["CentOS Stream 9 x86_64*"]
+    values = ["al2023-ami-*-x86_64"]
   }
 
   filter {
