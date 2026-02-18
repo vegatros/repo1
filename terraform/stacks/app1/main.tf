@@ -28,25 +28,28 @@ module "ec2" {
               dnf update -y
               dnf install -y nginx
               
-              # Create custom index page
-              cat > /usr/share/nginx/html/index.html << 'HTML'
-              <html>
-              <head><title>Nginx - ${var.project_name}</title></head>
+              # Create a simple index.html
+              cat > /usr/share/nginx/html/index.html <<EOF
+              <!DOCTYPE html>
+              <html lang="en">
+              <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Welcome</title>
+              </head>
               <body>
-                <h1>Nginx on CentOS Stream 9</h1>
-                <p>Environment: ${var.environment}</p>
-                <p>Auto-started on boot</p>
+              <h1>Hello from EC2!</h1>
+              <p>Nginx is running successfully.</p>
               </body>
               </html>
-              HTML
+              EOF
               
               # Start and enable nginx
               systemctl start nginx
               systemctl enable nginx
               
-              # Disable firewall
-              systemctl stop firewalld
-              systemctl disable firewalld
+              firewall-cmd --permanent --add-port=80/tcp
+              firewall-cmd --reload
               
               echo "Nginx configured and started" > /var/log/nginx-setup.log
               EOF
