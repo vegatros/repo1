@@ -29,45 +29,27 @@ module "ec2" {
               dnf install -y epel-release
               dnf install -y ansible git nginx
               
-              # Create playbooks directory
-              mkdir -p /home/centos/playbooks
+              # Disable firewall for testing
+              systemctl stop firewalld
+              systemctl disable firewalld
               
-              # Create nginx playbook
-              cat > /home/centos/playbooks/install-nginx.yml << 'PLAYBOOK'
-              ---
-              - name: Install and configure Nginx
-                hosts: localhost
-                connection: local
-                become: yes
-                tasks:
-                  - name: Ensure nginx is started
-                    service:
-                      name: nginx
-                      state: started
-                      enabled: yes
-                  
-                  - name: Create custom index page
-                    copy:
-                      content: |
-                        <html>
-                        <head><title>Ansible Nginx - ${var.project_name}</title></head>
-                        <body>
-                          <h1>Nginx on CentOS Stream 9</h1>
-                          <p>Environment: ${var.environment}</p>
-                          <p>Deployed with Ansible</p>
-                        </body>
-                        </html>
-                      dest: /usr/share/nginx/html/index.html
-                      mode: '0644'
-              PLAYBOOK
+              # Start nginx immediately
+              systemctl start nginx
+              systemctl enable nginx
               
-              # Set ownership
-              chown -R centos:centos /home/centos/playbooks
+              # Create custom index page
+              cat > /usr/share/nginx/html/index.html << 'HTML'
+              <html>
+              <head><title>Ansible Nginx - ${var.project_name}</title></head>
+              <body>
+                <h1>Nginx on CentOS Stream 9</h1>
+                <p>Environment: ${var.environment}</p>
+                <p>Deployed with user_data</p>
+              </body>
+              </html>
+              HTML
               
-              # Run nginx playbook
-              su - centos -c "ansible-playbook /home/centos/playbooks/install-nginx.yml"
-              
-              echo "Ansible and Nginx setup complete on CentOS" > /var/log/ansible-setup.log
+              echo "Nginx setup complete on CentOS" > /var/log/ansible-setup.log
               EOF
 
   tags = {
