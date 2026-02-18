@@ -25,9 +25,8 @@ module "ec2" {
 
   user_data = <<-EOF
               #!/bin/bash
-              yum update -y
-              amazon-linux-extras install ansible2 -y
-              yum install -y git
+              dnf update -y
+              dnf install -y ansible git
               
               # Create playbooks directory
               mkdir -p /home/ec2-user/playbooks
@@ -40,12 +39,8 @@ module "ec2" {
                 connection: local
                 become: yes
                 tasks:
-                  - name: Enable nginx in amazon-linux-extras
-                    command: amazon-linux-extras enable nginx1
-                    changed_when: false
-                  
                   - name: Install nginx
-                    yum:
+                    dnf:
                       name: nginx
                       state: present
                   
@@ -61,8 +56,9 @@ module "ec2" {
                         <html>
                         <head><title>Ansible Nginx - ${var.project_name}</title></head>
                         <body>
-                          <h1>Nginx installed via Ansible on ${var.environment}</h1>
-                          <p>Deployed automatically during EC2 launch</p>
+                          <h1>Nginx on Red Hat Enterprise Linux</h1>
+                          <p>Environment: ${var.environment}</p>
+                          <p>Deployed with Ansible</p>
                         </body>
                         </html>
                       dest: /usr/share/nginx/html/index.html
@@ -75,7 +71,7 @@ module "ec2" {
               # Run nginx playbook
               su - ec2-user -c "ansible-playbook /home/ec2-user/playbooks/install-nginx.yml"
               
-              echo "Ansible and Nginx setup complete" > /var/log/ansible-setup.log
+              echo "Ansible and Nginx setup complete on RHEL" > /var/log/ansible-setup.log
               EOF
 
   tags = {
