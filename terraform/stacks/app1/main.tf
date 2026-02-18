@@ -34,10 +34,10 @@ module "ec2" {
               systemctl disable firewalld
               
               # Create playbooks directory
-              mkdir -p /home/centos/playbooks
+              mkdir -p /home/centos/ansible/playbooks
               
               # Create nginx playbook
-              cat > /home/centos/playbooks/start-nginx.yml << 'PLAYBOOK'
+              cat > /home/centos/ansible/playbooks/start-nginx.yml << 'PLAYBOOK'
               ---
               - name: Configure and start Nginx
                 hosts: localhost
@@ -66,10 +66,10 @@ module "ec2" {
               PLAYBOOK
               
               # Set ownership
-              chown -R centos:centos /home/centos/playbooks
+              chown -R centos:centos /home/centos/ansible
               
               # Run playbook
-              su - centos -c "ansible-playbook /home/centos/playbooks/start-nginx.yml"
+              su - centos -c "ansible-playbook /home/centos/ansible/playbooks/start-nginx.yml"
               
               echo "Ansible playbook executed successfully" > /var/log/ansible-setup.log
               EOF
