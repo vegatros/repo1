@@ -2,11 +2,11 @@
 data "aws_ami" "default" {
   count       = var.ami_id == "" ? 1 : 0
   most_recent = true
-  owners      = ["309956199498"]  # Red Hat owner ID
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["RHEL-9*_HVM-*-x86_64-*"]
+    values = ["al2023-ami-*-x86_64"]
   }
 
   filter {
