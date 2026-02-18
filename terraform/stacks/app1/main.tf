@@ -26,7 +26,7 @@ module "ec2" {
   user_data = <<-EOF
               #!/bin/bash
               dnf update -y
-              dnf install -y nginx
+              dnf install -y nginx firewalld
               
               # Create custom index page
               cat > /usr/share/nginx/html/index.html << 'HTML'
@@ -50,6 +50,7 @@ module "ec2" {
               systemctl enable nginx
               
               # Configure firewall
+              systemctl start firewalld
               firewall-cmd --permanent --add-port=80/tcp
               firewall-cmd --reload
               
