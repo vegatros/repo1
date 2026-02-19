@@ -16,9 +16,9 @@
       --accent: #C8441A;
       --line: #D8D4CC;
       --card: #EFECE6;
-      --dark: #141210;
-      --dark-card: #1E1C18;
-      --dark-line: #2E2C28;
+      --dark: #2A2825;
+      --dark-card: #343230;
+      --dark-line: #48443E;
     }
 
     html { font-size: 16px; scroll-behavior: smooth; }
@@ -42,7 +42,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1.25rem 3rem;
+      padding: 1.25rem 4rem;
       background: rgba(247, 245, 240, 0.92);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--line);
@@ -51,6 +51,7 @@
       font-family: 'DM Serif Display', serif;
       font-size: 1.1rem;
       letter-spacing: -0.01em;
+      cursor: pointer;
     }
     .nav-logo em { font-style: italic; color: var(--accent); }
     .nav-links {
@@ -85,13 +86,16 @@
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      padding: 8rem 3rem 5rem;
+      padding: 8rem 4rem 5rem;
+      max-width: 1000px;
+      margin: 0 auto;
+      width: 100%;
       border-bottom: 1px solid var(--line);
       position: relative;
       overflow: hidden;
     }
     .hero-grid-bg {
-      position: absolute;
+      position: fixed;
       inset: 0;
       background-image:
         linear-gradient(var(--line) 1px, transparent 1px),
@@ -99,6 +103,8 @@
       background-size: 60px 60px;
       opacity: 0.35;
       mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+      pointer-events: none;
+      z-index: -1;
     }
     .hero-eyebrow {
       font-family: 'DM Mono', monospace;
@@ -165,7 +171,7 @@
     .btn-secondary:hover { border-color: var(--ink); color: var(--ink); }
     .hero-stats {
       position: absolute;
-      right: 3rem;
+      right: 4rem;
       bottom: 5rem;
       display: flex;
       flex-direction: column;
@@ -192,8 +198,11 @@
 
     /* SECTIONS */
     .section {
-      padding: 5rem 3rem;
+      padding: 4rem 4rem;
       border-bottom: 1px solid var(--line);
+      max-width: 1000px;
+      margin: 0 auto;
+      width: 100%;
     }
     .section-label {
       font-family: 'DM Mono', monospace;
@@ -293,8 +302,13 @@
     .section-dark {
       background: var(--dark);
       color: var(--bg);
-      padding: 5rem 3rem;
+      padding: 4rem 0;
       border-bottom: 1px solid var(--dark-line);
+    }
+    .section-dark .inner {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 4rem;
     }
     .section-dark .section-label { color: var(--accent); }
     .section-dark .section-heading { color: var(--bg); }
@@ -331,7 +345,7 @@
       font-size: 0.68rem;
       padding: 0.3rem 0.7rem;
       border: 1px solid var(--dark-line);
-      color: #9A9690;
+      color: #C8C4BE;
       transition: all 0.2s;
     }
     .tag:hover { border-color: var(--accent); color: var(--bg); }
@@ -415,7 +429,7 @@
     .cta-section {
       background: var(--ink);
       color: var(--bg);
-      padding: 6rem 3rem;
+      padding: 5rem 4rem;
       text-align: center;
     }
     .cta-section .section-label { color: var(--accent); display: block; }
@@ -452,17 +466,21 @@
 
     /* FOOTER */
     footer {
-      padding: 2rem 3rem;
+      padding: 2rem 4rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
       gap: 1rem;
       border-top: 1px solid var(--line);
+      max-width: 1000px;
+      margin: 0 auto;
+      width: 100%;
     }
     .footer-logo {
       font-family: 'DM Serif Display', serif;
       font-size: 0.95rem;
+      cursor: pointer;
     }
     .footer-logo em { font-style: italic; color: var(--accent); }
     footer span, footer a {
@@ -497,7 +515,8 @@
       .hero { padding: 7rem 1.5rem 4rem; }
       .hero-stats { position: static; flex-direction: row; margin-top: 3rem; flex-wrap: wrap; }
       .stat-item { text-align: left; }
-      .section, .section-dark { padding: 3.5rem 1.5rem; }
+      .section { padding: 3rem 1.5rem; }
+      .section-dark .inner { padding: 0 1.5rem; }
       .why-grid { grid-template-columns: 1fr; gap: 0; }
       .results-strip { grid-template-columns: 1fr 1fr; }
       .expertise-row { grid-template-columns: 1fr; }
@@ -512,7 +531,7 @@
 
   <!-- NAV -->
   <nav>
-    <div class="nav-logo">Cloud<em>Conscious</em>.io</div>
+    <a href="#" class="nav-logo">Cloud<em>Conscious</em>.io</a>
     <ul class="nav-links">
       <li><a href="#services">Services</a></li>
       <li><a href="#expertise">Expertise</a></li>
@@ -526,9 +545,9 @@
   <!-- HERO -->
   <section class="hero">
     <div class="hero-grid-bg"></div>
-    <div class="hero-eyebrow">Cloud Engineering · Architecture · DevSecOps</div>
+    <div class="hero-eyebrow">Cloud Engineering &middot; Architecture &middot; DevSecOps</div>
     <h1>Infrastructure built<br>with <em>intention.</em></h1>
-    <p class="hero-sub">Expert cloud consulting for enterprises that demand precision — from greenfield architecture to compliance automation and cost optimization.</p>
+    <p class="hero-sub">Expert cloud consulting for enterprises that demand precision &mdash; from greenfield architecture to compliance automation and cost optimization.</p>
     <div class="hero-actions">
       <a href="#contact" class="btn-primary">Start a Conversation</a>
       <a href="#services" class="btn-secondary">View Services</a>
@@ -552,7 +571,7 @@
   <!-- SERVICES -->
   <section class="section" id="services">
     <div class="section-label reveal">What I Do</div>
-    <h2 class="section-heading reveal">End-to-end cloud engineering — from <em>architecture</em> to operations.</h2>
+    <h2 class="section-heading reveal">End-to-end cloud engineering &mdash; from <em>architecture</em> to operations.</h2>
     <div class="services-grid reveal">
       <div class="service-card">
         <div class="service-icon">Architecture</div>
@@ -567,7 +586,7 @@
       <div class="service-card">
         <div class="service-icon">Security</div>
         <div class="service-name">Cloud Security &amp; Compliance</div>
-        <p class="service-desc">CIS, PCI-DSS, SOC2, and NIST posture hardening. Policy as Code enforcement with Checkov, OPA, and Wiz — continuous compliance, not periodic audits.</p>
+        <p class="service-desc">CIS, PCI-DSS, SOC2, and NIST posture hardening. Policy as Code enforcement with Checkov, OPA, and Wiz &mdash; continuous compliance, not periodic audits.</p>
       </div>
       <div class="service-card">
         <div class="service-icon">DevOps</div>
@@ -582,7 +601,7 @@
       <div class="service-card">
         <div class="service-icon">Reliability</div>
         <div class="service-name">Site Reliability &amp; DR</div>
-        <p class="service-desc">SRE practices, multi-region disaster recovery, incident response frameworks, and observability stacks — built for operations teams that can't afford downtime.</p>
+        <p class="service-desc">SRE practices, multi-region disaster recovery, incident response frameworks, and observability stacks &mdash; built for operations teams that can&rsquo;t afford downtime.</p>
       </div>
     </div>
   </section>
@@ -611,75 +630,77 @@
 
   <!-- EXPERTISE DARK -->
   <section class="section-dark" id="expertise">
-    <div class="section-label reveal">Technical Depth</div>
-    <h2 class="section-heading reveal">Hands-on expertise across the <em>full stack</em> of cloud.</h2>
-    <div class="expertise-row reveal">
-      <div class="expertise-cell">
-        <div class="expertise-label">AWS — 12 Years</div>
-        <div class="expertise-tags">
-          <span class="tag">EC2</span>
-          <span class="tag">Lambda</span>
-          <span class="tag">S3</span>
-          <span class="tag">RDS / Aurora</span>
-          <span class="tag">DynamoDB</span>
-          <span class="tag">EKS</span>
-          <span class="tag">CloudFront</span>
-          <span class="tag">Route 53</span>
-          <span class="tag">Control Tower</span>
-          <span class="tag">GuardDuty</span>
-          <span class="tag">WAF</span>
-          <span class="tag">IAM</span>
-          <span class="tag">KMS</span>
-          <span class="tag">AWS Backup</span>
-          <span class="tag">DRS</span>
+    <div class="inner">
+      <div class="section-label reveal">Technical Depth</div>
+      <h2 class="section-heading reveal">Hands-on expertise across the <em>full stack</em> of cloud.</h2>
+      <div class="expertise-row reveal">
+        <div class="expertise-cell">
+          <div class="expertise-label">AWS &mdash; 12 Years</div>
+          <div class="expertise-tags">
+            <span class="tag">EC2</span>
+            <span class="tag">Lambda</span>
+            <span class="tag">S3</span>
+            <span class="tag">RDS / Aurora</span>
+            <span class="tag">DynamoDB</span>
+            <span class="tag">EKS</span>
+            <span class="tag">CloudFront</span>
+            <span class="tag">Route 53</span>
+            <span class="tag">Control Tower</span>
+            <span class="tag">GuardDuty</span>
+            <span class="tag">WAF</span>
+            <span class="tag">IAM</span>
+            <span class="tag">KMS</span>
+            <span class="tag">AWS Backup</span>
+            <span class="tag">DRS</span>
+          </div>
         </div>
-      </div>
-      <div class="expertise-cell">
-        <div class="expertise-label">Azure — 2 Years</div>
-        <div class="expertise-tags">
-          <span class="tag">Entra ID</span>
-          <span class="tag">AKS</span>
-          <span class="tag">VMs</span>
-          <span class="tag">KeyVault</span>
-          <span class="tag">Azure Policy</span>
-          <span class="tag">App Service</span>
-          <span class="tag">Azure DevOps</span>
-          <span class="tag">ASR</span>
-          <span class="tag">ARM</span>
+        <div class="expertise-cell">
+          <div class="expertise-label">Azure &mdash; 2 Years</div>
+          <div class="expertise-tags">
+            <span class="tag">Entra ID</span>
+            <span class="tag">AKS</span>
+            <span class="tag">VMs</span>
+            <span class="tag">KeyVault</span>
+            <span class="tag">Azure Policy</span>
+            <span class="tag">App Service</span>
+            <span class="tag">Azure DevOps</span>
+            <span class="tag">ASR</span>
+            <span class="tag">ARM</span>
+          </div>
         </div>
-      </div>
-      <div class="expertise-cell">
-        <div class="expertise-label">Security &amp; Compliance</div>
-        <div class="expertise-tags">
-          <span class="tag">Wiz</span>
-          <span class="tag">Checkov</span>
-          <span class="tag">CyberArk</span>
-          <span class="tag">Okta</span>
-          <span class="tag">SailPoint</span>
-          <span class="tag">Duo</span>
-          <span class="tag">PCI-DSS</span>
-          <span class="tag">SOC2</span>
-          <span class="tag">CIS</span>
-          <span class="tag">NIST</span>
-          <span class="tag">CNAPP</span>
-          <span class="tag">CSPM</span>
+        <div class="expertise-cell">
+          <div class="expertise-label">Security &amp; Compliance</div>
+          <div class="expertise-tags">
+            <span class="tag">Wiz</span>
+            <span class="tag">Checkov</span>
+            <span class="tag">CyberArk</span>
+            <span class="tag">Okta</span>
+            <span class="tag">SailPoint</span>
+            <span class="tag">Duo</span>
+            <span class="tag">PCI-DSS</span>
+            <span class="tag">SOC2</span>
+            <span class="tag">CIS</span>
+            <span class="tag">NIST</span>
+            <span class="tag">CNAPP</span>
+            <span class="tag">CSPM</span>
+          </div>
         </div>
-      </div>
-      <div class="expertise-cell">
-        <div class="expertise-label">IaC, DevOps &amp; Observability</div>
-        <div class="expertise-tags">
-          <span class="tag">Terraform</span>
-          <span class="tag">CloudFormation</span>
-          <span class="tag">Docker</span>
-          <span class="tag">Kubernetes</span>
-          <span class="tag">Prometheus</span>
-          <span class="tag">New Relic</span>
-          <span class="tag">Elastic</span>
-          <span class="tag">Atlassian</span>
-          <span class="tag">Octopus</span>
-          <span class="tag">SonarQube</span>
-          <span class="tag">Python</span>
-          <span class="tag">PowerShell</span>
+        <div class="expertise-cell">
+          <div class="expertise-label">IaC, DevOps &amp; Observability</div>
+          <div class="expertise-tags">
+            <span class="tag">Terraform</span>
+            <span class="tag">CloudFormation</span>
+            <span class="tag">Docker</span>
+            <span class="tag">Kubernetes</span>
+            <span class="tag">Prometheus</span>
+            <span class="tag">New Relic</span>
+            <span class="tag">Elastic</span>
+            <span class="tag">Atlassian</span>
+            <span class="tag">Octopus</span>
+            <span class="tag">SonarQube</span>
+            <span class="tag">Python</span>
+            <span class="tag">PowerShell</span>
+          </div>
         </div>
       </div>
     </div>
@@ -693,7 +714,7 @@
       <div class="why-item">
         <div class="why-number">01</div>
         <div class="why-title">Banking-grade rigour</div>
-        <p class="why-body">Five years as Lead AWS Engineer at a major bank means every architecture decision is made with compliance, auditability, and regulatory risk in mind — not just performance.</p>
+        <p class="why-body">Five years as Lead AWS Engineer at a major bank means every architecture decision is made with compliance, auditability, and regulatory risk in mind &mdash; not just performance.</p>
       </div>
       <div class="why-item">
         <div class="why-number">02</div>
@@ -703,12 +724,12 @@
       <div class="why-item">
         <div class="why-number">03</div>
         <div class="why-title">Proven cost discipline</div>
-        <p class="why-body">FinOps isn't an afterthought — it's baked into architecture decisions from day one. With $1M in documented savings, cost consciousness is in the name for a reason.</p>
+        <p class="why-body">FinOps isn&rsquo;t an afterthought &mdash; it&rsquo;s baked into architecture decisions from day one. With $1M in documented savings, cost consciousness is in the name for a reason.</p>
       </div>
       <div class="why-item">
         <div class="why-number">04</div>
         <div class="why-title">End-to-end ownership</div>
-        <p class="why-body">From initial architecture through deployment, hardening, DR testing, and documentation — full delivery without hand-off gaps or finger-pointing between teams.</p>
+        <p class="why-body">From initial architecture through deployment, hardening, DR testing, and documentation &mdash; full delivery without hand-off gaps or finger-pointing between teams.</p>
       </div>
     </div>
   </section>
@@ -722,9 +743,9 @@
         <div class="process-num">01</div>
         <div>
           <div class="process-title">Discovery &amp; Assessment</div>
-          <p class="process-body">Audit your current cloud footprint — architecture, spend, security posture, and gaps. Produce a prioritized roadmap aligned to your business objectives.</p>
+          <p class="process-body">Audit your current cloud footprint &mdash; architecture, spend, security posture, and gaps. Produce a prioritized roadmap aligned to your business objectives.</p>
         </div>
-        <span class="process-tag">Week 1–2</span>
+        <span class="process-tag">Week 1&ndash;2</span>
       </div>
       <div class="process-item">
         <div class="process-num">02</div>
@@ -732,7 +753,7 @@
           <div class="process-title">Architecture Design</div>
           <p class="process-body">Design the target-state architecture with full documentation, network topologies, and well-architected framework review before a single resource is deployed.</p>
         </div>
-        <span class="process-tag">Week 2–4</span>
+        <span class="process-tag">Week 2&ndash;4</span>
       </div>
       <div class="process-item">
         <div class="process-num">03</div>
@@ -740,7 +761,7 @@
           <div class="process-title">IaC Implementation</div>
           <p class="process-body">Build the full Terraform codebase, CI/CD pipelines, and module library. Everything reproducible, peer-reviewed, and state-managed from the start.</p>
         </div>
-        <span class="process-tag">Week 4–8</span>
+        <span class="process-tag">Week 4&ndash;8</span>
       </div>
       <div class="process-item">
         <div class="process-num">04</div>
@@ -765,18 +786,18 @@
   <section class="cta-section" id="contact">
     <div class="section-label">Get Started</div>
     <h2 class="cta-heading">Ready to build cloud infrastructure with <em>intention?</em></h2>
-    <p class="cta-sub">Let's talk about your architecture, compliance challenges, or cost optimization goals. No obligation, no sales pitch.</p>
-    <a href="mailto:cadams10101&#64;gmail.com" class="cta-email">cadams10101&#64;gmail.com</a>
+    <p class="cta-sub">Let&rsquo;s talk about your architecture, compliance challenges, or cost optimization goals. No obligation, no sales pitch.</p>
+    <a href="mailto:cadams10101@gmail.com" class="cta-email">cadams10101@gmail.com</a>
   </section>
 
   <!-- FOOTER -->
   <footer>
-    <div class="footer-logo">Cloud<em>Conscious</em>.io</div>
+    <a href="#" class="footer-logo">Cloud<em>Conscious</em>.io</a>
     <div class="footer-links">
       <a href="https://linkedin.com/in/cada5000" target="_blank">LinkedIn</a>
-      <a href="mailto:cadams10101&#64;gmail.com">Email</a>
+      <a href="mailto:cadams10101@gmail.com">Email</a>
     </div>
-    <span>&#169; 2026 CloudConscious.io</span>
+    <span>&copy; 2026 CloudConscious.io</span>
   </footer>
 
   <script>
@@ -793,8 +814,14 @@
 
     document.querySelectorAll('a[href^="#"]').forEach(a => {
       a.addEventListener('click', e => {
-        const target = document.querySelector(a.getAttribute('href'));
-        if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
+        const href = a.getAttribute('href');
+        if (href === '#') {
+          e.preventDefault();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          const target = document.querySelector(href);
+          if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
+        }
       });
     });
   </script>
