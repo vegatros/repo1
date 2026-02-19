@@ -16,9 +16,9 @@
       --accent: #C8441A;
       --line: #D8D4CC;
       --card: #EFECE6;
-      --dark: #2A2825;
-      --dark-card: #343230;
-      --dark-line: #48443E;
+      --dark: #141210;
+      --dark-card: #1E1C18;
+      --dark-line: #2E2C28;
     }
 
     html { font-size: 16px; scroll-behavior: smooth; }
@@ -39,13 +39,17 @@
       position: fixed;
       top: 0; left: 0; right: 0;
       z-index: 100;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1.25rem 4rem;
       background: rgba(247, 245, 240, 0.92);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--line);
+    }
+    .nav-inner {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 1.25rem 4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     .nav-logo {
       font-family: 'DM Serif Display', serif;
@@ -82,10 +86,9 @@
 
     /* HERO */
     .hero {
-      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
+      justify-content: flex-start;
       padding: 8rem 4rem 5rem;
       max-width: 1000px;
       margin: 0 auto;
@@ -118,7 +121,7 @@
     }
     .hero h1 {
       font-family: 'DM Serif Display', serif;
-      font-size: clamp(3.2rem, 7vw, 6.5rem);
+      font-size: clamp(2rem, 4vw, 3.5rem);
       font-weight: 400;
       line-height: 1.0;
       letter-spacing: -0.03em;
@@ -170,16 +173,14 @@
     }
     .btn-secondary:hover { border-color: var(--ink); color: var(--ink); }
     .hero-stats {
-      position: absolute;
-      right: 4rem;
-      bottom: 5rem;
       display: flex;
-      flex-direction: column;
-      gap: 2rem;
+      flex-direction: row;
+      gap: 3rem;
+      margin-top: 3rem;
       opacity: 0;
       animation: fadeUp 0.8s 0.55s ease forwards;
     }
-    .stat-item { text-align: right; }
+    .stat-item { text-align: left; }
     .stat-number {
       font-family: 'DM Serif Display', serif;
       font-size: 2.8rem;
@@ -345,7 +346,7 @@
       font-size: 0.68rem;
       padding: 0.3rem 0.7rem;
       border: 1px solid var(--dark-line);
-      color: #C8C4BE;
+      color: #9A9690;
       transition: all 0.2s;
     }
     .tag:hover { border-color: var(--accent); color: var(--bg); }
@@ -510,7 +511,8 @@
 
     /* RESPONSIVE */
     @media (max-width: 768px) {
-      nav { padding: 1rem 1.5rem; }
+      nav { padding: 0; }
+      .nav-inner { padding: 1rem 1.5rem; }
       .nav-links { display: none; }
       .hero { padding: 7rem 1.5rem 4rem; }
       .hero-stats { position: static; flex-direction: row; margin-top: 3rem; flex-wrap: wrap; }
@@ -531,21 +533,22 @@
 
   <!-- NAV -->
   <nav>
-    <a href="#" class="nav-logo">Cloud<em>Conscious</em>.io</a>
-    <ul class="nav-links">
-      <li><a href="#services">Services</a></li>
-      <li><a href="#expertise">Expertise</a></li>
-      <li><a href="#process">Process</a></li>
-      <li><a href="#contact">Contact</a></li>
-      <li><a href="resume.html">Resume</a></li>
-    </ul>
-    <a href="#contact" class="nav-cta">Get in Touch</a>
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">Cloud<em>Conscious</em>.io</a>
+      <ul class="nav-links">
+        <li><a href="#services">Services</a></li>
+        <li><a href="#expertise">Expertise</a></li>
+        <li><a href="#process">Process</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a href="resume.html">Resume</a></li>
+      </ul>
+      <a href="#contact" class="nav-cta">Get in Touch</a>
+    </div>
   </nav>
 
   <!-- HERO -->
   <section class="hero">
     <div class="hero-grid-bg"></div>
-    <div class="hero-eyebrow">Cloud Engineering &middot; Architecture &middot; DevSecOps</div>
     <h1>Infrastructure built<br>with <em>intention.</em></h1>
     <p class="hero-sub">Expert cloud consulting for enterprises that demand precision &mdash; from greenfield architecture to compliance automation and cost optimization.</p>
     <div class="hero-actions">
@@ -787,7 +790,7 @@
     <div class="section-label">Get Started</div>
     <h2 class="cta-heading">Ready to build cloud infrastructure with <em>intention?</em></h2>
     <p class="cta-sub">Let&rsquo;s talk about your architecture, compliance challenges, or cost optimization goals. No obligation, no sales pitch.</p>
-    <a href="mailto:cadams10101@gmail.com" class="cta-email">cadams10101@gmail.com</a>
+    <a href="#" id="cta-email-btn" class="cta-email">cadams10101 at gmail.com</a>
   </section>
 
   <!-- FOOTER -->
@@ -795,12 +798,18 @@
     <a href="#" class="footer-logo">Cloud<em>Conscious</em>.io</a>
     <div class="footer-links">
       <a href="https://linkedin.com/in/cada5000" target="_blank">LinkedIn</a>
-      <a href="mailto:cadams10101@gmail.com">Email</a>
+      <a href="#" id="footer-email-link">Email</a>
     </div>
     <span>&copy; 2026 CloudConscious.io</span>
   </footer>
 
   <script>
+    var u='cadams10101', d='gmail.com', e=u+'@'+d;
+    var btn=document.getElementById('cta-email-btn');
+    if(btn){ btn.href='mailto:'+e; btn.textContent=e; }
+    var fl=document.getElementById('footer-email-link');
+    if(fl){ fl.href='mailto:'+e; }
+
     const reveals = document.querySelectorAll('.reveal');
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry, i) => {
