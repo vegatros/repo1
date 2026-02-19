@@ -4,7 +4,7 @@ module "vpc" {
 
   project_name             = var.project_name
   vpc_cidr                 = var.vpc_cidr
-  enable_nat_gateway       = true
+  enable_nat_gateway       = false
   enable_flow_logs         = false  # Disabled - requires IAM permissions
 
   tags = {
