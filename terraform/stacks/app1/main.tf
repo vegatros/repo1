@@ -28,15 +28,15 @@ module "ec2" {
               dnf update -y
               dnf install -y nginx git
               
-              # Download resume HTML from repository
+              # Download cloudconscious HTML as home page
               curl -o /usr/share/nginx/html/index.html \
-                https://raw.githubusercontent.com/vegatros/q/master/terraform/stacks/app1/html/resume-index.html
+                https://raw.githubusercontent.com/vegatros/q/master/terraform/stacks/app1/html/cloudconscious.html
               
               # Start and enable nginx
               systemctl start nginx
               systemctl enable nginx
               
-              echo "Nginx configured with resume page" > /var/log/nginx-setup.log
+              echo "Nginx configured with cloudconscious home page" > /var/log/nginx-setup.log
               EOF
 
   tags = {
