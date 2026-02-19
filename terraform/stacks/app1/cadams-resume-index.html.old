@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume - C. Adams</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f4f4f4;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        header {
+            text-align: center;
+            border-bottom: 3px solid #2c3e50;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        h1 { color: #2c3e50; font-size: 2.5em; }
+        h2 { color: #34495e; margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
+        h3 { color: #2c3e50; margin-top: 20px; }
+        .contact { margin: 10px 0; }
+        .section { margin-bottom: 30px; }
+        ul { margin-left: 20px; }
+        li { margin-bottom: 8px; }
+        .job { margin-bottom: 25px; }
+        .job-title { font-weight: bold; color: #2c3e50; }
+        .company { color: #3498db; }
+        .date { color: #7f8c8d; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>C. Adams</h1>
+            <div class="contact">
+                <p>Email: cadams@example.com | Phone: (555) 123-4567</p>
+                <p>Location: City, State | LinkedIn: linkedin.com/in/cadams</p>
+            </div>
+        </header>
+
+        <section class="section">
+            <h2>Professional Summary</h2>
+            <p>Experienced DevOps Engineer with expertise in AWS, Terraform, and automation. Proven track record of designing and implementing scalable cloud infrastructure solutions.</p>
+        </section>
+
+        <section class="section">
+            <h2>Skills</h2>
+            <ul>
+                <li><strong>Cloud Platforms:</strong> AWS (EC2, EKS, S3, VPC, IAM)</li>
+                <li><strong>Infrastructure as Code:</strong> Terraform, CloudFormation</li>
+                <li><strong>Configuration Management:</strong> Ansible</li>
+                <li><strong>CI/CD:</strong> GitHub Actions, Jenkins</li>
+                <li><strong>Containers:</strong> Docker, Kubernetes</li>
+                <li><strong>Operating Systems:</strong> Linux (CentOS, Amazon Linux), Windows</li>
+                <li><strong>Scripting:</strong> Bash, PowerShell, Python</li>
+            </ul>
+        </section>
+
+        <section class="section">
+            <h2>Professional Experience</h2>
+            
+            <div class="job">
+                <h3><span class="job-title">Senior DevOps Engineer</span> - <span class="company">Tech Company</span></h3>
+                <p class="date">2020 - Present</p>
+                <ul>
+                    <li>Designed and implemented AWS infrastructure using Terraform</li>
+                    <li>Automated deployment pipelines with GitHub Actions</li>
+                    <li>Managed EKS clusters and containerized applications</li>
+                    <li>Implemented security best practices and compliance standards</li>
+                </ul>
+            </div>
+
+            <div class="job">
+                <h3><span class="job-title">DevOps Engineer</span> - <span class="company">Previous Company</span></h3>
+                <p class="date">2018 - 2020</p>
+                <ul>
+                    <li>Maintained and optimized cloud infrastructure</li>
+                    <li>Developed automation scripts for routine tasks</li>
+                    <li>Collaborated with development teams on CI/CD improvements</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>Education</h2>
+            <p><strong>Bachelor of Science in Computer Science</strong></p>
+            <p>University Name, Year</p>
+        </section>
+
+        <section class="section">
+            <h2>Certifications</h2>
+            <ul>
+                <li>AWS Certified Solutions Architect</li>
+                <li>Certified Kubernetes Administrator (CKA)</li>
+            </ul>
+        </section>
+    </div>
+</body>
+</html>
