@@ -32,6 +32,10 @@ module "ec2" {
               curl -o /usr/share/nginx/html/index.html \
                 https://raw.githubusercontent.com/vegatros/q/master/terraform/stacks/app1/html/cloudconscious.html
               
+              # Download resume page
+              curl -o /usr/share/nginx/html/resume.html \
+                https://raw.githubusercontent.com/vegatros/q/master/terraform/stacks/app1/html/resume-index.html
+              
               # Start and enable nginx
               systemctl start nginx
               systemctl enable nginx
