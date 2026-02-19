@@ -26,24 +26,11 @@ module "ec2" {
   user_data = <<-EOF
               #!/bin/bash
               dnf update -y
-              dnf install -y nginx firewalld
+              dnf install -y nginx firewalld git
               
-              # Create custom index page
-              cat > /usr/share/nginx/html/index.html << 'HTML'
-              <!DOCTYPE html>
-              <html lang="en">
-              <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>Welcome - ${var.project_name}</title>
-              </head>
-              <body>
-              <h1>Hello from CentOS Stream 9!</h1>
-              <p>Environment: ${var.environment}</p>
-              <p>Nginx is running successfully.</p>
-              </body>
-              </html>
-              HTML
+              # Download resume HTML from repository
+              curl -o /usr/share/nginx/html/index.html \
+                https://raw.githubusercontent.com/vegatros/q/master/terraform/stacks/app1/cadams-resume-index.html
               
               # Start and enable nginx
               systemctl start nginx
@@ -54,7 +41,7 @@ module "ec2" {
               firewall-cmd --permanent --add-port=80/tcp
               firewall-cmd --reload
               
-              echo "Nginx configured and started" > /var/log/nginx-setup.log
+              echo "Nginx configured with resume page" > /var/log/nginx-setup.log
               EOF
 
   tags = {
