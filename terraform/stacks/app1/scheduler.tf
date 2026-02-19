@@ -43,14 +43,28 @@ resource "aws_iam_role_policy" "ec2_scheduler" {
   })
 }
 
+# Create Lambda deployment packages
+data "archive_file" "stop_ec2" {
+  type        = "zip"
+  source_file = "${path.module}/schedule/lambda_stop.py"
+  output_path = "${path.module}/schedule/lambda_stop.zip"
+}
+
+data "archive_file" "start_ec2" {
+  type        = "zip"
+  source_file = "${path.module}/schedule/lambda_start.py"
+  output_path = "${path.module}/schedule/lambda_start.zip"
+}
+
 # Lambda function to stop EC2
 resource "aws_lambda_function" "stop_ec2" {
-  filename      = "schedule/lambda_stop.zip"
+  filename      = data.archive_file.stop_ec2.output_path
   function_name = "${var.project_name}-stop-ec2"
   role          = aws_iam_role.ec2_scheduler.arn
-  handler       = "index.handler"
+  handler       = "lambda_stop.handler"
   runtime       = "python3.11"
   timeout       = 60
+  source_code_hash = data.archive_file.stop_ec2.output_base64sha256
 
   environment {
     variables = {
@@ -61,12 +75,13 @@ resource "aws_lambda_function" "stop_ec2" {
 
 # Lambda function to start EC2
 resource "aws_lambda_function" "start_ec2" {
-  filename      = "schedule/lambda_start.zip"
+  filename      = data.archive_file.start_ec2.output_path
   function_name = "${var.project_name}-start-ec2"
   role          = aws_iam_role.ec2_scheduler.arn
-  handler       = "index.handler"
+  handler       = "lambda_start.handler"
   runtime       = "python3.11"
   timeout       = 60
+  source_code_hash = data.archive_file.start_ec2.output_base64sha256
 
   environment {
     variables = {
