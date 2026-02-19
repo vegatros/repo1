@@ -45,7 +45,7 @@ resource "aws_iam_role_policy" "ec2_scheduler" {
 
 # Lambda function to stop EC2
 resource "aws_lambda_function" "stop_ec2" {
-  filename      = "lambda_stop.zip"
+  filename      = "schedule/lambda_stop.zip"
   function_name = "${var.project_name}-stop-ec2"
   role          = aws_iam_role.ec2_scheduler.arn
   handler       = "index.handler"
@@ -61,7 +61,7 @@ resource "aws_lambda_function" "stop_ec2" {
 
 # Lambda function to start EC2
 resource "aws_lambda_function" "start_ec2" {
-  filename      = "lambda_start.zip"
+  filename      = "schedule/lambda_start.zip"
   function_name = "${var.project_name}-start-ec2"
   role          = aws_iam_role.ec2_scheduler.arn
   handler       = "index.handler"
