@@ -26,7 +26,7 @@ module "ec2" {
   user_data = <<-EOF
               #!/bin/bash
               dnf update -y
-              dnf install -y nginx git
+              dnf install -y nginx git aws-cli
               
               # Download resume HTML from repository
               curl -o /usr/share/nginx/html/index.html \
@@ -36,7 +36,54 @@ module "ec2" {
               systemctl start nginx
               systemctl enable nginx
               
-              echo "Nginx configured with resume page on Amazon Linux 2023" > /var/log/nginx-setup.log
+              # Create Route 53 update script
+              cat > /usr/local/bin/update-route53.sh << 'SCRIPT'
+              #!/bin/bash
+              HOSTED_ZONE_ID="Z3LLP0B81D4CRA"
+              DOMAIN="www.cloudconscious.io"
+              PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+              
+              cat > /tmp/route53-change.json << JSONEOF
+              {
+                "Changes": [{
+                  "Action": "UPSERT",
+                  "ResourceRecordSet": {
+                    "Name": "$DOMAIN",
+                    "Type": "A",
+                    "TTL": 300,
+                    "ResourceRecords": [{"Value": "$PUBLIC_IP"}]
+                  }
+                }]
+              }
+              JSONEOF
+              
+              aws route53 change-resource-record-sets \
+                --hosted-zone-id $HOSTED_ZONE_ID \
+                --change-batch file:///tmp/route53-change.json \
+                --region us-east-1
+              SCRIPT
+              
+              chmod +x /usr/local/bin/update-route53.sh
+              
+              # Create systemd service for Route 53 update on boot
+              cat > /etc/systemd/system/update-route53.service << 'SERVICE'
+              [Unit]
+              Description=Update Route 53 DNS record on boot
+              After=network-online.target
+              Wants=network-online.target
+              
+              [Service]
+              Type=oneshot
+              ExecStart=/usr/local/bin/update-route53.sh
+              
+              [Install]
+              WantedBy=multi-user.target
+              SERVICE
+              
+              systemctl enable update-route53.service
+              systemctl start update-route53.service
+              
+              echo "Nginx and Route 53 automation configured" > /var/log/nginx-setup.log
               EOF
 
   tags = {
