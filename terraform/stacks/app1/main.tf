@@ -34,7 +34,7 @@ module "ec2" {
               
               # Download resume page
               curl -o /usr/share/nginx/html/resume.html \
-                https://raw.githubusercontent.com/vegatros/q/master/terraform/stacks/app1/html/resume-index.html
+                https://raw.githubusercontent.com/vegatros/q/master/terraform/stacks/app1/html/resume.html
               
               # Start and enable nginx
               systemctl start nginx
