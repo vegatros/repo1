@@ -1,110 +1,441 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resume - C. Adams</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f4f4f4;
-        }
-        .container {
-            background: white;
-            padding: 40px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        header {
-            text-align: center;
-            border-bottom: 3px solid #2c3e50;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-        }
-        h1 { color: #2c3e50; font-size: 2.5em; }
-        h2 { color: #34495e; margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
-        h3 { color: #2c3e50; margin-top: 20px; }
-        .contact { margin: 10px 0; }
-        .section { margin-bottom: 30px; }
-        ul { margin-left: 20px; }
-        li { margin-bottom: 8px; }
-        .job { margin-bottom: 25px; }
-        .job-title { font-weight: bold; color: #2c3e50; }
-        .company { color: #3498db; }
-        .date { color: #7f8c8d; font-style: italic; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Craig Adams — Cloud Engineer</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F7F5F0;
+      --ink: #1A1814;
+      --muted: #7A7670;
+      --accent: #C8441A;
+      --line: #D8D4CC;
+      --card: #EFECE6;
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── LAYOUT ── */
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* ── HEADER ── */
+    header {
+      padding: 5rem 0 3rem;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 3.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s ease forwards;
+    }
+
+    .title-block { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1.5rem; }
+
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2.8rem, 6vw, 4.5rem);
+      font-weight: 400;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .role-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      padding: 0.4rem 0.8rem;
+      white-space: nowrap;
+    }
+
+    .contact-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--line);
+    }
+
+    .contact-bar a, .contact-bar span {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .contact-bar a:hover { color: var(--accent); }
+
+    .contact-bar .dot { color: var(--line); }
+
+    /* ── SUMMARY ── */
+    .summary {
+      font-size: 1.1rem;
+      line-height: 1.75;
+      max-width: 680px;
+      color: var(--ink);
+      margin-bottom: 3.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.15s ease forwards;
+    }
+
+    /* ── SECTION ── */
+    section {
+      margin-bottom: 3.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s ease forwards;
+    }
+
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.25rem;
+    }
+
+    /* ── EXPERIENCE ── */
+    .job {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.5rem 2rem;
+      padding: 1.75rem 0;
+      border-top: 1px solid var(--line);
+      transition: background 0.2s;
+    }
+    .job:last-child { border-bottom: 1px solid var(--line); }
+
+    .job-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.2rem;
+      font-weight: 400;
+      margin-bottom: 0.2rem;
+    }
+
+    .job-company {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+
+    .job-period {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      white-space: nowrap;
+      padding-top: 0.25rem;
+    }
+
+    .job-bullets {
+      list-style: none;
+      grid-column: 1 / -1;
+    }
+
+    .job-bullets li {
+      font-size: 0.88rem;
+      color: #444;
+      line-height: 1.65;
+      padding: 0.2rem 0 0.2rem 1.1rem;
+      position: relative;
+    }
+
+    .job-bullets li::before {
+      content: "–";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+    }
+
+    /* ── SKILLS GRID ── */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+
+    .skill-group {
+      background: var(--bg);
+      padding: 1.25rem 1.25rem 1.25rem 1.25rem;
+      transition: background 0.2s;
+    }
+    .skill-group:hover { background: var(--card); }
+
+    .skill-group-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.6rem;
+    }
+
+    .skill-group p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── CERTS ── */
+    .certs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .cert {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--ink);
+      color: var(--ink);
+      letter-spacing: 0.04em;
+      transition: all 0.2s;
+    }
+    .cert:hover { background: var(--ink); color: var(--bg); }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 2rem 0 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    footer span {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+
+    .available {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+
+    .pulse {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #4CAF50;
+      animation: pulse 2s infinite;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(1.3); }
+    }
+
+    section:nth-child(1) { animation-delay: 0.1s; }
+    section:nth-child(2) { animation-delay: 0.2s; }
+    section:nth-child(3) { animation-delay: 0.3s; }
+    section:nth-child(4) { animation-delay: 0.4s; }
+    section:nth-child(5) { animation-delay: 0.5s; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .title-block { flex-direction: column; align-items: flex-start; }
+      .job { grid-template-columns: 1fr; }
+      .job-period { grid-row: 1; justify-self: start; }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>C. Adams</h1>
-            <div class="contact">
-                <p>Email: cadams@example.com | Phone: (555) 123-4567</p>
-                <p>Location: City, State | LinkedIn: linkedin.com/in/cadams</p>
-            </div>
-        </header>
+<div class="page">
 
-        <section class="section">
-            <h2>Professional Summary</h2>
-            <p>Experienced DevOps Engineer with expertise in AWS, Terraform, and automation. Proven track record of designing and implementing scalable cloud infrastructure solutions.</p>
-        </section>
-
-        <section class="section">
-            <h2>Skills</h2>
-            <ul>
-                <li><strong>Cloud Platforms:</strong> AWS (EC2, EKS, S3, VPC, IAM)</li>
-                <li><strong>Infrastructure as Code:</strong> Terraform, CloudFormation</li>
-                <li><strong>Configuration Management:</strong> Ansible</li>
-                <li><strong>CI/CD:</strong> GitHub Actions, Jenkins</li>
-                <li><strong>Containers:</strong> Docker, Kubernetes</li>
-                <li><strong>Operating Systems:</strong> Linux (CentOS, Amazon Linux), Windows</li>
-                <li><strong>Scripting:</strong> Bash, PowerShell, Python</li>
-            </ul>
-        </section>
-
-        <section class="section">
-            <h2>Professional Experience</h2>
-            
-            <div class="job">
-                <h3><span class="job-title">Senior DevOps Engineer</span> - <span class="company">Tech Company</span></h3>
-                <p class="date">2020 - Present</p>
-                <ul>
-                    <li>Designed and implemented AWS infrastructure using Terraform</li>
-                    <li>Automated deployment pipelines with GitHub Actions</li>
-                    <li>Managed EKS clusters and containerized applications</li>
-                    <li>Implemented security best practices and compliance standards</li>
-                </ul>
-            </div>
-
-            <div class="job">
-                <h3><span class="job-title">DevOps Engineer</span> - <span class="company">Previous Company</span></h3>
-                <p class="date">2018 - 2020</p>
-                <ul>
-                    <li>Maintained and optimized cloud infrastructure</li>
-                    <li>Developed automation scripts for routine tasks</li>
-                    <li>Collaborated with development teams on CI/CD improvements</li>
-                </ul>
-            </div>
-        </section>
-
-        <section class="section">
-            <h2>Education</h2>
-            <p><strong>Bachelor of Science in Computer Science</strong></p>
-            <p>University Name, Year</p>
-        </section>
-
-        <section class="section">
-            <h2>Certifications</h2>
-            <ul>
-                <li>AWS Certified Solutions Architect</li>
-                <li>Certified Kubernetes Administrator (CKA)</li>
-            </ul>
-        </section>
+  <header>
+    <div class="title-block">
+      <h1>Craig <em>Adams</em></h1>
+      <span class="role-tag">Cloud Engineer · Architect · SRE</span>
     </div>
+    <div class="contact-bar">
+      <a href="mailto:cadams10101@gmail.com">cadams10101@gmail.com</a>
+      <span class="dot">·</span>
+      <a href="tel:9544179985">954.417.9985</a>
+      <span class="dot">·</span>
+      <a href="https://linkedin.com/in/cada5000" target="_blank">linkedin.com/in/cada5000</a>
+      <span class="dot">·</span>
+      <span>Pembroke Pines, FL</span>
+    </div>
+  </header>
+
+  <p class="summary">
+    Versatile Cloud Engineer with a proven track record of designing, deploying, and managing scalable, secure enterprise cloud solutions. Expert in Infrastructure as Code, CI/CD pipelines, and cloud-native services — with deep experience building resilient environments that satisfy security, governance, and regulatory requirements at scale.
+  </p>
+
+  <!-- EXPERIENCE -->
+  <section>
+    <div class="section-label">Experience</div>
+
+    <div class="job">
+      <div>
+        <div class="job-title">Cloud Engineer & Architect</div>
+        <div class="job-company">Western Alliance Bank</div>
+      </div>
+      <div class="job-period">Jul 2020 — Jun 2025</div>
+      <ul class="job-bullets">
+        <li>Lead AWS Engineer responsible for architecture design, deployments, site reliability, compliance, and cost optimization for hybrid multi-cloud production environments.</li>
+        <li>Designed high-availability, multi-region architectures using Route 53, Global Accelerator, and cross-region replication — delivering 99.99% uptime for mission-critical applications.</li>
+        <li>Automated a comprehensive Terraform IaC CI/CD pipeline, reducing deployment time by 70% and cloud expenditure by $1M.</li>
+        <li>Implemented Control Tower Organizations to manage security policies, cost controls, and IAM SSO federated access — reducing administrative overhead by 40%.</li>
+        <li>Transformed CIS security posture from 40% to 100% compliance using Wiz Cloud to identify and remediate misconfigurations across production infrastructure.</li>
+        <li>Authored technical documentation including bank microservice diagrams, network topologies, engineering standards, and continuity strategies.</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div>
+        <div class="job-title">Site Reliability Engineer</div>
+        <div class="job-company">Fandango / Movietickets.com</div>
+      </div>
+      <div class="job-period">Apr 2015 — Jun 2020</div>
+      <ul class="job-bullets">
+        <li>SRE for an international movie ticketing platform serving online purchasing at scale — managing AWS workloads connected to hybrid VMware clusters and POS routers.</li>
+        <li>Owned application microservices, networking, CDN, security, automation, migrations, monitoring, incident response, compliance, and disaster recovery.</li>
+        <li>DevOps admin for Atlassian CI/CD pipeline deployments.</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div>
+        <div class="job-title">Site Reliability Engineer</div>
+        <div class="job-company">Hollywood Media Corp.</div>
+      </div>
+      <div class="job-period">May 2011 — Apr 2015</div>
+      <ul class="job-bullets">
+        <li>Managed enterprise AWS LAMP web stack serving 2 million monthly visitors.</li>
+        <li>Administered multi-location office VPN network connected to a hybrid VMware cluster.</li>
+        <li>Provisioned and managed infrastructure using CloudFormation; served as FinOps admin for AWS accounts.</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div>
+        <div class="job-title">Systems Administrator</div>
+        <div class="job-company">Columbia County Clerk of Courts</div>
+      </div>
+      <div class="job-period">Apr 2006 — May 2011</div>
+      <ul class="job-bullets">
+        <li>Administered Linux and Windows server clusters, records and data imaging systems, security, compliance, and disaster recovery.</li>
+        <li>Developed and maintained the Clerk public records website; managed vendor accounts and budgeting.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SKILLS -->
+  <section>
+    <div class="section-label">Competencies</div>
+    <div class="skills-grid">
+      <div class="skill-group">
+        <div class="skill-group-name">AWS (12 yrs)</div>
+        <p>EC2, Lambda, S3, FSx, RDS, Aurora, DynamoDB, Redshift, Elastic Beanstalk, API Gateway, CloudFront, Route 53, AWS Backup</p>
+      </div>
+      <div class="skill-group">
+        <div class="skill-group-name">AWS Security</div>
+        <p>IAM, Organizations, Control Tower, GuardDuty, KMS, WAF, Shield, CloudTrail, Config</p>
+      </div>
+      <div class="skill-group">
+        <div class="skill-group-name">Azure (2 yrs)</div>
+        <p>Entra, VMs, Storage, VNets, KeyVault, SQL, API Gateway, App Service, Policy</p>
+      </div>
+      <div class="skill-group">
+        <div class="skill-group-name">IaC & DevOps</div>
+        <p>Terraform, CloudFormation, ARM, Atlassian, Azure DevOps, Octopus, SonarQube, Checkov</p>
+      </div>
+      <div class="skill-group">
+        <div class="skill-group-name">Containers</div>
+        <p>Docker, Kubernetes, EKS, AKS, ECS, Prometheus</p>
+      </div>
+      <div class="skill-group">
+        <div class="skill-group-name">Networking</div>
+        <p>VPC, Direct Connect, Transit Gateway, VPN, Hybrid Cloud, Load Balancing, Cloudflare, Cisco, F5</p>
+      </div>
+      <div class="skill-group">
+        <div class="skill-group-name">Security & Identity</div>
+        <p>CyberArk, Delinea, SSO, Okta, Duo, SailPoint, CIS, NIST, PCI, SOC2, Wiz, CNAPP, CSPM</p>
+      </div>
+      <div class="skill-group">
+        <div class="skill-group-name">Monitoring</div>
+        <p>CloudWatch, CloudTrail, Elastic, New Relic, Sumo Logic, SolarWinds</p>
+      </div>
+      <div class="skill-group">
+        <div class="skill-group-name">Code & Scripting</div>
+        <p>Python, PowerShell, Amazon Q, Claude, Codex</p>
+      </div>
+      <div class="skill-group">
+        <div class="skill-group-name">FinOps</div>
+        <p>Cost Explorer, Trusted Advisor, Savings Plans, Reserved Instances</p>
+      </div>
+      <div class="skill-group">
+        <div class="skill-group-name">Disaster Recovery</div>
+        <p>AWS DRS, Azure ASR, Risk Connect, VMware, multi-region backup & DR design</p>
+      </div>
+      <div class="skill-group">
+        <div class="skill-group-name">OS & Platforms</div>
+        <p>Linux, Windows Server, Microsoft 365, VMware</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CERTIFICATIONS -->
+  <section>
+    <div class="section-label">Certifications</div>
+    <div class="certs">
+      <div class="cert">HashiCorp Terraform Associate</div>
+      <div class="cert">AWS Solutions Architect Associate</div>
+      <div class="cert">Cisco CCNA</div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Craig Adams · Pembroke Pines, FL</span>
+    <div class="available">
+      <div class="pulse"></div>
+      Available for new opportunities
+    </div>
+  </footer>
+
+</div>
 </body>
 </html>
