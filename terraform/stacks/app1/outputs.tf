@@ -30,7 +30,12 @@ output "instance_public_ips" {
 
 output "nginx_url" {
   description = "Nginx web server URL"
-  value       = length(module.ec2.instance_public_ips) > 0 ? "https://${module.ec2.instance_public_ips[0]}" : "No public IP"
+  value       = length(module.ec2.instance_public_ips) > 0 ? "https://${aws_eip.web.public_ip}" : "No public IP"
+}
+
+output "elastic_ip" {
+  description = "Elastic IP address"
+  value       = aws_eip.web.public_ip
 }
 
 # output "alb_dns_name" {
