@@ -26,7 +26,7 @@ module "ec2" {
   user_data = <<-EOF
               #!/bin/bash
               dnf update -y
-              dnf install -y nginx firewalld git
+              dnf install -y nginx git
               
               # Download resume HTML from repository
               curl -o /usr/share/nginx/html/index.html \
@@ -36,12 +36,7 @@ module "ec2" {
               systemctl start nginx
               systemctl enable nginx
               
-              # Configure firewall
-              systemctl start firewalld
-              firewall-cmd --permanent --add-port=80/tcp
-              firewall-cmd --reload
-              
-              echo "Nginx configured with resume page" > /var/log/nginx-setup.log
+              echo "Nginx configured with resume page on Amazon Linux 2023" > /var/log/nginx-setup.log
               EOF
 
   tags = {
