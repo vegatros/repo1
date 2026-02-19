@@ -44,6 +44,17 @@ module "ec2" {
   }
 }
 
+# Elastic IP
+resource "aws_eip" "web" {
+  instance = module.ec2.instance_ids[0]
+  domain   = "vpc"
+
+  tags = {
+    Name        = "${var.project_name}-eip"
+    Environment = var.environment
+  }
+}
+
 # # ALB Security Group
 # resource "aws_security_group" "alb" {
 #   name        = "${var.project_name}-alb-sg"
