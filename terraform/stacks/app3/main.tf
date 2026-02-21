@@ -38,13 +38,13 @@ module "ec2_west" {
     aws = aws.us-west-2
   }
 
-  instance_type     = var.instance_type
-  ami_id            = var.ami_id_west
-  subnet_ids        = [module.vpc_west.public_subnet_ids[0]]
-  vpc_id            = module.vpc_west.vpc_id
-  project_name      = "${var.project_name}-west"
-  user_data         = file("${path.module}/user_data.sh")
-  instance_count    = 1
+  instance_type  = var.instance_type
+  ami_id         = var.ami_id_west
+  subnet_ids     = [module.vpc_west.public_subnet_ids[0]]
+  vpc_id         = module.vpc_west.vpc_id
+  project_name   = "${var.project_name}-west"
+  user_data      = file("${path.module}/user_data.sh")
+  instance_count = 1
 }
 
 # VPC and EC2 in us-east-1
@@ -67,21 +67,21 @@ module "ec2_east" {
     aws = aws.us-east-1
   }
 
-  instance_type     = var.instance_type
-  ami_id            = var.ami_id_east
-  subnet_ids        = [module.vpc_east.public_subnet_ids[0]]
-  vpc_id            = module.vpc_east.vpc_id
-  project_name      = "${var.project_name}-east"
-  user_data         = file("${path.module}/user_data.sh")
-  instance_count    = 1
+  instance_type  = var.instance_type
+  ami_id         = var.ami_id_east
+  subnet_ids     = [module.vpc_east.public_subnet_ids[0]]
+  vpc_id         = module.vpc_east.vpc_id
+  project_name   = "${var.project_name}-east"
+  user_data      = file("${path.module}/user_data.sh")
+  instance_count = 1
 }
 
 # Global Accelerator
 resource "aws_globalaccelerator_accelerator" "main" {
-  provider          = aws.us-west-2
-  name              = "${var.project_name}-${var.environment}-accelerator"
-  ip_address_type   = "IPV4"
-  enabled           = true
+  provider        = aws.us-west-2
+  name            = "${var.project_name}-${var.environment}-accelerator"
+  ip_address_type = "IPV4"
+  enabled         = true
 }
 
 resource "aws_globalaccelerator_listener" "main" {
@@ -96,9 +96,9 @@ resource "aws_globalaccelerator_listener" "main" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "west" {
-  provider              = aws.us-west-2
-  listener_arn          = aws_globalaccelerator_listener.main.id
-  endpoint_group_region = "us-west-2"
+  provider                = aws.us-west-2
+  listener_arn            = aws_globalaccelerator_listener.main.id
+  endpoint_group_region   = "us-west-2"
   traffic_dial_percentage = 50
 
   endpoint_configuration {
@@ -113,9 +113,9 @@ resource "aws_globalaccelerator_endpoint_group" "west" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "east" {
-  provider              = aws.us-west-2
-  listener_arn          = aws_globalaccelerator_listener.main.id
-  endpoint_group_region = "us-east-1"
+  provider                = aws.us-west-2
+  listener_arn            = aws_globalaccelerator_listener.main.id
+  endpoint_group_region   = "us-east-1"
   traffic_dial_percentage = 50
 
   endpoint_configuration {
