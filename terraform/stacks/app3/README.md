@@ -1,6 +1,6 @@
 # App3 - Cross-Region Active-Active Architecture
 
-Multi-region active-active deployment using AWS Global Accelerator and Route 53 for high availability and low latency global traffic distribution with HTTPS encryption.
+Multi-region active-active deployment using AWS Global Accelerator and Route 53 for high availability and low latency global traffic distribution with Let's Encrypt SSL certificates.
 
 ## Architecture
 
@@ -27,7 +27,7 @@ Multi-region active-active deployment using AWS Global Accelerator and Route 53 
     │  │ EC2 + Nginx │  │        │  │ EC2 + Nginx ││
     │  │ Amazon Linux│  │        │  │ Amazon Linux││
     │  │ HTTPS (443) │  │        │  │ HTTPS (443) ││
-    │  │ Self-signed │  │        │  │ Self-signed ││
+    │  │Let's Encrypt│  │        │  │Let's Encrypt││
     │  └─────────────┘  │        │  └─────────────┘│
     └───────────────────┘        └─────────────────┘
 ```
@@ -36,10 +36,11 @@ Multi-region active-active deployment using AWS Global Accelerator and Route 53 
 
 ### Infrastructure
 - **2 VPCs**: One in us-west-2 (10.3.0.0/16), one in us-east-1 (10.4.0.0/16)
-- **2 EC2 Instances**: Amazon Linux with Nginx and SSL in each region
+- **2 EC2 Instances**: Amazon Linux with Nginx and Let's Encrypt SSL in each region
 - **AWS Global Accelerator**: Provides static anycast IPs and intelligent traffic routing on port 443
-- **Route 53**: DNS management with domain alias to Global Accelerator
-- **SSL/TLS**: Self-signed certificates with automatic HTTP to HTTPS redirect
+- **Route 53**: DNS management with existing hosted zone (cloudconscious.io)
+- **Let's Encrypt SSL**: Automated certificate provisioning and renewal via Route53 DNS challenge
+- **IAM Roles**: EC2 instances have Route53 permissions for certificate management
 
 ### Traffic Distribution
 - **Active-Active**: Both regions serve traffic simultaneously (50/50 split)
@@ -47,13 +48,33 @@ Multi-region active-active deployment using AWS Global Accelerator and Route 53 
 - **Automatic Failover**: Unhealthy endpoints removed from rotation
 - **HTTPS Only**: All HTTP traffic redirected to HTTPS
 
+## SSL/TLS Configuration
+
+### Let's Encrypt Certificates
+- **Certificate Authority**: Let's Encrypt (trusted by all browsers)
+- **Validation Method**: DNS-01 challenge via Route53
+- **Auto-Renewal**: Certificates renew automatically every 12 hours (90-day validity)
+- **Protocols**: TLS 1.2 and 1.3
+- **Ciphers**: HIGH security cipher suites
+- **Email**: vegatros@gmail.com (renewal notifications)
+
+### How It Works
+1. Instance launches with nginx on port 80
+2. Certbot requests certificate from Let's Encrypt
+3. Creates DNS TXT record in Route53 for validation
+4. Let's Encrypt validates domain ownership
+5. Certificate installed at `/etc/letsencrypt/live/cloudconscious.io/`
+6. Nginx configured with SSL and HTTP redirect
+7. Cron job runs twice daily to check for renewal
+
 ## Deployment
 
 ### Prerequisites
 1. AWS account with appropriate permissions
-2. S3 bucket for Terraform state (update `backend.tf`)
+2. S3 bucket for Terraform state: `terraform-state-925185632967`
 3. Existing Route 53 hosted zone: cloudconscious.io (Z3LLP0B81D4CRA)
 4. Valid AMI IDs for both regions
+5. IAM permissions for EC2 to manage Route53 records
 
 ### Local Deployment
 
@@ -77,6 +98,8 @@ Trigger via workflow dispatch:
 2. Select environment (dev/qa/prod)
 3. Select action (plan/apply/destroy)
 4. Run workflow
+
+**Workflow naming convention**: `app3-{environment}-{action}-{commit-message}`
 
 ## Configuration
 
@@ -109,45 +132,25 @@ After deployment:
 - `ec2_west_public_ip`: Direct EC2 IP in us-west-2
 - `ec2_east_public_ip`: Direct EC2 IP in us-east-1
 
-## SSL/TLS Configuration
-
-### Self-Signed Certificates
-- Automatically generated on instance launch
-- Valid for 365 days
-- Subject: CN=cloudconscious.io
-- Protocols: TLSv1.2, TLSv1.3
-- Ciphers: HIGH security only
-
-### HTTP to HTTPS Redirect
-- All HTTP (port 80) traffic automatically redirects to HTTPS (port 443)
-- 301 permanent redirect
-- Preserves request URI
-
-### Upgrading to Let's Encrypt (Production)
-For production use with valid certificates:
-
-1. Ensure DNS points to instances
-2. SSH into each instance
-3. Install certbot: `yum install -y certbot python3-certbot-nginx`
-4. Run: `certbot --nginx -d cloudconscious.io -d www.cloudconscious.io`
-5. Certificates auto-renew via cron
-
 ## Testing
 
 ```bash
 # Test via Global Accelerator (HTTPS)
-curl -k https://<global-accelerator-dns>
+curl https://afd3ea9b16c5b1fb9.awsglobalaccelerator.com
 
-# Test via domain (after DNS propagation)
-curl -k https://cloudconscious.io
+# Test via domain
+curl https://cloudconscious.io
 
 # Test individual regions (HTTPS)
-curl -k https://<ec2_west_public_ip>
-curl -k https://<ec2_east_public_ip>
+curl https://<ec2_west_public_ip>
+curl https://<ec2_east_public_ip>
 
 # Verify HTTP redirect
 curl -I http://cloudconscious.io
 # Should return: HTTP/1.1 301 Moved Permanently
+
+# Check SSL certificate
+openssl s_client -connect cloudconscious.io:443 -servername cloudconscious.io
 ```
 
 Each response shows the region and instance ID serving the request.
@@ -162,10 +165,17 @@ Each response shows the region and instance ID serving the request.
 - EBS encryption enabled
 
 ### SSL/TLS Security
+- Let's Encrypt trusted certificates (no browser warnings)
 - TLS 1.2 and 1.3 only
 - Strong cipher suites (HIGH:!aNULL:!MD5)
 - Server-preferred cipher order
-- HTTP Strict Transport Security ready
+- Automatic certificate renewal
+- HTTP to HTTPS redirect (301)
+
+### IAM Security
+- EC2 instances use IAM roles (no credentials in code)
+- Least privilege access to Route53
+- GitHub Actions uses OIDC (no long-lived credentials)
 
 ### Health Checks
 - Protocol: TCP (port 443)
@@ -178,6 +188,7 @@ Each response shows the region and instance ID serving the request.
 - **Global Accelerator**: ~$0.025/hour + data transfer fees (~$18/month fixed)
 - **EC2 t3.micro**: ~$0.0104/hour per instance (~$15/month for 2)
 - **Route 53**: Queries only (hosted zone managed separately)
+- **Let's Encrypt**: Free SSL certificates
 - **Data Transfer**: Variable based on usage
 - **Estimated monthly cost**: ~$35-40 for dev environment
 
@@ -193,6 +204,12 @@ Each response shows the region and instance ID serving the request.
 - TCP connectivity checks every 30 seconds
 - Automatic traffic routing to healthy endpoints only
 
+### Certificate Monitoring
+- Let's Encrypt renewal logs: `/var/log/letsencrypt/`
+- Nginx logs: `/var/log/nginx/`
+- User data execution: `/var/log/user-data.log`
+- Certificate expiration: 90 days (auto-renews at 30 days)
+
 ## Troubleshooting
 
 ### Endpoints showing unhealthy
@@ -200,11 +217,19 @@ Each response shows the region and instance ID serving the request.
 - Verify nginx is running: `systemctl status nginx`
 - Check nginx logs: `tail -f /var/log/nginx/error.log`
 - Verify security groups allow port 443
+- Check certbot logs: `tail -f /var/log/letsencrypt/letsencrypt.log`
 
 ### HTTPS not working
 - Check SSL certificate: `openssl s_client -connect <instance-ip>:443`
-- Verify nginx SSL configuration: `nginx -t`
-- Check if certificate files exist: `ls -la /etc/nginx/ssl/`
+- Verify certificate files exist: `ls -la /etc/letsencrypt/live/cloudconscious.io/`
+- Check nginx SSL configuration: `nginx -t`
+- Review user data log: `tail -f /var/log/user-data.log`
+
+### Certificate not renewing
+- Check cron job: `cat /etc/cron.d/certbot-renew`
+- Test renewal: `certbot renew --dry-run`
+- Verify IAM role has Route53 permissions
+- Check certbot logs for errors
 
 ### HTTP not redirecting to HTTPS
 - Test redirect: `curl -I http://<instance-ip>`
@@ -214,7 +239,7 @@ Each response shows the region and instance ID serving the request.
 ### DNS not resolving
 - Verify Route 53 record points to Global Accelerator
 - Check hosted zone ID is correct (Z3LLP0B81D4CRA)
-- Wait for DNS propagation (up to 48 hours)
+- Test DNS: `dig cloudconscious.io`
 
 ## Files
 
@@ -223,7 +248,7 @@ Each response shows the region and instance ID serving the request.
 - `outputs.tf` - Infrastructure outputs
 - `dev.tfvars` - Dev environment configuration
 - `backend.tf` - S3 state backend
-- `user_data.sh` - Nginx + SSL installation script
+- `user_data.sh` - Nginx + Let's Encrypt installation script
 - `README.md` - This file
 - `diagrams.md` - Architecture diagrams and service details
 
@@ -234,6 +259,7 @@ Each response shows the region and instance ID serving the request.
 - **Steps**: Init → Format → Validate → Trivy Scan → Plan → Apply/Destroy
 - **Security**: OIDC authentication, no static credentials
 - **Scanning**: Trivy for infrastructure security
+- **Naming**: `app3-{env}-{action}-{commit-message}`
 
 ### Security Scanning
 - Trivy scans Terraform configurations
@@ -254,8 +280,36 @@ Each response shows the region and instance ID serving the request.
 - Traffic routed to healthy region only
 - No manual intervention required
 
+### Certificate Resilience
+- Auto-renewal prevents expiration
+- Independent certificates per instance
+- Renewal failures don't affect existing certificates
+- Email notifications for renewal issues
+
+## Maintenance
+
+### Certificate Renewal
+Certificates renew automatically. Manual renewal if needed:
+```bash
+sudo certbot renew --force-renewal
+sudo systemctl restart nginx
+```
+
+### Updating Nginx Configuration
+```bash
+sudo nano /etc/nginx/conf.d/ssl.conf
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+### Checking Certificate Expiration
+```bash
+sudo certbot certificates
+```
+
 ## Documentation
 
 - See `diagrams.md` for detailed architecture diagrams
 - See GitHub Actions workflow for CI/CD pipeline details
 - See Terraform outputs for deployed resource information
+- Let's Encrypt documentation: https://letsencrypt.org/docs/
