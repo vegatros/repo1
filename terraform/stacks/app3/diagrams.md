@@ -1,43 +1,5 @@
 # App3 - Architecture Diagrams & Service Summary
 
-## Color Diagram (Mermaid)
-
-```mermaid
-flowchart TB
-    U(["Internet Users"]):::users
-    R53["Route 53\ncloudconscious.io"]:::dns
-    GA["Global Accelerator\nTCP 443 · 50/50"]:::ga
-
-    GA -->|"50%"| EW
-    GA -->|"50%"| EE
-
-    subgraph WEST["us-west-2"]
-        EW["EC2 t3.micro\nNginx + SSL"]:::ec2
-        DW[("DynamoDB\nprimary")]:::db
-        EW --> DW
-    end
-
-    subgraph EAST["us-east-1"]
-        EE["EC2 t3.micro\nNginx + SSL"]:::ec2
-        DE[("DynamoDB\nreplica")]:::db
-        EE --> DE
-    end
-
-    U --> R53 --> GA
-    DW <-->|"replication"| DE
-
-    classDef users fill:#dbeafe,stroke:#1d4ed8,color:#1e3a5f,font-weight:bold
-    classDef dns   fill:#fef08a,stroke:#a16207,color:#1a1a2e,font-weight:bold
-    classDef ga    fill:#bbf7d0,stroke:#15803d,color:#1a1a2e,font-weight:bold
-    classDef ec2   fill:#fecaca,stroke:#b91c1c,color:#1a1a2e,font-weight:bold
-    classDef db    fill:#e9d5ff,stroke:#7e22ce,color:#1a1a2e,font-weight:bold
-
-    style WEST fill:#eff6ff,stroke:#1d4ed8,stroke-width:2px,color:#1e3a5f,font-weight:bold
-    style EAST fill:#f0fdf4,stroke:#15803d,stroke-width:2px,color:#14532d,font-weight:bold
-```
-
----
-
 ## High-Level Architecture (ASCII)
 
 ```
