@@ -109,7 +109,7 @@ resource "aws_globalaccelerator_endpoint_group" "west" {
 
   health_check_interval_seconds = 30
   health_check_path             = "/"
-  health_check_protocol         = "HTTPS"
+  health_check_protocol         = "TCP"
   health_check_port             = 443
 }
 
@@ -127,7 +127,7 @@ resource "aws_globalaccelerator_endpoint_group" "east" {
 
   health_check_interval_seconds = 30
   health_check_path             = "/"
-  health_check_protocol         = "HTTPS"
+  health_check_protocol         = "TCP"
   health_check_port             = 443
 }
 
