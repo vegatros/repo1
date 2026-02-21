@@ -55,13 +55,14 @@ jobs:
             -backend-config="key=stacks/app1/${{ inputs.environment }}/terraform.tfstate" \
             -reconfigure
       
-      - name: Run Checkov Security Scan
-        uses: bridgecrewio/checkov-action@master
+      - name: Run Trivy Security Scan
+        uses: aquasecurity/trivy-action@master
         with:
-          directory: terraform/stacks/app1
-          framework: terraform
-          output_format: cli
-          soft_fail: true
+          scan-type: 'config'
+          scan-ref: 'terraform/stacks/app1'
+          format: 'table'
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH,MEDIUM'
       
       - name: Terraform Plan
         working-directory: terraform/stacks/app1
