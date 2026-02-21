@@ -8,7 +8,7 @@ data "aws_region" "current" {}
 locals {
   azs                  = length(var.azs) > 0 ? var.azs : slice(data.aws_availability_zones.available.names, 0, 2)
   public_subnet_cidrs  = length(var.public_subnet_cidrs) > 0 ? var.public_subnet_cidrs : [for i in range(2) : cidrsubnet(var.vpc_cidr, 8, i)]
-  private_subnet_cidrs = length(var.private_subnet_cidrs) > 0 ? var.private_subnet_cidrs : [for i in range(2) : cidrsubnet(var.vpc_cidr, 8, i + 2)]
+  private_subnet_cidrs = var.private_subnet_cidrs
 }
 
 # VPC
