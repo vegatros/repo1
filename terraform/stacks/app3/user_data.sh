@@ -38,13 +38,36 @@ systemctl start nginx
 sleep 5
 
 # Obtain Let's Encrypt certificate using Route53 DNS challenge
-certbot --nginx \
+certbot certonly \
+    --dns-route53 \
     --non-interactive \
     --agree-tos \
     --email vegatros@gmail.com \
-    --dns-route53 \
-    --domains cloudconscious.io \
-    --redirect
+    --domains cloudconscious.io
+
+# Configure nginx with the certificate
+cat > /etc/nginx/conf.d/ssl.conf <<'EOF'
+server {
+    listen 443 ssl;
+    server_name cloudconscious.io;
+    root /usr/share/nginx/html;
+
+    ssl_certificate /etc/letsencrypt/live/cloudconscious.io/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/cloudconscious.io/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    location / {
+        index index.html;
+    }
+}
+
+server {
+    listen 80;
+    server_name cloudconscious.io;
+    return 301 https://$host$request_uri;
+}
+EOF
 
 # Setup auto-renewal
 echo "0 0,12 * * * root certbot renew --quiet" > /etc/cron.d/certbot-renew
