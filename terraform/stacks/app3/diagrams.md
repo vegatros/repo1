@@ -1,47 +1,49 @@
 # App3 - Architecture Diagrams & Service Summary
 
-## Color Diagram (Mermaid)
+## Color Diagram (Mermaid Flowchart)
 
 ```mermaid
-flowchart TD
+flowchart LR
     Users(["🌐 Internet Users"]):::users
 
-    R53["🔖 Route 53\ncloudconscious.io\nZone: Z3LLP0B81D4CRA"]:::dns
+    R53[/"🔖 Route 53\ncloudconscious.io"\]:::dns
 
-    GA["⚡ AWS Global Accelerator\n166.117.62.x / 166.117.139.x\nTCP :443 — 50/50 split"]:::accelerator
+    GA[/"⚡ Global Accelerator\n166.117.62.x · 166.117.139.x"\]:::accelerator
 
     subgraph WEST["🌎  us-west-2"]
-        VPC_W["VPC 10.3.0.0/16"]:::vpc
-        SUB_W["Public Subnet\n10.3.1.0/24 (us-west-2a)"]:::subnet
-        EC2_W["🖥 EC2 t3.micro\nNginx + Let's Encrypt"]:::ec2
-        DDB_W[("🗄 DynamoDB\napp3-dev-data\nprimary")]:::dynamo
+        direction TB
+        VPC_W[["VPC\n10.3.0.0/16"]]:::vpc
+        SUB_W["Public Subnet\n10.3.1.0/24\nus-west-2a"]:::subnet
+        EC2_W[/"🖥 EC2 t3.micro\nNginx + Let's Encrypt"\]:::ec2
+        DDB_W[("🗄 DynamoDB\nprimary")]:::dynamo
+        VPC_W --> SUB_W --> EC2_W --> DDB_W
     end
 
     subgraph EAST["🌍  us-east-1"]
-        VPC_E["VPC 10.4.0.0/16"]:::vpc
-        SUB_E["Public Subnet\n10.4.1.0/24 (us-east-1a)"]:::subnet
-        EC2_E["🖥 EC2 t3.micro\nNginx + Let's Encrypt"]:::ec2
-        DDB_E[("🗄 DynamoDB\napp3-dev-data\nreplica")]:::dynamo
+        direction TB
+        VPC_E[["VPC\n10.4.0.0/16"]]:::vpc
+        SUB_E["Public Subnet\n10.4.1.0/24\nus-east-1a"]:::subnet
+        EC2_E[/"🖥 EC2 t3.micro\nNginx + Let's Encrypt"\]:::ec2
+        DDB_E[("🗄 DynamoDB\nreplica")]:::dynamo
+        VPC_E --> SUB_E --> EC2_E --> DDB_E
     end
 
-    Users --> R53
-    R53 -->|Alias| GA
-    GA -->|50%| EC2_W
-    GA -->|50%| EC2_E
-    VPC_W --> SUB_W --> EC2_W --> DDB_W
-    VPC_E --> SUB_E --> EC2_E --> DDB_E
-    DDB_W <-->|"⟳ Bi-directional\nreplication"| DDB_E
+    Users -->|"HTTPS"| R53
+    R53 -->|"Alias record"| GA
+    GA -->|"50% traffic"| WEST
+    GA -->|"50% traffic"| EAST
+    DDB_W <-->|"⟳ Bi-directional replication"| DDB_E
 
-    classDef users    fill:#f0f4ff,stroke:#4a6cf7,color:#1a1a2e,font-weight:bold
-    classDef dns      fill:#fff3cd,stroke:#f0a500,color:#1a1a2e,font-weight:bold
-    classDef accelerator fill:#e8f5e9,stroke:#2e7d32,color:#1a1a2e,font-weight:bold
-    classDef vpc      fill:#e3f2fd,stroke:#1565c0,color:#1a1a2e
-    classDef subnet   fill:#e8eaf6,stroke:#3949ab,color:#1a1a2e
-    classDef ec2      fill:#fce4ec,stroke:#c62828,color:#1a1a2e,font-weight:bold
-    classDef dynamo   fill:#f3e5f5,stroke:#6a1b9a,color:#1a1a2e,font-weight:bold
+    classDef users       fill:#dbeafe,stroke:#2563eb,color:#1e3a5f,font-weight:bold,rx:20
+    classDef dns         fill:#fef9c3,stroke:#ca8a04,color:#1a1a2e,font-weight:bold
+    classDef accelerator fill:#dcfce7,stroke:#16a34a,color:#1a1a2e,font-weight:bold
+    classDef vpc         fill:#e0e7ff,stroke:#4338ca,color:#1a1a2e,font-weight:bold
+    classDef subnet      fill:#ede9fe,stroke:#7c3aed,color:#1a1a2e
+    classDef ec2         fill:#ffe4e6,stroke:#be123c,color:#1a1a2e,font-weight:bold
+    classDef dynamo      fill:#f5d0fe,stroke:#9333ea,color:#1a1a2e,font-weight:bold
 
-    style WEST fill:#e3f2fd22,stroke:#1565c0,stroke-width:2px
-    style EAST fill:#e8f5e922,stroke:#2e7d32,stroke-width:2px
+    style WEST fill:#eff6ff,stroke:#2563eb,stroke-width:2px,color:#1e3a5f
+    style EAST fill:#f0fdf4,stroke:#16a34a,stroke-width:2px,color:#14532d
 ```
 
 ---
