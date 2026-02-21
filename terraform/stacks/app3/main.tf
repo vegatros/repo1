@@ -25,10 +25,11 @@ module "vpc_west" {
     aws = aws.us-west-2
   }
 
-  vpc_cidr            = var.vpc_cidr_west
-  public_subnet_cidrs = var.public_subnet_cidrs_west
-  azs                 = var.availability_zones_west
-  project_name        = "${var.project_name}-west"
+  vpc_cidr             = var.vpc_cidr_west
+  public_subnet_cidrs  = var.public_subnet_cidrs_west
+  private_subnet_cidrs = []
+  azs                  = var.availability_zones_west
+  project_name         = "${var.project_name}-west"
 }
 
 module "ec2_west" {
@@ -53,10 +54,11 @@ module "vpc_east" {
     aws = aws.us-east-1
   }
 
-  vpc_cidr            = var.vpc_cidr_east
-  public_subnet_cidrs = var.public_subnet_cidrs_east
-  azs                 = var.availability_zones_east
-  project_name        = "${var.project_name}-east"
+  vpc_cidr             = var.vpc_cidr_east
+  public_subnet_cidrs  = var.public_subnet_cidrs_east
+  private_subnet_cidrs = []
+  azs                  = var.availability_zones_east
+  project_name         = "${var.project_name}-east"
 }
 
 module "ec2_east" {
