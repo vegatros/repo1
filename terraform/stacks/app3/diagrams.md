@@ -3,28 +3,27 @@
 ## Color Diagram (Mermaid)
 
 ```mermaid
-flowchart TD
+flowchart TB
     U(["Internet Users"]):::users
     R53["Route 53\ncloudconscious.io"]:::dns
     GA["Global Accelerator\nTCP 443 · 50/50"]:::ga
 
+    GA -->|"50%"| EW
+    GA -->|"50%"| EE
+
     subgraph WEST["us-west-2"]
-        direction TB
         EW["EC2 t3.micro\nNginx + SSL"]:::ec2
         DW[("DynamoDB\nprimary")]:::db
         EW --> DW
     end
 
     subgraph EAST["us-east-1"]
-        direction TB
         EE["EC2 t3.micro\nNginx + SSL"]:::ec2
         DE[("DynamoDB\nreplica")]:::db
         EE --> DE
     end
 
     U --> R53 --> GA
-    GA -->|"50%"| EW
-    GA -->|"50%"| EE
     DW <-->|"replication"| DE
 
     classDef users fill:#dbeafe,stroke:#1d4ed8,color:#1e3a5f,font-weight:bold
