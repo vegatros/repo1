@@ -7,61 +7,70 @@ Multi-region active-active deployment using AWS Global Accelerator, Route 53, an
 ### Network Diagram
 
 ```mermaid
-graph TB
+graph TD
     subgraph Internet["🌐 Internet Users"]
         Users[Users Worldwide]
     end
+    
+    Users -->|DNS Query| R53
     
     subgraph DNS["☁️ AWS Route 53"]
         R53[cloudconscious.io]
     end
     
+    R53 -->|A Record Alias| Accelerator
+    
     subgraph GA["⚡ AWS Global Accelerator"]
         Accelerator[Static Anycast IPs<br/>166.117.62.x<br/>166.117.139.x<br/>Port: 443 HTTPS]
         Listener[TCP Listener<br/>Port 443]
-        EG_West[Endpoint Group<br/>us-west-2<br/>Traffic: 50%<br/>Health: TCP/443]
-        EG_East[Endpoint Group<br/>us-east-1<br/>Traffic: 50%<br/>Health: TCP/443]
+        Accelerator --> Listener
     end
     
+    Listener --> EG_West
+    Listener --> EG_East
+    
+    subgraph Endpoints["Endpoint Groups"]
+        EG_West[us-west-2<br/>Traffic: 50%<br/>Health: TCP/443]
+        EG_East[us-east-1<br/>Traffic: 50%<br/>Health: TCP/443]
+    end
+    
+    EG_West -->|Health Check| EC2_West
+    EG_East -->|Health Check| EC2_East
+    
     subgraph West["🌎 us-west-2 Region"]
-        DDB_West["📊 DynamoDB<br/>app3-dev-data<br/>1 RCU / 1 WCU"]
         subgraph VPC_West["VPC: 10.3.0.0/16"]
             IGW_West[Internet Gateway]
             subgraph Subnet_West["Public Subnet: 10.3.1.0/24"]
                 EC2_West["🖥️ EC2 Instance<br/>Amazon Linux<br/>Nginx + Let's Encrypt<br/>HTTPS: 443"]
             end
         end
+        DDB_West["📊 DynamoDB<br/>app3-dev-data<br/>1 RCU / 1 WCU"]
     end
     
     subgraph East["🌍 us-east-1 Region"]
-        DDB_East["📊 DynamoDB<br/>Replica<br/>1 RCU / 1 WCU"]
         subgraph VPC_East["VPC: 10.4.0.0/16"]
             IGW_East[Internet Gateway]
             subgraph Subnet_East["Public Subnet: 10.4.1.0/24"]
                 EC2_East["🖥️ EC2 Instance<br/>Amazon Linux<br/>Nginx + Let's Encrypt<br/>HTTPS: 443"]
             end
         end
+        DDB_East["📊 DynamoDB<br/>Replica<br/>1 RCU / 1 WCU"]
     end
+    
+    EC2_West -->|Read/Write| DDB_West
+    EC2_East -->|Read/Write| DDB_East
+    DDB_West <-.->|Bi-directional<br/>Replication| DDB_East
+    
+    EC2_West --> IGW_West
+    EC2_East --> IGW_East
     
     subgraph LE["🔒 Let's Encrypt"]
         LetsEncrypt[Certificate Authority<br/>DNS-01 Challenge<br/>Auto-Renewal]
     end
     
-    Users -->|DNS Query| R53
-    R53 -->|A Record Alias| Accelerator
-    Accelerator --> Listener
-    Listener --> EG_West
-    Listener --> EG_East
-    EG_West -->|Health Check| EC2_West
-    EG_East -->|Health Check| EC2_East
-    EC2_West -->|Read/Write| DDB_West
-    EC2_East -->|Read/Write| DDB_East
-    DDB_West <-.->|Bi-directional<br/>Replication| DDB_East
     EC2_West -.->|Certificate Request| LetsEncrypt
     EC2_East -.->|Certificate Request| LetsEncrypt
     LetsEncrypt -.->|DNS Validation| R53
-    EC2_West --> IGW_West
-    EC2_East --> IGW_East
     
     style Users fill:#e1f5ff,stroke:#01579b,stroke-width:2px
     style R53 fill:#ff9800,stroke:#e65100,stroke-width:2px
