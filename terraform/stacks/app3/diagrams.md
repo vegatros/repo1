@@ -1,24 +1,10 @@
 # App3 - Architecture Diagrams & Service Summary
 
-## Interactive Color Diagram (draw.io)
+## Architecture Diagram
 
-File: [`app3-architecture.drawio`](./app3-architecture.drawio)
+![App3 Architecture](./app3-architecture.drawio.png)
 
-**Color key:**
-
-| Color | Service |
-|-------|---------|
-| Blue | Internet Users |
-| Yellow | Route 53 |
-| Green | Global Accelerator / us-east-1 region |
-| Blue border | us-west-2 region |
-| Red/Pink | EC2 instances |
-| Purple | DynamoDB Global Table |
-
-**How to open:**
-- **draw.io desktop/web**: Open [diagrams.net](https://app.diagrams.net) → *File → Open from → Device* → select `app3-architecture.drawio`
-- **VS Code**: Install the [Draw.io Integration](https://marketplace.visualstudio.com/items?itemName=hediet.vscode-drawio) extension, then click the file
-- **Lucidchart**: *File → Import → Diagrams.net (draw.io)*
+> Source file: [`app3-architecture.drawio`](./app3-architecture.drawio) — open in [diagrams.net](https://app.diagrams.net) or VS Code with the [Draw.io Integration](https://marketplace.visualstudio.com/items?itemName=hediet.vscode-drawio) extension.
 
 ---
 
