@@ -1,0 +1,101 @@
+<mxfile host="app" modified="2026-02-21T00:00:00.000Z" agent="Claude Code" version="21.0.0">
+  <diagram name="app3-architecture" id="app3-arch">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Internet Users -->
+        <mxCell id="users" value="Internet Users" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#1d4ed8;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="450" y="20" width="160" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Route 53 -->
+        <mxCell id="r53" value="Route 53&#xa;cloudconscious.io" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fef08a;strokeColor=#a16207;fontStyle=1;fontSize=12;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="430" y="145" width="200" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Global Accelerator -->
+        <mxCell id="ga" value="AWS Global Accelerator&#xa;TCP 443  ·  50 / 50 split" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbf7d0;strokeColor=#15803d;fontStyle=1;fontSize=12;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="395" y="270" width="270" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- us-west-2 region box -->
+        <mxCell id="west" value="us-west-2" style="swimlane;startSize=30;fillColor=#eff6ff;strokeColor=#1d4ed8;fontStyle=1;fontSize=14;fontColor=#1e3a5f;strokeWidth=2;arcSize=5;" vertex="1" parent="1">
+          <mxGeometry x="50" y="390" width="360" height="280" as="geometry" />
+        </mxCell>
+
+        <!-- VPC West label -->
+        <mxCell id="vpcw" value="VPC: 10.3.0.0/16  ·  Subnet: 10.3.1.0/24" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=2;fontSize=10;fontColor=#1d4ed8;" vertex="1" parent="west">
+          <mxGeometry x="20" y="35" width="320" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- EC2 West -->
+        <mxCell id="ec2w" value="EC2  t3.micro&#xa;Nginx + Let's Encrypt SSL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fecaca;strokeColor=#b91c1c;fontStyle=1;fontSize=12;arcSize=15;" vertex="1" parent="west">
+          <mxGeometry x="80" y="70" width="200" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- DynamoDB West -->
+        <mxCell id="ddbw" value="DynamoDB&#xa;app3-dev-data (primary)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#e9d5ff;strokeColor=#7e22ce;fontStyle=1;fontSize=11;" vertex="1" parent="west">
+          <mxGeometry x="80" y="175" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- us-east-1 region box -->
+        <mxCell id="east" value="us-east-1" style="swimlane;startSize=30;fillColor=#f0fdf4;strokeColor=#15803d;fontStyle=1;fontSize=14;fontColor=#14532d;strokeWidth=2;arcSize=5;" vertex="1" parent="1">
+          <mxGeometry x="650" y="390" width="360" height="280" as="geometry" />
+        </mxCell>
+
+        <!-- VPC East label -->
+        <mxCell id="vpce" value="VPC: 10.4.0.0/16  ·  Subnet: 10.4.1.0/24" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=2;fontSize=10;fontColor=#15803d;" vertex="1" parent="east">
+          <mxGeometry x="20" y="35" width="320" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- EC2 East -->
+        <mxCell id="ec2e" value="EC2  t3.micro&#xa;Nginx + Let's Encrypt SSL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fecaca;strokeColor=#b91c1c;fontStyle=1;fontSize=12;arcSize=15;" vertex="1" parent="east">
+          <mxGeometry x="80" y="70" width="200" height="65" as="geometry" />
+        </mxCell>
+
+        <!-- DynamoDB East -->
+        <mxCell id="ddbe" value="DynamoDB&#xa;app3-dev-data (replica)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#e9d5ff;strokeColor=#7e22ce;fontStyle=1;fontSize=11;" vertex="1" parent="east">
+          <mxGeometry x="80" y="175" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: Users → R53 -->
+        <mxCell id="e1" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="users" target="r53" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: R53 → GA -->
+        <mxCell id="e2" value="Alias record" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" source="r53" target="ga" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: GA → EC2 West -->
+        <mxCell id="e3" value="50%" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontStyle=1;fontSize=12;fontColor=#1d4ed8;strokeColor=#1d4ed8;" edge="1" source="ga" target="ec2w" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: GA → EC2 East -->
+        <mxCell id="e4" value="50%" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontStyle=1;fontSize=12;fontColor=#15803d;strokeColor=#15803d;" edge="1" source="ga" target="ec2e" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: EC2 West → DDB West -->
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" source="ec2w" target="ddbw" parent="west">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: EC2 East → DDB East -->
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" source="ec2e" target="ddbe" parent="east">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Edge: DDB West ↔ DDB East (bi-directional replication) -->
+        <mxCell id="e7" value="Bi-directional replication" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;startArrow=block;startFill=1;endArrow=block;endFill=1;fontStyle=3;fontSize=11;fontColor=#7e22ce;strokeColor=#7e22ce;strokeWidth=2;dashed=1;" edge="1" source="ddbw" target="ddbe" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
