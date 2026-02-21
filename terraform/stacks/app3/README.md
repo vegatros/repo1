@@ -27,70 +27,21 @@ Multi-region active-active deployment using AWS Global Accelerator, Route 53, an
         ┌──────────────┘          └──────────────┐
         │                                        │
         ▼                                        ▼
-┌───────────────┐                        ┌───────────────┐
-│  us-west-2    │                        │  us-east-1    │
-├───────────────┤                        ├───────────────┤
-│               │                        │               │
-│  ┌─────────┐  │                        │  ┌─────────┐  │
-│  │   EC2   │  │                        │  │   EC2   │  │
-│  │  Nginx  │  │                        │  │  Nginx  │  │
-│  └────┬────┘  │                        │  └────┬────┘  │
-│       │       │                        │       │       │
-│       ▼       │                        │       ▼       │
-│  ┌─────────┐  │    ◄──Replication──►  │  ┌─────────┐  │
-│  │DynamoDB │  │◄──────────────────────►│  │DynamoDB │  │
-│  └─────────┘  │                        │  └─────────┘  │
-│               │                        │               │
-└───────────────┘                        └───────────────┘
-```
-
-### Color Network Diagram
-
-```mermaid
-%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#ff6b6b','primaryTextColor':'#fff','primaryBorderColor':'#c92a2a','lineColor':'#495057','secondaryColor':'#51cf66','tertiaryColor':'#339af0'}}}%%
-graph TB
-    subgraph Internet[" "]
-        Users["🌐 Internet Users"]
-    end
-    
-    subgraph DNS[" "]
-        R53["☁️ Route 53<br/>cloudconscious.io"]
-    end
-    
-    subgraph GlobalAccel[" "]
-        GA["⚡ Global Accelerator<br/>166.117.62.x<br/>166.117.139.x<br/>Port 443 HTTPS"]
-    end
-    
-    subgraph West["🌎 us-west-2"]
-        EC2W["🖥️ EC2 Instance<br/>Amazon Linux 2023<br/>Nginx + Let's Encrypt"]
-        DDBW["📊 DynamoDB<br/>app3-dev-data<br/>1 RCU / 1 WCU"]
-    end
-    
-    subgraph East["🌍 us-east-1"]
-        EC2E["🖥️ EC2 Instance<br/>Amazon Linux 2023<br/>Nginx + Let's Encrypt"]
-        DDBE["📊 DynamoDB Replica<br/>app3-dev-data<br/>1 RCU / 1 WCU"]
-    end
-    
-    Users --> R53
-    R53 --> GA
-    GA --> EC2W
-    GA --> EC2E
-    EC2W --> DDBW
-    EC2E --> DDBE
-    DDBW <-.Bi-directional<br/>Replication.-> DDBE
-    
-    classDef userStyle fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#000
-    classDef dnsStyle fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
-    classDef gaStyle fill:#c8e6c9,stroke:#2e7d32,stroke-width:4px,color:#000
-    classDef regionStyle fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
-    classDef ec2Style fill:#fff9c4,stroke:#f57f17,stroke-width:2px,color:#000
-    classDef ddbStyle fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
-    
-    class Users userStyle
-    class R53 dnsStyle
-    class GA gaStyle
-    class EC2W,EC2E ec2Style
-    class DDBW,DDBE ddbStyle
+┌─────────────────┐                      ┌─────────────────┐
+│   us-west-2     │                      │   us-east-1     │
+├─────────────────┤                      ├─────────────────┤
+│                 │                      │                 │
+│  ┌───────────┐  │                      │  ┌───────────┐  │
+│  │    EC2    │  │                      │  │    EC2    │  │
+│  │   Nginx   │  │                      │  │   Nginx   │  │
+│  └─────┬─────┘  │                      │  └─────┬─────┘  │
+│        │        │                      │        │        │
+│        ▼        │                      │        ▼        │
+│  ┌───────────┐  │  ◄──Replication──►  │  ┌───────────┐  │
+│  │ DynamoDB  │◄─┼──────────────────────┼─►│ DynamoDB  │  │
+│  └───────────┘  │                      │  └───────────┘  │
+│                 │                      │                 │
+└─────────────────┘                      └─────────────────┘
 ```
 
 ## Components
