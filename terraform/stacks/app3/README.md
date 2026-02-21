@@ -24,22 +24,22 @@ graph TB
     end
     
     subgraph West["🌎 us-west-2 Region"]
+        DDB_West["📊 DynamoDB<br/>app3-dev-data<br/>1 RCU / 1 WCU"]
         subgraph VPC_West["VPC: 10.3.0.0/16"]
+            IGW_West[Internet Gateway]
             subgraph Subnet_West["Public Subnet: 10.3.1.0/24"]
                 EC2_West["🖥️ EC2 Instance<br/>Amazon Linux<br/>Nginx + Let's Encrypt<br/>HTTPS: 443"]
             end
-            IGW_West[Internet Gateway]
-            DDB_West["📊 DynamoDB<br/>app3-dev-data<br/>1 RCU / 1 WCU"]
         end
     end
     
     subgraph East["🌍 us-east-1 Region"]
+        DDB_East["📊 DynamoDB<br/>Replica<br/>1 RCU / 1 WCU"]
         subgraph VPC_East["VPC: 10.4.0.0/16"]
+            IGW_East[Internet Gateway]
             subgraph Subnet_East["Public Subnet: 10.4.1.0/24"]
                 EC2_East["🖥️ EC2 Instance<br/>Amazon Linux<br/>Nginx + Let's Encrypt<br/>HTTPS: 443"]
             end
-            IGW_East[Internet Gateway]
-            DDB_East["📊 DynamoDB<br/>Replica<br/>1 RCU / 1 WCU"]
         end
     end
     
