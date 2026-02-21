@@ -1,5 +1,7 @@
 name: Terraform App3 (Cross-Region Active-Active)
 
+run-name: app3-${{ github.event.inputs.environment || 'dev' }}-${{ github.event.inputs.action || 'plan' }}-${{ github.event.head_commit.message || 'manual-run' }}
+
 on:
   workflow_dispatch:
     inputs:
