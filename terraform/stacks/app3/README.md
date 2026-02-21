@@ -4,6 +4,79 @@ Multi-region active-active deployment using AWS Global Accelerator and Route 53 
 
 ## Architecture
 
+### Network Diagram
+
+```mermaid
+graph TB
+    subgraph Internet["🌐 Internet Users"]
+        Users[Users Worldwide]
+    end
+    
+    subgraph DNS["☁️ AWS Route 53"]
+        R53[cloudconscious.io<br/>Hosted Zone: Z3LLP0B81D4CRA]
+    end
+    
+    subgraph GA["⚡ AWS Global Accelerator"]
+        Accelerator[Static Anycast IPs<br/>166.117.62.166<br/>166.117.139.123<br/>Port: 443 HTTPS]
+        Listener[TCP Listener<br/>Port 443]
+        EG_West[Endpoint Group<br/>us-west-2<br/>Traffic: 50%<br/>Health: TCP/443]
+        EG_East[Endpoint Group<br/>us-east-1<br/>Traffic: 50%<br/>Health: TCP/443]
+    end
+    
+    subgraph West["🌎 us-west-2 Region"]
+        subgraph VPC_West["VPC: 10.3.0.0/16"]
+            subgraph Subnet_West["Public Subnet: 10.3.1.0/24"]
+                EC2_West["🖥️ EC2 Instance<br/>Amazon Linux 2023<br/>t3.micro<br/>Nginx + Let's Encrypt<br/>HTTPS: 443"]
+            end
+            IGW_West[Internet Gateway]
+        end
+    end
+    
+    subgraph East["🌍 us-east-1 Region"]
+        subgraph VPC_East["VPC: 10.4.0.0/16"]
+            subgraph Subnet_East["Public Subnet: 10.4.1.0/24"]
+                EC2_East["🖥️ EC2 Instance<br/>Amazon Linux 2023<br/>t3.micro<br/>Nginx + Let's Encrypt<br/>HTTPS: 443"]
+            end
+            IGW_East[Internet Gateway]
+        end
+    end
+    
+    subgraph LE["🔒 Let's Encrypt"]
+        LetsEncrypt[Certificate Authority<br/>DNS-01 Challenge<br/>Auto-Renewal]
+    end
+    
+    Users -->|DNS Query| R53
+    R53 -->|A Record Alias| Accelerator
+    Accelerator --> Listener
+    Listener --> EG_West
+    Listener --> EG_East
+    EG_West -->|Health Check| EC2_West
+    EG_East -->|Health Check| EC2_East
+    EC2_West -.->|Certificate Request| LetsEncrypt
+    EC2_East -.->|Certificate Request| LetsEncrypt
+    LetsEncrypt -.->|DNS Validation| R53
+    EC2_West --> IGW_West
+    EC2_East --> IGW_East
+    
+    style Users fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    style R53 fill:#ff9800,stroke:#e65100,stroke-width:2px
+    style Accelerator fill:#4caf50,stroke:#1b5e20,stroke-width:3px
+    style Listener fill:#8bc34a,stroke:#33691e,stroke-width:2px
+    style EG_West fill:#81c784,stroke:#2e7d32,stroke-width:2px
+    style EG_East fill:#81c784,stroke:#2e7d32,stroke-width:2px
+    style VPC_West fill:#bbdefb,stroke:#1976d2,stroke-width:2px
+    style VPC_East fill:#bbdefb,stroke:#1976d2,stroke-width:2px
+    style Subnet_West fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style Subnet_East fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style EC2_West fill:#fff9c4,stroke:#f57f17,stroke-width:3px
+    style EC2_East fill:#fff9c4,stroke:#f57f17,stroke-width:3px
+    style LetsEncrypt fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
+    style IGW_West fill:#b3e5fc,stroke:#0277bd,stroke-width:2px
+    style IGW_East fill:#b3e5fc,stroke:#0277bd,stroke-width:2px
+```
+
+### ASCII Diagram
+
 ```
                     ┌─────────────────┐
                     │   Route 53      │
