@@ -15,6 +15,71 @@ data "aws_ami" "default" {
   }
 }
 
+# IAM Role for EC2 instances (for Let's Encrypt Route53 access)
+resource "aws_iam_role" "ec2" {
+  name = "${var.project_name}-ec2-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = merge(
+    {
+      Name = "${var.project_name}-ec2-role"
+    },
+    var.tags
+  )
+}
+
+# IAM Policy for Route53 (Let's Encrypt DNS challenge)
+resource "aws_iam_role_policy" "route53" {
+  name = "${var.project_name}-route53-policy"
+  role = aws_iam_role.ec2.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "route53:ListHostedZones",
+          "route53:GetChange"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "route53:ChangeResourceRecordSets"
+        ]
+        Resource = "arn:aws:route53:::hostedzone/*"
+      }
+    ]
+  })
+}
+
+# IAM Instance Profile
+resource "aws_iam_instance_profile" "ec2" {
+  name = "${var.project_name}-ec2-profile"
+  role = aws_iam_role.ec2.name
+
+  tags = merge(
+    {
+      Name = "${var.project_name}-ec2-profile"
+    },
+    var.tags
+  )
+}
+
 # Security Group
 resource "aws_security_group" "ec2" {
   name        = "${var.project_name}-ec2-sg"
@@ -70,6 +135,7 @@ resource "aws_instance" "this" {
   instance_type               = var.instance_type
   subnet_id                   = var.subnet_ids[count.index % length(var.subnet_ids)]
   vpc_security_group_ids      = [aws_security_group.ec2.id]
+  iam_instance_profile        = aws_iam_instance_profile.ec2.name
   key_name                    = var.key_name != "" ? var.key_name : null
   user_data                   = var.user_data != "" ? var.user_data : null
   associate_public_ip_address = true
