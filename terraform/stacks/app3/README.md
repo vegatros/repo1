@@ -13,7 +13,7 @@ graph TB
     end
     
     subgraph DNS["☁️ AWS Route 53"]
-        R53[cloudconscious.io<br/>Hosted Zone: Z3LLP0B81D4CRA]
+        R53[cloudconscious.io]
     end
     
     subgraph GA["⚡ AWS Global Accelerator"]
