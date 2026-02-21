@@ -102,8 +102,9 @@ resource "aws_globalaccelerator_endpoint_group" "west" {
   traffic_dial_percentage = 50
 
   endpoint_configuration {
-    endpoint_id = module.ec2_west.instance_ids[0]
-    weight      = 100
+    endpoint_id                    = module.ec2_west.instance_ids[0]
+    weight                         = 100
+    client_ip_preservation_enabled = true
   }
 
   health_check_interval_seconds = 30
@@ -119,8 +120,9 @@ resource "aws_globalaccelerator_endpoint_group" "east" {
   traffic_dial_percentage = 50
 
   endpoint_configuration {
-    endpoint_id = module.ec2_east.instance_ids[0]
-    weight      = 100
+    endpoint_id                    = module.ec2_east.instance_ids[0]
+    weight                         = 100
+    client_ip_preservation_enabled = true
   }
 
   health_check_interval_seconds = 30
