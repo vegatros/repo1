@@ -31,13 +31,6 @@ resource "aws_iam_role" "ec2" {
       }
     ]
   })
-
-  tags = merge(
-    {
-      Name = "${var.project_name}-ec2-role"
-    },
-    var.tags
-  )
 }
 
 # IAM Policy for Route53 (Let's Encrypt DNS challenge)
@@ -71,13 +64,6 @@ resource "aws_iam_role_policy" "route53" {
 resource "aws_iam_instance_profile" "ec2" {
   name = "${var.project_name}-ec2-profile"
   role = aws_iam_role.ec2.name
-
-  tags = merge(
-    {
-      Name = "${var.project_name}-ec2-profile"
-    },
-    var.tags
-  )
 }
 
 # Security Group
