@@ -22,10 +22,6 @@ graph LR
     
     DDBW <-.->|Replication| DDBE
     
-    EC2W -.-> LE[🔒 Let's Encrypt]
-    EC2E -.-> LE
-    LE -.-> R53
-    
     style Users fill:#e1f5ff,stroke:#01579b,stroke-width:2px
     style R53 fill:#ff9800,stroke:#e65100,stroke-width:2px
     style GA fill:#4caf50,stroke:#1b5e20,stroke-width:3px
@@ -35,7 +31,6 @@ graph LR
     style EC2E fill:#fff9c4,stroke:#f57f17,stroke-width:2px
     style DDBW fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
     style DDBE fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
-    style LE fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
 ```
 
 ### ASCII Diagram
@@ -67,7 +62,7 @@ graph LR
     │         │         │        │         │       │
     │  ┌──────▼──────┐  │        │  ┌──────▼──────┐│
     │  │  DynamoDB   │◄─┼────────┼─►│  DynamoDB   ││
-    │  │ app3-dev-   │  │        │  │   Replica   ││
+    │  │ app3-dev    │  │        │  │   Replica   ││
     │  │    data     │  │        │  │             ││
     │  └─────────────┘  │        │  └─────────────┘│
     └───────────────────┘        └─────────────────┘
