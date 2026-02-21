@@ -21,11 +21,6 @@ on:
           - plan
           - apply
           - destroy
-  pull_request:
-    branches:
-      - master
-    paths:
-      - 'terraform/stacks/app3/**'
   push:
     branches:
       - master
@@ -97,7 +92,7 @@ jobs:
             -out=tfplan
 
       - name: Terraform Apply
-        if: github.event.inputs.action == 'apply'
+        if: github.event.inputs.action == 'apply' || github.event_name == 'push'
         run: terraform apply -auto-approve tfplan
 
       - name: Terraform Destroy
