@@ -72,20 +72,20 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-      - name: Run Checkov
-        uses: bridgecrewio/checkov-action@v12
+      - name: Run Trivy Security Scan
+        uses: aquasecurity/trivy-action@master
         with:
-          directory: terraform/stacks/app3
-          framework: terraform
-          output_format: cli,sarif
-          output_file_path: console,results.sarif
-          soft_fail: true
+          scan-type: 'config'
+          scan-ref: 'terraform/stacks/app3'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          exit-code: '0'
 
-      - name: Upload Checkov Results
+      - name: Upload Trivy Results
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: results.sarif
+          sarif_file: trivy-results.sarif
 
       - name: Terraform Plan
         id: plan
