@@ -1,6 +1,6 @@
 # App3 - Cross-Region Active-Active Architecture
 
-Multi-region active-active deployment using AWS Global Accelerator and Route 53 for high availability and low latency global traffic distribution with Let's Encrypt SSL certificates.
+Multi-region active-active deployment using AWS Global Accelerator, Route 53, and DynamoDB Global Tables for high availability, low latency global traffic distribution, and cross-region data replication with Let's Encrypt SSL certificates.
 
 ## Architecture
 
@@ -30,6 +30,7 @@ graph TB
             end
             IGW_West[Internet Gateway]
         end
+        DDB_West["📊 DynamoDB<br/>app3-dev-data<br/>1 RCU / 1 WCU"]
     end
     
     subgraph East["🌍 us-east-1 Region"]
@@ -39,6 +40,7 @@ graph TB
             end
             IGW_East[Internet Gateway]
         end
+        DDB_East["📊 DynamoDB<br/>Replica<br/>1 RCU / 1 WCU"]
     end
     
     subgraph LE["🔒 Let's Encrypt"]
@@ -52,6 +54,9 @@ graph TB
     Listener --> EG_East
     EG_West -->|Health Check| EC2_West
     EG_East -->|Health Check| EC2_East
+    EC2_West -->|Read/Write| DDB_West
+    EC2_East -->|Read/Write| DDB_East
+    DDB_West <-.->|Bi-directional<br/>Replication| DDB_East
     EC2_West -.->|Certificate Request| LetsEncrypt
     EC2_East -.->|Certificate Request| LetsEncrypt
     LetsEncrypt -.->|DNS Validation| R53
@@ -70,6 +75,8 @@ graph TB
     style Subnet_East fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
     style EC2_West fill:#fff9c4,stroke:#f57f17,stroke-width:3px
     style EC2_East fill:#fff9c4,stroke:#f57f17,stroke-width:3px
+    style DDB_West fill:#f3e5f5,stroke:#6a1b9a,stroke-width:3px
+    style DDB_East fill:#f3e5f5,stroke:#6a1b9a,stroke-width:3px
     style LetsEncrypt fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
     style IGW_West fill:#b3e5fc,stroke:#0277bd,stroke-width:2px
     style IGW_East fill:#b3e5fc,stroke:#0277bd,stroke-width:2px
@@ -111,14 +118,54 @@ graph TB
 - **2 EC2 Instances**: Amazon Linux with Nginx and Let's Encrypt SSL in each region
 - **AWS Global Accelerator**: Provides static anycast IPs and intelligent traffic routing on port 443
 - **Route 53**: DNS management with existing hosted zone (cloudconscious.io)
+- **DynamoDB Global Tables**: Cross-region replicated database with sub-second latency
 - **Let's Encrypt SSL**: Automated certificate provisioning and renewal via Route53 DNS challenge
-- **IAM Roles**: EC2 instances have Route53 permissions for certificate management
+- **IAM Roles**: EC2 instances have Route53 and DynamoDB permissions
 
 ### Traffic Distribution
 - **Active-Active**: Both regions serve traffic simultaneously (50/50 split)
 - **Health Checks**: TCP health checks on port 443 every 30 seconds
 - **Automatic Failover**: Unhealthy endpoints removed from rotation
 - **HTTPS Only**: All HTTP traffic redirected to HTTPS
+- **Data Replication**: DynamoDB replicates data bi-directionally between regions
+
+## DynamoDB Global Tables
+
+### Configuration
+- **Table Name**: app3-dev-data
+- **Primary Key**: id (String)
+- **Billing Mode**: PROVISIONED (low-cost for dev)
+- **Capacity**: 1 RCU / 1 WCU per region
+- **Replication**: us-west-2 ↔ us-east-1
+- **Streams**: Enabled (NEW_AND_OLD_IMAGES)
+- **Point-in-Time Recovery**: Disabled (dev environment)
+
+### Features
+- **Multi-Region Writes**: Write to either region, data replicates automatically
+- **Local Reads**: Low-latency reads from local region
+- **Sub-Second Replication**: Typically < 1 second between regions
+- **Conflict Resolution**: Last-writer-wins (automatic)
+- **Strong Consistency**: Available within each region
+
+### Cost Optimization
+- Provisioned capacity (1 RCU/1 WCU) costs ~$0.65/month
+- Pay-per-request would cost ~$2.50/month minimum
+- For production, consider auto-scaling or on-demand billing
+
+### Usage Example
+```bash
+# Write to us-west-2
+aws dynamodb put-item \
+  --table-name app3-dev-data \
+  --item '{"id": {"S": "test-1"}, "data": {"S": "Hello from us-west-2"}}' \
+  --region us-west-2
+
+# Read from us-east-1 (replicated automatically)
+aws dynamodb get-item \
+  --table-name app3-dev-data \
+  --key '{"id": {"S": "test-1"}}' \
+  --region us-east-1
+```
 
 ## SSL/TLS Configuration
 
@@ -203,6 +250,9 @@ After deployment:
 - `domain_name`: cloudconscious.io
 - `ec2_west_public_ip`: Direct EC2 IP in us-west-2
 - `ec2_east_public_ip`: Direct EC2 IP in us-east-1
+- `dynamodb_table_name`: DynamoDB global table name
+- `dynamodb_table_arn`: DynamoDB table ARN
+- `dynamodb_stream_arn`: DynamoDB stream ARN
 
 ## Testing
 
@@ -246,7 +296,7 @@ Each response shows the region and instance ID serving the request.
 
 ### IAM Security
 - EC2 instances use IAM roles (no credentials in code)
-- Least privilege access to Route53
+- Least privilege access to Route53 and DynamoDB
 - GitHub Actions uses OIDC (no long-lived credentials)
 
 ### Health Checks
@@ -259,6 +309,7 @@ Each response shows the region and instance ID serving the request.
 
 - **Global Accelerator**: ~$0.025/hour + data transfer fees (~$18/month fixed)
 - **EC2 t3.micro**: ~$0.0104/hour per instance (~$15/month for 2)
+- **DynamoDB**: ~$0.65/month (1 RCU/1 WCU provisioned in 2 regions)
 - **Route 53**: Queries only (hosted zone managed separately)
 - **Let's Encrypt**: Free SSL certificates
 - **Data Transfer**: Variable based on usage
