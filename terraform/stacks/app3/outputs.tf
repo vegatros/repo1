@@ -8,14 +8,9 @@ output "global_accelerator_ips" {
   value       = aws_globalaccelerator_accelerator.main.ip_sets[0].ip_addresses
 }
 
-output "route53_nameservers" {
-  description = "Route 53 nameservers for domain delegation"
-  value       = aws_route53_zone.main.name_servers
-}
-
 output "domain_name" {
   description = "Configured domain name"
-  value       = var.domain_name
+  value       = "cloudconscious.io"
 }
 
 output "ec2_west_public_ip" {

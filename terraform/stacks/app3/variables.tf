@@ -9,11 +9,6 @@ variable "project_name" {
   default     = "app3"
 }
 
-variable "domain_name" {
-  description = "Route 53 domain name"
-  type        = string
-}
-
 # us-west-2 variables
 variable "vpc_cidr_west" {
   description = "VPC CIDR for us-west-2"

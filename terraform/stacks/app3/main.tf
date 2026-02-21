@@ -131,17 +131,11 @@ resource "aws_globalaccelerator_endpoint_group" "east" {
   health_check_port             = 80
 }
 
-# Route 53 Hosted Zone
-resource "aws_route53_zone" "main" {
-  provider = aws.us-west-2
-  name     = var.domain_name
-}
-
 # Route 53 record pointing to Global Accelerator
 resource "aws_route53_record" "accelerator" {
   provider = aws.us-west-2
-  zone_id  = aws_route53_zone.main.zone_id
-  name     = var.domain_name
+  zone_id  = "Z3LLP0B81D4CRA"
+  name     = "cloudconscious.io"
   type     = "A"
 
   alias {
