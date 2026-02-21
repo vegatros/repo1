@@ -154,12 +154,14 @@ module "dynamodb" {
 
   table_name      = "${var.project_name}-${var.environment}-data"
   hash_key        = "id"
-  billing_mode    = "PAY_PER_REQUEST"
+  billing_mode    = "PROVISIONED"
+  read_capacity   = 1
+  write_capacity  = 1
   replica_regions = ["us-east-1"]
 
   stream_enabled         = true
   stream_view_type       = "NEW_AND_OLD_IMAGES"
-  point_in_time_recovery = true
+  point_in_time_recovery = false
 
   tags = {
     Environment = var.environment
