@@ -26,7 +26,7 @@ graph TB
     subgraph West["🌎 us-west-2 Region"]
         subgraph VPC_West["VPC: 10.3.0.0/16"]
             subgraph Subnet_West["Public Subnet: 10.3.1.0/24"]
-                EC2_West["🖥️ EC2 Instance<br/>Amazon Linux 2023<br/>t3.micro<br/>Nginx + Let's Encrypt<br/>HTTPS: 443"]
+                EC2_West["🖥️ EC2 Instance<br/>Amazon Linux 2023<br/>Nginx + Let's Encrypt<br/>HTTPS: 443"]
             end
             IGW_West[Internet Gateway]
         end
@@ -35,7 +35,7 @@ graph TB
     subgraph East["🌍 us-east-1 Region"]
         subgraph VPC_East["VPC: 10.4.0.0/16"]
             subgraph Subnet_East["Public Subnet: 10.4.1.0/24"]
-                EC2_East["🖥️ EC2 Instance<br/>Amazon Linux 2023<br/>t3.micro<br/>Nginx + Let's Encrypt<br/>HTTPS: 443"]
+                EC2_East["🖥️ EC2 Instance<br/>Amazon Linux 2023<br/>Nginx + Let's Encrypt<br/>HTTPS: 443"]
             end
             IGW_East[Internet Gateway]
         end
