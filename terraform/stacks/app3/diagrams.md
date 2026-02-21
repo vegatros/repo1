@@ -1,6 +1,52 @@
 # App3 - Architecture Diagrams & Service Summary
 
-## High-Level Architecture
+## Color Diagram (Mermaid)
+
+```mermaid
+flowchart TD
+    Users(["🌐 Internet Users"]):::users
+
+    R53["🔖 Route 53\ncloudconscious.io\nZone: Z3LLP0B81D4CRA"]:::dns
+
+    GA["⚡ AWS Global Accelerator\n166.117.62.x / 166.117.139.x\nTCP :443 — 50/50 split"]:::accelerator
+
+    subgraph WEST["🌎  us-west-2"]
+        VPC_W["VPC 10.3.0.0/16"]:::vpc
+        SUB_W["Public Subnet\n10.3.1.0/24 (us-west-2a)"]:::subnet
+        EC2_W["🖥 EC2 t3.micro\nNginx + Let's Encrypt"]:::ec2
+        DDB_W[("🗄 DynamoDB\napp3-dev-data\nprimary")]:::dynamo
+    end
+
+    subgraph EAST["🌍  us-east-1"]
+        VPC_E["VPC 10.4.0.0/16"]:::vpc
+        SUB_E["Public Subnet\n10.4.1.0/24 (us-east-1a)"]:::subnet
+        EC2_E["🖥 EC2 t3.micro\nNginx + Let's Encrypt"]:::ec2
+        DDB_E[("🗄 DynamoDB\napp3-dev-data\nreplica")]:::dynamo
+    end
+
+    Users --> R53
+    R53 -->|Alias| GA
+    GA -->|50%| EC2_W
+    GA -->|50%| EC2_E
+    VPC_W --> SUB_W --> EC2_W --> DDB_W
+    VPC_E --> SUB_E --> EC2_E --> DDB_E
+    DDB_W <-->|"⟳ Bi-directional\nreplication"| DDB_E
+
+    classDef users    fill:#f0f4ff,stroke:#4a6cf7,color:#1a1a2e,font-weight:bold
+    classDef dns      fill:#fff3cd,stroke:#f0a500,color:#1a1a2e,font-weight:bold
+    classDef accelerator fill:#e8f5e9,stroke:#2e7d32,color:#1a1a2e,font-weight:bold
+    classDef vpc      fill:#e3f2fd,stroke:#1565c0,color:#1a1a2e
+    classDef subnet   fill:#e8eaf6,stroke:#3949ab,color:#1a1a2e
+    classDef ec2      fill:#fce4ec,stroke:#c62828,color:#1a1a2e,font-weight:bold
+    classDef dynamo   fill:#f3e5f5,stroke:#6a1b9a,color:#1a1a2e,font-weight:bold
+
+    style WEST fill:#e3f2fd22,stroke:#1565c0,stroke-width:2px
+    style EAST fill:#e8f5e922,stroke:#2e7d32,stroke-width:2px
+```
+
+---
+
+## High-Level Architecture (ASCII)
 
 ```
                         ┌─────────────────────────────────┐
