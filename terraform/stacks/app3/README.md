@@ -15,7 +15,7 @@ Multi-region active-active deployment using AWS Global Accelerator, Route 53, an
                    ┌───────────────────┐
                    │   Route 53        │
                    │ cloudconscious.io │
-                   └────────┬───────────┘
+                   └────────┬──────────┘
                             │
                             ▼
                 ┌───────────────────────┐
