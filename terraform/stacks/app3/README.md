@@ -11,13 +11,13 @@ graph TD
     Users[🌐 Internet Users] --> R53[☁️ Route 53<br/>cloudconscious.io]
     R53 --> GA[⚡ Global Accelerator<br/>166.117.62.x, 166.117.139.x]
     
-    GA --> EC2W[🖥️ EC2 us-west-2<br/>Nginx + SSL]
-    GA --> EC2E[🖥️ EC2 us-east-1<br/>Nginx + SSL]
+    GA --> EC2W
+    GA --> EC2E
     
-    EC2W --> DDBW[📊 DynamoDB<br/>us-west-2]
-    EC2E --> DDBE[📊 DynamoDB<br/>us-east-1]
+    EC2W[🖥️ EC2 us-west-2<br/>Nginx + SSL] --> DDBW[📊 DynamoDB<br/>us-west-2]
+    EC2E[🖥️ EC2 us-east-1<br/>Nginx + SSL] --> DDBE[📊 DynamoDB<br/>us-east-1]
     
-    DDBW <-.Replication.-> DDBE
+    DDBW -.Replication.-> DDBE
     
     style Users fill:#e1f5ff,stroke:#01579b,stroke-width:2px
     style R53 fill:#ff9800,stroke:#e65100,stroke-width:2px
