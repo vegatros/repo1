@@ -6,7 +6,19 @@ variable "table_name" {
 variable "billing_mode" {
   description = "DynamoDB billing mode"
   type        = string
-  default     = "PAY_PER_REQUEST"
+  default     = "PROVISIONED"
+}
+
+variable "read_capacity" {
+  description = "Read capacity units"
+  type        = number
+  default     = 1
+}
+
+variable "write_capacity" {
+  description = "Write capacity units"
+  type        = number
+  default     = 1
 }
 
 variable "hash_key" {

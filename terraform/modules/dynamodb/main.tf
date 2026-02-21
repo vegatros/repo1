@@ -17,6 +17,9 @@ resource "aws_dynamodb_table" "this" {
   stream_enabled   = var.stream_enabled
   stream_view_type = var.stream_enabled ? var.stream_view_type : null
 
+  read_capacity  = var.billing_mode == "PROVISIONED" ? var.read_capacity : null
+  write_capacity = var.billing_mode == "PROVISIONED" ? var.write_capacity : null
+
   attribute {
     name = var.hash_key
     type = "S"
