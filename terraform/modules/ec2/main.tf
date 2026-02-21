@@ -21,12 +21,15 @@ resource "aws_security_group" "ec2" {
   description = "Security group for EC2 instances"
   vpc_id      = var.vpc_id
 
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "SSH access"
+  dynamic "ingress" {
+    for_each = length(var.ssh_allowed_cidrs) > 0 ? [1] : []
+    content {
+      from_port   = 22
+      to_port     = 22
+      protocol    = "tcp"
+      cidr_blocks = var.ssh_allowed_cidrs
+      description = "SSH access from allowed CIDRs"
+    }
   }
 
   ingress {

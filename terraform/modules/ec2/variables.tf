@@ -48,3 +48,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "ssh_allowed_cidrs" {
+  description = "CIDR blocks allowed to SSH (leave empty to disable SSH access)"
+  type        = list(string)
+  default     = []
+}
