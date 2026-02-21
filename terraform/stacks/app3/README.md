@@ -7,20 +7,28 @@ Multi-region active-active deployment using AWS Global Accelerator, Route 53, an
 ### Network Diagram
 
 ```mermaid
-graph LR
-    Users[🌐 Users] --> R53[☁️ Route 53<br/>cloudconscious.io]
-    R53 --> GA[⚡ Global Accelerator<br/>166.117.62.x<br/>166.117.139.x]
+flowchart TB
+    Users[🌐 Internet Users]
+    R53[☁️ Route 53<br/>cloudconscious.io]
+    GA[⚡ Global Accelerator<br/>Static IPs: 166.117.62.x, 166.117.139.x<br/>Port: 443 HTTPS]
     
-    GA --> West[🌎 us-west-2]
-    GA --> East[🌍 us-east-1]
+    subgraph West[🌎 us-west-2 Region]
+        EC2W[🖥️ EC2 Instance<br/>Amazon Linux<br/>Nginx + Let's Encrypt]
+        DDBW[📊 DynamoDB<br/>app3-dev-data<br/>1 RCU / 1 WCU]
+    end
     
-    West --> EC2W[🖥️ EC2<br/>Nginx + SSL]
-    East --> EC2E[🖥️ EC2<br/>Nginx + SSL]
+    subgraph East[🌍 us-east-1 Region]
+        EC2E[🖥️ EC2 Instance<br/>Amazon Linux<br/>Nginx + Let's Encrypt]
+        DDBE[📊 DynamoDB<br/>Replica<br/>1 RCU / 1 WCU]
+    end
     
-    EC2W --> DDBW[📊 DynamoDB<br/>app3-dev-data]
-    EC2E --> DDBE[📊 DynamoDB<br/>Replica]
-    
-    DDBW <-.->|Replication| DDBE
+    Users --> R53
+    R53 --> GA
+    GA --> EC2W
+    GA --> EC2E
+    EC2W --> DDBW
+    EC2E --> DDBE
+    DDBW <-.Replication.-> DDBE
     
     style Users fill:#e1f5ff,stroke:#01579b,stroke-width:2px
     style R53 fill:#ff9800,stroke:#e65100,stroke-width:2px
