@@ -1,6 +1,5 @@
 environment  = "dev"
 project_name = "app3"
-domain_name  = "cloudconcious.dev"
 
 # us-west-2 configuration
 vpc_cidr_west            = "10.3.0.0/16"
