@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 yum update -y
 yum install -y nginx
 
@@ -30,58 +32,28 @@ cat > /usr/share/nginx/html/index.html <<EOF
 </html>
 EOF
 
-# Configure nginx
-cat > /etc/nginx/nginx.conf <<'NGINX_EOF'
-user nginx;
-worker_processes auto;
-error_log /var/log/nginx/error.log;
-pid /run/nginx.pid;
+# Add SSL server block
+cat > /etc/nginx/conf.d/ssl.conf <<'EOF'
+server {
+    listen 443 ssl http2 default_server;
+    listen [::]:443 ssl http2 default_server;
+    server_name _;
+    root /usr/share/nginx/html;
 
-events {
-    worker_connections 1024;
-}
+    ssl_certificate /etc/nginx/ssl/cert.pem;
+    ssl_certificate_key /etc/nginx/ssl/key.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
 
-http {
-    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
-                      '$status $body_bytes_sent "$http_referer" '
-                      '"$http_user_agent" "$http_x_forwarded_for"';
-
-    access_log  /var/log/nginx/access.log  main;
-
-    sendfile            on;
-    tcp_nopush          on;
-    tcp_nodelay         on;
-    keepalive_timeout   65;
-    types_hash_max_size 4096;
-
-    include             /etc/nginx/mime.types;
-    default_type        application/octet-stream;
-
-    # HTTP server - redirect to HTTPS
-    server {
-        listen       80;
-        server_name  _;
-        return 301 https://$host$request_uri;
-    }
-
-    # HTTPS server
-    server {
-        listen       443 ssl http2;
-        server_name  _;
-        root         /usr/share/nginx/html;
-
-        ssl_certificate /etc/nginx/ssl/cert.pem;
-        ssl_certificate_key /etc/nginx/ssl/key.pem;
-        ssl_protocols TLSv1.2 TLSv1.3;
-        ssl_ciphers HIGH:!aNULL:!MD5;
-        ssl_prefer_server_ciphers on;
-
-        location / {
-            index index.html;
-        }
+    location / {
+        index index.html;
     }
 }
-NGINX_EOF
+EOF
+
+# Modify default HTTP server to redirect to HTTPS
+sed -i 's/listen       80;/listen       80;\n    return 301 https:\/\/$host$request_uri;/' /etc/nginx/nginx.conf
 
 systemctl start nginx
 systemctl enable nginx
