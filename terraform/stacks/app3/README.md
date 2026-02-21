@@ -17,7 +17,7 @@ graph TB
     end
     
     subgraph GA["⚡ AWS Global Accelerator"]
-        Accelerator[Static Anycast IPs<br/>166.117.62.166<br/>166.117.139.123<br/>Port: 443 HTTPS]
+        Accelerator[Static Anycast IPs<br/>166.117.62.x<br/>166.117.139.x<br/>Port: 443 HTTPS]
         Listener[TCP Listener<br/>Port 443]
         EG_West[Endpoint Group<br/>us-west-2<br/>Traffic: 50%<br/>Health: TCP/443]
         EG_East[Endpoint Group<br/>us-east-1<br/>Traffic: 50%<br/>Health: TCP/443]
