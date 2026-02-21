@@ -29,8 +29,8 @@ graph TB
                 EC2_West["🖥️ EC2 Instance<br/>Amazon Linux<br/>Nginx + Let's Encrypt<br/>HTTPS: 443"]
             end
             IGW_West[Internet Gateway]
+            DDB_West["📊 DynamoDB<br/>app3-dev-data<br/>1 RCU / 1 WCU"]
         end
-        DDB_West["📊 DynamoDB<br/>app3-dev-data<br/>1 RCU / 1 WCU"]
     end
     
     subgraph East["🌍 us-east-1 Region"]
@@ -39,8 +39,8 @@ graph TB
                 EC2_East["🖥️ EC2 Instance<br/>Amazon Linux<br/>Nginx + Let's Encrypt<br/>HTTPS: 443"]
             end
             IGW_East[Internet Gateway]
+            DDB_East["📊 DynamoDB<br/>Replica<br/>1 RCU / 1 WCU"]
         end
-        DDB_East["📊 DynamoDB<br/>Replica<br/>1 RCU / 1 WCU"]
     end
     
     subgraph LE["🔒 Let's Encrypt"]
