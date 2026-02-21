@@ -60,6 +60,32 @@ resource "aws_iam_role_policy" "route53" {
   })
 }
 
+# IAM Policy for DynamoDB
+resource "aws_iam_role_policy" "dynamodb" {
+  name = "${var.project_name}-dynamodb-policy"
+  role = aws_iam_role.ec2.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Query",
+          "dynamodb:Scan",
+          "dynamodb:BatchGetItem",
+          "dynamodb:BatchWriteItem"
+        ]
+        Resource = "arn:aws:dynamodb:*:*:table/*"
+      }
+    ]
+  })
+}
+
 # IAM Instance Profile
 resource "aws_iam_instance_profile" "ec2" {
   name = "${var.project_name}-ec2-profile"

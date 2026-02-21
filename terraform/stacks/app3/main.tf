@@ -144,3 +144,25 @@ resource "aws_route53_record" "accelerator" {
     evaluate_target_health = true
   }
 }
+
+# DynamoDB Global Table
+module "dynamodb" {
+  source = "../../modules/dynamodb"
+  providers = {
+    aws = aws.us-west-2
+  }
+
+  table_name      = "${var.project_name}-${var.environment}-data"
+  hash_key        = "id"
+  billing_mode    = "PAY_PER_REQUEST"
+  replica_regions = ["us-east-1"]
+
+  stream_enabled         = true
+  stream_view_type       = "NEW_AND_OLD_IMAGES"
+  point_in_time_recovery = true
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
