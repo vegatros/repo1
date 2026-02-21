@@ -27,8 +27,7 @@ module "vpc_west" {
 
   vpc_cidr            = var.vpc_cidr_west
   public_subnet_cidrs = var.public_subnet_cidrs_west
-  availability_zones  = var.availability_zones_west
-  environment         = var.environment
+  azs                 = var.availability_zones_west
   project_name        = "${var.project_name}-west"
 }
 
@@ -56,8 +55,7 @@ module "vpc_east" {
 
   vpc_cidr            = var.vpc_cidr_east
   public_subnet_cidrs = var.public_subnet_cidrs_east
-  availability_zones  = var.availability_zones_east
-  environment         = var.environment
+  azs                 = var.availability_zones_east
   project_name        = "${var.project_name}-east"
 }
 
