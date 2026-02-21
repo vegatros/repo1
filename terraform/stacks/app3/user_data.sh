@@ -1,5 +1,7 @@
 #!/bin/bash
-set -e
+exec > >(tee /var/log/user-data.log)
+exec 2>&1
+set -x
 
 yum update -y
 yum install -y nginx
@@ -32,29 +34,78 @@ cat > /usr/share/nginx/html/index.html <<EOF
 </html>
 EOF
 
-# Add SSL server block
-cat > /etc/nginx/conf.d/ssl.conf <<'EOF'
-server {
-    listen 443 ssl http2 default_server;
-    listen [::]:443 ssl http2 default_server;
-    server_name _;
-    root /usr/share/nginx/html;
+# Backup original config
+cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak
 
-    ssl_certificate /etc/nginx/ssl/cert.pem;
-    ssl_certificate_key /etc/nginx/ssl/key.pem;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-    ssl_prefer_server_ciphers on;
+# Create new nginx config with SSL
+cat > /etc/nginx/nginx.conf <<'EOF'
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log notice;
+pid /run/nginx.pid;
 
-    location / {
-        index index.html;
+include /usr/share/nginx/modules/*.conf;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    keepalive_timeout   65;
+    types_hash_max_size 4096;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    server {
+        listen       80;
+        listen       [::]:80;
+        server_name  _;
+        return 301 https://$host$request_uri;
+    }
+
+    server {
+        listen       443 ssl http2;
+        listen       [::]:443 ssl http2;
+        server_name  _;
+        root         /usr/share/nginx/html;
+
+        ssl_certificate "/etc/nginx/ssl/cert.pem";
+        ssl_certificate_key "/etc/nginx/ssl/key.pem";
+        ssl_session_cache shared:SSL:1m;
+        ssl_session_timeout  10m;
+        ssl_ciphers HIGH:!aNULL:!MD5;
+        ssl_prefer_server_ciphers on;
+
+        location / {
+        }
+
+        error_page 404 /404.html;
+        location = /404.html {
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+        }
     }
 }
 EOF
 
-# Modify default HTTP server to redirect to HTTPS
-sed -i 's/listen       80;/listen       80;\n    return 301 https:\/\/$host$request_uri;/' /etc/nginx/nginx.conf
+# Test nginx config
+nginx -t
 
-systemctl start nginx
+# Start nginx
 systemctl enable nginx
+systemctl restart nginx
+
+# Verify nginx is running
+systemctl status nginx
 
