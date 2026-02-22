@@ -4,6 +4,7 @@ module "vpc" {
 
   project_name             = var.project_name
   vpc_cidr                 = var.vpc_cidr
+  private_subnet_cidrs     = ["10.0.10.0/24", "10.0.11.0/24"]
   enable_nat_gateway       = true
   enable_flow_logs         = false  # Disabled - requires IAM permissions
 
