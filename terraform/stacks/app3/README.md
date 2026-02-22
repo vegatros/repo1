@@ -63,17 +63,17 @@ aws dynamodb get-item \
 
 ## Environment Configuration
 
-### Dev Environment (dev.tfvars)
+### Dev Environment (vars/dev.tfvars)
 - VPC CIDRs: 10.3.0.0/16 (west), 10.4.0.0/16 (east)
 - Instance type: t3.micro
 - DynamoDB: PAY_PER_REQUEST
 
-### QA Environment (qa.tfvars)
+### QA Environment (vars/qa.tfvars)
 - VPC CIDRs: 10.5.0.0/16 (west), 10.6.0.0/16 (east)
 - Instance type: t3.micro
 - DynamoDB: PAY_PER_REQUEST
 
-### Prod Environment (prod.tfvars)
+### Prod Environment (vars/prod.tfvars)
 - VPC CIDRs: 10.7.0.0/16 (west), 10.8.0.0/16 (east)
 - Instance type: t3.small
 - DynamoDB: PAY_PER_REQUEST
@@ -115,10 +115,10 @@ cd terraform/stacks/app3
 terraform init
 
 # Plan
-terraform plan -var-file="dev.tfvars"
+terraform plan -var-file="vars/dev.tfvars"
 
 # Apply
-terraform apply -var-file="dev.tfvars"
+terraform apply -var-file="vars/dev.tfvars"
 ```
 
 ### GitHub Actions Deployment
@@ -133,7 +133,7 @@ Trigger via workflow dispatch:
 
 ## Configuration
 
-### Environment Variables (dev.tfvars)
+### Environment Variables (vars/dev.tfvars)
 
 ```hcl
 environment  = "dev"
@@ -274,9 +274,9 @@ Each response shows the region and instance ID serving the request.
 - `main.tf` - Multi-region infrastructure with Global Accelerator
 - `variables.tf` - Configuration variables
 - `outputs.tf` - Infrastructure outputs
-- `dev.tfvars` - Dev environment configuration
-- `qa.tfvars` - QA environment configuration
-- `prod.tfvars` - Prod environment configuration
+- `vars/dev.tfvars` - Dev environment configuration
+- `vars/qa.tfvars` - QA environment configuration
+- `vars/prod.tfvars` - Prod environment configuration
 - `backend.tf` - S3 state backend
 - `user_data.sh` - Nginx + Let's Encrypt installation script
 - `README.md` - This file
