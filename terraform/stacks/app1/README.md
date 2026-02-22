@@ -23,8 +23,10 @@ App1 is a production-ready web hosting stack that deploys Nginx web servers acro
 
 ### Networking
 - **VPC**: 10.0.0.0/16 CIDR block
-- **Public Subnets**: 2 subnets across us-east-1a and us-east-1b
-- **Internet Gateway**: Direct internet connectivity
+- **Public Subnets**: 2 subnets (10.0.0.0/24, 10.0.1.0/24) for ALB and NAT Gateway
+- **Private Subnets**: 2 subnets (10.0.10.0/24, 10.0.11.0/24) for EC2 instances
+- **Internet Gateway**: Direct internet connectivity for public subnets
+- **NAT Gateway**: Outbound internet access for private subnets
 - **Route53**: DNS management for cloudconscious.io
 
 ### Compute
@@ -42,6 +44,8 @@ App1 is a production-ready web hosting stack that deploys Nginx web servers acro
 ### Security
 - **ALB Security Group**: Allows 80 (HTTP) and 443 (HTTPS) from internet
 - **EC2 Security Group**: Allows 80 (HTTP) from ALB only
+- **Private Subnets**: EC2 instances have no direct internet access
+- **NAT Gateway**: Controlled outbound internet for updates only
 - **IAM Roles**: EC2 instance profiles with Route53 and DynamoDB access
 
 ## Deployment
@@ -200,11 +204,13 @@ Comment out or remove `scheduler.tf` resources for 24/7 availability.
 
 ## Security Best Practices
 
-1. **Network Isolation**: EC2 instances only accept traffic from ALB
-2. **SSL/TLS**: All traffic encrypted in transit
-3. **IMDSv2**: Instance metadata service v2 enforced
-4. **No SSH Keys**: SSH access disabled by default (can be enabled per environment)
-5. **Least Privilege IAM**: Minimal permissions for EC2 instance roles
+1. **Network Isolation**: EC2 instances in private subnets with no direct internet access
+2. **Single Entry Point**: All traffic must go through ALB (no direct instance access)
+3. **SSL/TLS**: All traffic encrypted in transit
+4. **IMDSv2**: Instance metadata service v2 enforced
+5. **No SSH Keys**: SSH access disabled by default (can be enabled per environment)
+6. **Least Privilege IAM**: Minimal permissions for EC2 instance roles
+7. **NAT Gateway**: Controlled outbound access for updates only
 
 ## Troubleshooting
 
