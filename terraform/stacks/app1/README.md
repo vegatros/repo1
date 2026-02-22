@@ -234,8 +234,9 @@ After deployment, Terraform outputs:
 │   ├── cloudconscious.html  # Homepage
 │   └── resume.html          # Resume page
 ├── schedule/            # Scheduler Lambda function
-├── network-diagram.drawio   # Architecture diagram (editable)
-├── network-diagram.drawio.png  # Architecture diagram (image)
+├── diagrams/
+│   ├── network-diagram.drawio      # Architecture diagram (editable)
+│   └── network-diagram.drawio.png  # Architecture diagram (image)
 └── README.md           # This file
 ```
 
