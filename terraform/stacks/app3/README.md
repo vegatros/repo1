@@ -59,7 +59,7 @@ Multi-region active-active deployment using AWS Global Accelerator, Route 53, an
 - **Active-Active**: Both regions serve traffic simultaneously (50/50 split)
 - **Health Checks**: TCP health checks on port 443 every 30 seconds
 - **Automatic Failover**: Unhealthy endpoints removed from rotation
-- **HTTPS Only**: All HTTP traffic redirected to HTTPS
+- **HTTPS Only**: Direct HTTPS access on port 443
 - **Data Replication**: DynamoDB replicates data bi-directionally between regions
 
 ## DynamoDB Global Tables
@@ -127,12 +127,12 @@ aws dynamodb get-item \
 - **Email**: vegatros@gmail.com (renewal notifications)
 
 ### How It Works
-1. Instance launches with nginx on port 80
+1. Instance launches with nginx on port 443
 2. Certbot requests certificate from Let's Encrypt
 3. Creates DNS TXT record in Route53 for validation
 4. Let's Encrypt validates domain ownership
 5. Certificate installed at `/etc/letsencrypt/live/cloudconscious.io/`
-6. Nginx configured with SSL and HTTP redirect
+6. Nginx configured with SSL on port 443
 7. Cron job runs twice daily to check for renewal
 
 ## Deployment
@@ -216,10 +216,6 @@ curl https://cloudconscious.io
 curl https://<ec2_west_public_ip>
 curl https://<ec2_east_public_ip>
 
-# Verify HTTP redirect
-curl -I http://cloudconscious.io
-# Should return: HTTP/1.1 301 Moved Permanently
-
 # Check SSL certificate
 openssl s_client -connect cloudconscious.io:443 -servername cloudconscious.io
 ```
@@ -229,7 +225,7 @@ Each response shows the region and instance ID serving the request.
 ## Security Features
 
 ### Network Security
-- Security groups allow only HTTP (80) and HTTPS (443)
+- Security groups allow only HTTPS (443)
 - No SSH access by default
 - VPCs isolated per region
 - IMDSv2 required (enforced)
@@ -241,7 +237,7 @@ Each response shows the region and instance ID serving the request.
 - Strong cipher suites (HIGH:!aNULL:!MD5)
 - Server-preferred cipher order
 - Automatic certificate renewal
-- HTTP to HTTPS redirect (301)
+- HTTPS only on port 443
 
 ### IAM Security
 - EC2 instances use IAM roles (no credentials in code)
@@ -305,11 +301,6 @@ Each response shows the region and instance ID serving the request.
 - Test renewal: `certbot renew --dry-run`
 - Verify IAM role has Route53 permissions
 - Check certbot logs for errors
-
-### HTTP not redirecting to HTTPS
-- Test redirect: `curl -I http://<instance-ip>`
-- Check nginx configuration for redirect rule
-- Verify port 80 is open in security group
 
 ### DNS not resolving
 - Verify Route 53 record points to Global Accelerator
