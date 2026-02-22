@@ -43,6 +43,7 @@ App1 is a production-ready web hosting stack that deploys Nginx web servers acro
 
 ### Security
 - **ALB Security Group**: Allows 80 (HTTP) and 443 (HTTPS) from internet
+- **HTTP to HTTPS Redirect**: ALB automatically redirects all HTTP traffic to HTTPS
 - **EC2 Security Group**: Allows 80 (HTTP) from ALB only
 - **Private Subnets**: EC2 instances have no direct internet access
 - **NAT Gateway**: Controlled outbound internet for updates only
