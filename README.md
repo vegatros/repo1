@@ -2,6 +2,10 @@
 
 This repository contains Terraform configurations for managing AWS infrastructure and GitHub Actions workflows for automated deployment and security scanning.
 
+## Architecture Diagram
+
+![Network Architecture](terraform/stacks/app1/diagrams/network-diagram.drawio.png)
+
 ## Repository Structure
 
 ```
