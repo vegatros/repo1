@@ -30,7 +30,7 @@ output "instance_public_ips" {
 
 output "nginx_url" {
   description = "Nginx web server URL"
-  value       = length(module.ec2.instance_public_ips) > 0 ? "https://${aws_eip.web.public_ip}" : "No public IP"
+  value       = length(module.ec2.instance_public_ips) > 0 ? "http://${aws_eip.web.public_ip}" : "No public IP"
 }
 
 output "elastic_ip" {
@@ -38,7 +38,12 @@ output "elastic_ip" {
   value       = aws_eip.web.public_ip
 }
 
-# output "alb_dns_name" {
-#   description = "Application Load Balancer DNS name"
-#   value       = aws_lb.main.dns_name
-# }
+output "alb_dns_name" {
+  description = "Application Load Balancer DNS name"
+  value       = aws_lb.main.dns_name
+}
+
+output "alb_url" {
+  description = "Application Load Balancer URL"
+  value       = var.domain_name != "" ? "https://${var.domain_name}" : "http://${aws_lb.main.dns_name}"
+}
