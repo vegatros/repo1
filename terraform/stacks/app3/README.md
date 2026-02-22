@@ -1,4 +1,4 @@
-# App3 - Cross-Region Active-Active Architecture
+# App3 - Cross-Region Active-Active
 
 Multi-region active-active deployment using AWS Global Accelerator, Route 53, and DynamoDB Global Tables for high availability, low latency global traffic distribution, and cross-region data replication with Let's Encrypt SSL certificates.
 
