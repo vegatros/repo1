@@ -65,10 +65,9 @@ Multi-region active-active deployment using AWS Global Accelerator, Route 53, an
 ## DynamoDB Global Tables
 
 ### Configuration
-- **Table Name**: app3-dev-data
+- **Table Name**: app3-{environment}-data
 - **Primary Key**: id (String)
-- **Billing Mode**: PROVISIONED (low-cost for dev)
-- **Capacity**: 1 RCU / 1 WCU per region
+- **Billing Mode**: PAY_PER_REQUEST (required for Global Tables with replicas)
 - **Replication**: us-west-2 ↔ us-east-1
 - **Streams**: Enabled (NEW_AND_OLD_IMAGES)
 - **Point-in-Time Recovery**: Disabled (dev environment)
@@ -81,9 +80,9 @@ Multi-region active-active deployment using AWS Global Accelerator, Route 53, an
 - **Strong Consistency**: Available within each region
 
 ### Cost Optimization
-- Provisioned capacity (1 RCU/1 WCU) costs ~$0.65/month
-- Pay-per-request would cost ~$2.50/month minimum
-- For production, consider auto-scaling or on-demand billing
+- Pay-per-request billing: ~$1.25 per million write requests, ~$0.25 per million read requests
+- No minimum cost, pay only for what you use
+- Ideal for unpredictable or low-traffic workloads
 
 ### Usage Example
 ```bash
@@ -99,6 +98,23 @@ aws dynamodb get-item \
   --key '{"id": {"S": "test-1"}}' \
   --region us-east-1
 ```
+
+## Environment Configuration
+
+### Dev Environment (dev.tfvars)
+- VPC CIDRs: 10.3.0.0/16 (west), 10.4.0.0/16 (east)
+- Instance type: t3.micro
+- DynamoDB: PAY_PER_REQUEST
+
+### QA Environment (qa.tfvars)
+- VPC CIDRs: 10.5.0.0/16 (west), 10.6.0.0/16 (east)
+- Instance type: t3.micro
+- DynamoDB: PAY_PER_REQUEST
+
+### Prod Environment (prod.tfvars)
+- VPC CIDRs: 10.7.0.0/16 (west), 10.8.0.0/16 (east)
+- Instance type: t3.small
+- DynamoDB: PAY_PER_REQUEST
 
 ## SSL/TLS Configuration
 
@@ -242,11 +258,14 @@ Each response shows the region and instance ID serving the request.
 
 - **Global Accelerator**: ~$0.025/hour + data transfer fees (~$18/month fixed)
 - **EC2 t3.micro**: ~$0.0104/hour per instance (~$15/month for 2)
-- **DynamoDB**: ~$0.65/month (1 RCU/1 WCU provisioned in 2 regions)
+- **EC2 t3.small**: ~$0.0208/hour per instance (~$30/month for 2, prod only)
+- **DynamoDB**: Pay-per-request (~$1.25/million writes, ~$0.25/million reads)
 - **Route 53**: Queries only (hosted zone managed separately)
 - **Let's Encrypt**: Free SSL certificates
 - **Data Transfer**: Variable based on usage
-- **Estimated monthly cost**: ~$35-40 for dev environment
+- **Estimated monthly cost**: 
+  - Dev/QA: ~$35-40
+  - Prod: ~$50-55
 
 ## Monitoring & Observability
 
@@ -303,10 +322,12 @@ Each response shows the region and instance ID serving the request.
 - `variables.tf` - Configuration variables
 - `outputs.tf` - Infrastructure outputs
 - `dev.tfvars` - Dev environment configuration
+- `qa.tfvars` - QA environment configuration
+- `prod.tfvars` - Prod environment configuration
 - `backend.tf` - S3 state backend
 - `user_data.sh` - Nginx + Let's Encrypt installation script
 - `README.md` - This file
-- `diagrams.md` - Architecture diagrams and service details
+- `diagrams/` - Architecture diagrams and documentation
 
 ## CI/CD Pipeline
 
@@ -365,7 +386,7 @@ sudo certbot certificates
 
 ## Documentation
 
-- See `diagrams.md` for detailed architecture diagrams
+- See `diagrams/diagrams.md` for detailed architecture diagrams
 - See GitHub Actions workflow for CI/CD pipeline details
 - See Terraform outputs for deployed resource information
 - Let's Encrypt documentation: https://letsencrypt.org/docs/
