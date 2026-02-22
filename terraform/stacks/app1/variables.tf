@@ -38,3 +38,15 @@ variable "key_name" {
   type        = string
   default     = ""
 }
+
+variable "domain_name" {
+  description = "Domain name for SSL certificate"
+  type        = string
+  default     = ""
+}
+
+variable "route53_zone_id" {
+  description = "Route53 hosted zone ID for domain"
+  type        = string
+  default     = ""
+}
