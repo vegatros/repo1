@@ -78,7 +78,7 @@ User Request (cloudconscious.io)
          └── us-east-1 healthy? ──► Route 50% traffic to EC2 east
 
    EC2 (Nginx)
-   ─ Port 80: redirect to HTTPS (301)
+   ─ Port 80: redirect to HTTPS
    ─ Port 443: serve content with Let's Encrypt cert
    ─ Response includes region + instance ID
 ```
@@ -141,7 +141,7 @@ User Request (cloudconscious.io)
 | AMI (east)      | ami-0f3caa1cf4417e51b       |
 | Web Server      | Nginx                      |
 | SSL             | Let's Encrypt (auto-renew) |
-| Port 80         | Redirect to HTTPS (301)    |
+| Port 80         | Redirect to HTTPS          |
 | Port 443        | HTTPS (TLS 1.2/1.3)        |
 | IMDSv2          | Required                   |
 | EBS Encryption  | Enabled                    |
