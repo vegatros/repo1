@@ -17,7 +17,7 @@ App1 is a production-ready web hosting stack that deploys Nginx web servers acro
 - **Load Balancing**: Application Load Balancer with health checks
 - **Auto-Scaling Ready**: Infrastructure supports easy scaling
 - **Security**: Security groups with least-privilege access
-- **Cost Optimized**: Instance scheduler for dev/qa environments
+- **Cost Optimized**: Instance scheduler for dev/qa/prod environments
 
 ## Infrastructure Components
 
