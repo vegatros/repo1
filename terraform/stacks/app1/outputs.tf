@@ -23,21 +23,6 @@ output "instance_private_ips" {
   value       = module.ec2.instance_private_ips
 }
 
-output "instance_public_ips" {
-  description = "EC2 public IPs"
-  value       = module.ec2.instance_public_ips
-}
-
-output "nginx_url" {
-  description = "Nginx web server URL"
-  value       = length(module.ec2.instance_public_ips) > 0 ? "http://${aws_eip.web.public_ip}" : "No public IP"
-}
-
-output "elastic_ip" {
-  description = "Elastic IP address"
-  value       = aws_eip.web.public_ip
-}
-
 output "alb_dns_name" {
   description = "Application Load Balancer DNS name"
   value       = aws_lb.main.dns_name

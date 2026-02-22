@@ -4,7 +4,7 @@ module "vpc" {
 
   project_name             = var.project_name
   vpc_cidr                 = var.vpc_cidr
-  enable_nat_gateway       = false
+  enable_nat_gateway       = true
   enable_flow_logs         = false  # Disabled - requires IAM permissions
 
   tags = {
@@ -53,7 +53,7 @@ module "ec2" {
 
   project_name            = var.project_name
   vpc_id                  = module.vpc.vpc_id
-  subnet_ids              = module.vpc.public_subnet_ids
+  subnet_ids              = module.vpc.private_subnet_ids
   instance_type           = var.instance_type
   instance_count          = var.instance_count
   key_name                = var.key_name
@@ -62,17 +62,6 @@ module "ec2" {
   user_data = file("${path.module}/user_data.sh")
 
   tags = {
-    Environment = var.environment
-  }
-}
-
-# Elastic IP
-resource "aws_eip" "web" {
-  instance = module.ec2.instance_ids[0]
-  domain   = "vpc"
-
-  tags = {
-    Name        = "${var.project_name}-eip"
     Environment = var.environment
   }
 }
