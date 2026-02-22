@@ -5,5 +5,5 @@ vpc_cidr        = "10.0.0.0/16"
 instance_type   = "t2.nano"
 instance_count  = 1
 key_name        = "myapp-dev-key"
-domain_name     = ""
-route53_zone_id = ""
+domain_name     = "dev.cloudconscious.io"
+route53_zone_id = "Z3LLP0B81D4CRA"
