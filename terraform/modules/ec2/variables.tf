@@ -54,3 +54,9 @@ variable "ssh_allowed_cidrs" {
   type        = list(string)
   default     = []
 }
+
+variable "alb_security_group_id" {
+  description = "ALB security group ID to allow traffic from"
+  type        = string
+  default     = ""
+}
