@@ -233,7 +233,11 @@ After deployment, Terraform outputs:
 ├── html/
 │   ├── cloudconscious.html  # Homepage
 │   └── resume.html          # Resume page
-├── schedule/            # Scheduler Lambda function
+├── schedule/
+│   ├── lambda_start.py      # Lambda function to start instances
+│   ├── lambda_stop.py       # Lambda function to stop instances
+│   ├── lambda_start.zip     # Packaged start function
+│   └── lambda_stop.zip      # Packaged stop function
 ├── diagrams/
 │   ├── network-diagram.drawio      # Architecture diagram (editable)
 │   └── network-diagram.drawio.png  # Architecture diagram (image)
