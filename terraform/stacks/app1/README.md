@@ -152,12 +152,51 @@ aws elbv2 describe-target-health \
 
 ### Instance Scheduler
 
-Dev and QA environments include EC2 scheduler to reduce costs:
-- **Start**: 8 AM EST (Monday-Friday)
-- **Stop**: 6 PM EST (Monday-Friday)
-- **Weekend**: Instances stopped
+Dev and QA environments include automated EC2 scheduler to reduce costs using AWS Lambda and EventBridge.
 
-Estimated savings: ~60% reduction in compute costs for non-prod environments.
+**Architecture:**
+- **Lambda Functions**: Python-based functions to start/stop EC2 instances
+- **EventBridge Rules**: Cron-based scheduling triggers
+- **IAM Role**: Least-privilege permissions for EC2 operations
+
+**Schedule:**
+- **Stop**: 12:00 AM ET (5:00 AM UTC) - Daily
+- **Start**: 6:00 AM ET (11:00 AM UTC) - Daily
+
+**Implementation:**
+
+The scheduler uses two Lambda functions (`schedule/lambda_start.py` and `schedule/lambda_stop.py`) that:
+1. Receive instance ID via environment variable
+2. Use boto3 to call EC2 start/stop APIs
+3. Log operations to CloudWatch
+
+**Configuration:**
+
+Located in `scheduler.tf`:
+- IAM role with EC2 start/stop permissions
+- Lambda functions with Python 3.11 runtime
+- EventBridge cron rules for scheduling
+- CloudWatch Logs for monitoring
+
+**Cost Savings:**
+- **Daily**: 18 hours stopped (75% reduction)
+- **Monthly**: ~540 hours saved per instance
+- **Estimated Savings**: 60-75% reduction in compute costs for non-prod environments
+
+**Customization:**
+
+Modify schedule in `scheduler.tf`:
+```hcl
+# Stop at 6 PM ET (11 PM UTC)
+schedule_expression = "cron(0 23 * * ? *)"
+
+# Start at 8 AM ET (1 PM UTC)  
+schedule_expression = "cron(0 13 * * ? *)"
+```
+
+**Disable Scheduler:**
+
+Comment out or remove `scheduler.tf` resources for 24/7 availability.
 
 ## Security Best Practices
 
