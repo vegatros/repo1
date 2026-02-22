@@ -4,7 +4,7 @@ High-availability web application infrastructure using EC2 instances behind an A
 
 ## Architecture
 
-![Network Architecture](network-diagram.drawio.png)
+![Network Architecture](diagrams/network-diagram.drawio.png)
 
 ## Overview
 
