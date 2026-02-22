@@ -1,13 +1,5 @@
 # App3 - Architecture Diagrams & Service Summary
 
-## Architecture Diagram
-
-![App3 Architecture](./app3-architecture.drawio.png)
-
-> Source file: [`app3-architecture.drawio`](./app3-architecture.drawio) — open in [diagrams.net](https://app.diagrams.net) or VS Code with the [Draw.io Integration](https://marketplace.visualstudio.com/items?itemName=hediet.vscode-drawio) extension.
-
----
-
 ## High-Level Architecture (ASCII)
 
 ```
