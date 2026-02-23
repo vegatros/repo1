@@ -1,0 +1,28 @@
+namespace: app-qa
+replicaCount: 2
+
+ingress:
+  enabled: true
+  hosts:
+    - host: app-qa.cloudconscious.io
+      paths:
+        - path: /
+          pathType: Prefix
+
+configMap:
+  enabled: true
+  data:
+    APP_ENV: qa
+    LOG_LEVEL: info
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true

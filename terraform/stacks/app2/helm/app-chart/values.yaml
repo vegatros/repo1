@@ -1,14 +1,46 @@
+# -- Number of replicas (ignored if HPA enabled)
 replicaCount: 2
+
+# -- Namespace to deploy into
+namespace: default
 
 image:
   repository: nginx
-  tag: "1.21"
+  tag: "1.25"
   pullPolicy: IfNotPresent
 
-service:
-  type: LoadBalancer
-  port: 80
+# -- Service Account configuration
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+  # For IRSA:
+  # annotations:
+  #   eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT:role/ROLE
 
+# -- Linkerd mesh injection
+linkerd:
+  inject: enabled  # "enabled", "disabled", or "ingress"
+
+# -- Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+# -- Ingress configuration
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: app.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# -- Container resource requests and limits
 resources:
   limits:
     cpu: 200m
@@ -16,3 +48,76 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
+
+# -- Liveness probe configuration
+livenessProbe:
+  httpGet:
+    path: /
+    port: 80
+  initialDelaySeconds: 15
+  periodSeconds: 20
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# -- Readiness probe configuration
+readinessProbe:
+  httpGet:
+    path: /
+    port: 80
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# -- Security context for the pod
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 101    # nginx user
+  fsGroup: 101
+
+# -- Security context for the container
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+# -- Horizontal Pod Autoscaler
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# -- Pod Disruption Budget
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+# -- Network Policy
+networkPolicy:
+  enabled: false
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 80
+
+# -- ConfigMap data (key-value pairs injected as env vars)
+configMap:
+  enabled: false
+  data: {}
+
+# -- Node selector
+nodeSelector: {}
+
+# -- Tolerations
+tolerations: []
+
+# -- Affinity rules
+affinity: {}

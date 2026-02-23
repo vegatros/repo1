@@ -48,3 +48,21 @@ variable "admin_arns" {
   type        = list(string)
   default     = []
 }
+
+variable "enable_irsa" {
+  description = "Enable IAM Roles for Service Accounts (OIDC provider)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_cluster_logging" {
+  description = "Enable EKS control plane logging"
+  type        = bool
+  default     = false
+}
+
+variable "cluster_log_types" {
+  description = "List of EKS control plane log types to enable"
+  type        = list(string)
+  default     = ["api", "audit", "authenticator"]
+}
