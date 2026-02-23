@@ -54,6 +54,11 @@ resource "aws_iam_role_policy_attachment" "node_registry_policy" {
   role       = aws_iam_role.node.name
 }
 
+resource "aws_iam_role_policy_attachment" "node_cloudwatch_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+  role       = aws_iam_role.node.name
+}
+
 # EKS Cluster
 resource "aws_eks_cluster" "main" {
   name     = var.cluster_name
@@ -63,7 +68,25 @@ resource "aws_eks_cluster" "main" {
     subnet_ids = var.subnet_ids
   }
 
+  enabled_cluster_log_types = var.enable_cluster_logging ? var.cluster_log_types : []
+
   depends_on = [aws_iam_role_policy_attachment.cluster_policy]
+
+  tags = var.tags
+}
+
+# OIDC Provider for IRSA (IAM Roles for Service Accounts)
+data "tls_certificate" "eks" {
+  count = var.enable_irsa ? 1 : 0
+  url   = aws_eks_cluster.main.identity[0].oidc[0].issuer
+}
+
+resource "aws_iam_openid_connect_provider" "eks" {
+  count = var.enable_irsa ? 1 : 0
+
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = [data.tls_certificate.eks[0].certificates[0].sha1_fingerprint]
+  url             = aws_eks_cluster.main.identity[0].oidc[0].issuer
 
   tags = var.tags
 }
@@ -72,9 +95,9 @@ resource "aws_eks_cluster" "main" {
 resource "aws_eks_access_entry" "admin" {
   for_each = toset(var.admin_arns)
 
-  cluster_name      = aws_eks_cluster.main.name
-  principal_arn     = each.value
-  type              = "STANDARD"
+  cluster_name  = aws_eks_cluster.main.name
+  principal_arn = each.value
+  type          = "STANDARD"
 }
 
 resource "aws_eks_access_policy_association" "admin" {

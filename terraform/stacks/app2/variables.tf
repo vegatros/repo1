@@ -43,3 +43,9 @@ variable "max_size" {
   type        = number
   default     = 3
 }
+
+variable "private_subnet_cidrs" {
+  description = "Private subnet CIDR blocks for EKS nodes"
+  type        = list(string)
+  default     = []
+}

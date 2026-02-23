@@ -1,0 +1,25 @@
+namespace: app-dev
+replicaCount: 1
+
+ingress:
+  enabled: true
+  hosts:
+    - host: app-dev.cloudconscious.io
+      paths:
+        - path: /
+          pathType: Prefix
+
+configMap:
+  enabled: true
+  data:
+    APP_ENV: development
+    LOG_LEVEL: debug
+
+autoscaling:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: false
+
+networkPolicy:
+  enabled: false

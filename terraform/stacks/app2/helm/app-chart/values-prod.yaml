@@ -1,0 +1,39 @@
+namespace: app-prod
+replicaCount: 3
+
+image:
+  tag: "1.25"
+
+ingress:
+  enabled: true
+  hosts:
+    - host: app.cloudconscious.io
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+configMap:
+  enabled: true
+  data:
+    APP_ENV: production
+    LOG_LEVEL: warn
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+networkPolicy:
+  enabled: true
