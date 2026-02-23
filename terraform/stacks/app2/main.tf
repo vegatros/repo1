@@ -2,10 +2,11 @@
 module "vpc" {
   source = "../../modules/vpc"
 
-  project_name       = var.project_name
-  vpc_cidr           = var.vpc_cidr
-  enable_nat_gateway = true  # EKS needs NAT for private subnets
-  enable_flow_logs   = false
+  project_name         = var.project_name
+  vpc_cidr             = var.vpc_cidr
+  private_subnet_cidrs = var.private_subnet_cidrs
+  enable_nat_gateway   = true # EKS needs NAT for private subnets
+  enable_flow_logs     = false
 
   tags = {
     Environment                                 = var.environment
@@ -17,14 +18,17 @@ module "vpc" {
 module "eks" {
   source = "../../modules/eks"
 
-  cluster_name  = var.project_name
-  vpc_id        = module.vpc.vpc_id
-  subnet_ids    = module.vpc.private_subnet_ids
-  instance_type = var.instance_type
-  desired_size  = var.desired_size
-  min_size      = var.min_size
-  max_size      = var.max_size
-  admin_arns    = ["arn:aws:iam::925185632967:user/admin-user"]
+  cluster_name           = var.project_name
+  vpc_id                 = module.vpc.vpc_id
+  subnet_ids             = module.vpc.private_subnet_ids
+  instance_type          = var.instance_type
+  desired_size           = var.desired_size
+  min_size               = var.min_size
+  max_size               = var.max_size
+  admin_arns             = ["arn:aws:iam::925185632967:user/admin-user"]
+  enable_irsa            = true
+  enable_cluster_logging = true
+  cluster_log_types      = ["api", "audit", "authenticator"]
 
   tags = {
     Environment = var.environment
