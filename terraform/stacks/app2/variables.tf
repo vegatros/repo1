@@ -49,3 +49,15 @@ variable "private_subnet_cidrs" {
   type        = list(string)
   default     = []
 }
+
+variable "public_subnet_cidrs" {
+  description = "Public subnet CIDR blocks for NLB and NAT"
+  type        = list(string)
+  default     = []
+}
+
+variable "admin_arns" {
+  description = "List of IAM ARNs for EKS cluster admin access"
+  type        = list(string)
+  default     = []
+}

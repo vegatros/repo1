@@ -52,13 +52,14 @@ jobs:
         working-directory: terraform/stacks/app2
         run: terraform init -reconfigure
       
-      - name: Run Checkov Security Scan
-        uses: bridgecrewio/checkov-action@master
+      - name: Run Trivy Security Scan
+        uses: aquasecurity/trivy-action@master
         with:
-          directory: terraform/stacks/app2
-          framework: terraform
-          output_format: cli
-          soft_fail: true
+          scan-type: 'config'
+          scan-ref: 'terraform/stacks/app2'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          exit-code: '0'
       
       - name: Terraform Plan
         working-directory: terraform/stacks/app2
