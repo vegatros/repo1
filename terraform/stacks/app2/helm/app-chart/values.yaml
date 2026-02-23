@@ -5,7 +5,7 @@ replicaCount: 2
 namespace: default
 
 image:
-  repository: nginx
+  repository: nginxinc/nginx-unprivileged
   tag: "1.25"
   pullPolicy: IfNotPresent
 
@@ -72,7 +72,7 @@ readinessProbe:
 # -- Security context for the pod
 podSecurityContext:
   runAsNonRoot: true
-  runAsUser: 101    # nginx user
+  runAsUser: 101
   fsGroup: 101
 
 # -- Security context for the container
