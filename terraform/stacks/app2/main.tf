@@ -4,6 +4,7 @@ module "vpc" {
 
   project_name         = var.project_name
   vpc_cidr             = var.vpc_cidr
+  public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
   enable_nat_gateway   = true # EKS needs NAT for private subnets
   enable_flow_logs     = false
@@ -25,7 +26,7 @@ module "eks" {
   desired_size           = var.desired_size
   min_size               = var.min_size
   max_size               = var.max_size
-  admin_arns             = ["arn:aws:iam::925185632967:user/admin-user"]
+  admin_arns             = var.admin_arns
   enable_irsa            = true
   enable_cluster_logging = true
   cluster_log_types      = ["api", "audit", "authenticator"]
@@ -33,4 +34,6 @@ module "eks" {
   tags = {
     Environment = var.environment
   }
+
+  depends_on = [module.vpc]
 }

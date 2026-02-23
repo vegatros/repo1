@@ -6,6 +6,8 @@ resource "helm_release" "app" {
   chart            = "${path.module}/helm/app-chart"
   namespace        = "app-${var.environment}"
   create_namespace = true
+  timeout          = 300
+  wait             = true
 
   values = [
     file("${path.module}/helm/app-chart/values.yaml"),

@@ -68,6 +68,11 @@ resource "aws_eks_cluster" "main" {
     subnet_ids = var.subnet_ids
   }
 
+  access_config {
+    authentication_mode                         = "API_AND_CONFIG_MAP"
+    bootstrap_cluster_creator_admin_permissions = true
+  }
+
   enabled_cluster_log_types = var.enable_cluster_logging ? var.cluster_log_types : []
 
   depends_on = [aws_iam_role_policy_attachment.cluster_policy]

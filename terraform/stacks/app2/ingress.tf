@@ -7,6 +7,8 @@ resource "helm_release" "nginx_ingress" {
   chart            = "ingress-nginx"
   namespace        = "ingress-nginx"
   create_namespace = true
+  timeout          = 600
+  wait             = true
 
   # Use NLB instead of Classic LB
   set {
