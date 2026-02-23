@@ -26,13 +26,12 @@ resource "helm_release" "prometheus" {
     value = "enabled"
   }
 
-  # Disable Grafana (using Amazon Managed Grafana)
   set {
-    name  = "grafana.enabled"
-    value = "false"
+    name  = "grafana.podAnnotations.linkerd\\.io/inject"
+    value = "enabled"
   }
 
-  # Configure ServiceAccount with IRSA
+  # Configure ServiceAccount with IRSA for AMP
   set {
     name  = "prometheus.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
     value = "arn:aws:iam::925185632967:role/PrometheusAMPWriteRole"
