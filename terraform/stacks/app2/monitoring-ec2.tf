@@ -153,3 +153,23 @@ output "monitoring_credentials" {
   value       = "Username: admin, Password: admin123"
   sensitive   = true
 }
+
+output "monitoring_dashboard_url" {
+  description = "EKS Cluster Overview Dashboard"
+  value       = "http://${aws_eip.monitoring.public_ip}:3000/d/802e6ed1-27fd-4144-b218-5bc5d3a97411/eks-cluster-overview"
+}
+
+output "eks_prometheus_endpoint" {
+  description = "EKS Prometheus LoadBalancer endpoint"
+  value       = "http://${data.kubernetes_service.prometheus.status[0].load_balancer[0].ingress[0].hostname}:9090"
+}
+
+# Data source to get Prometheus service info
+data "kubernetes_service" "prometheus" {
+  metadata {
+    name      = "prometheus-kube-prometheus-prometheus"
+    namespace = "monitoring"
+  }
+  
+  depends_on = [helm_release.prometheus]
+}
