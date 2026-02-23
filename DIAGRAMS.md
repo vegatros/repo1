@@ -339,49 +339,100 @@ graph LR
 
 ```mermaid
 graph TB
-    subgraph AWS Cloud
-        subgraph VPC[VPC Module - 10.0.0.0/16]
-            IGW[Internet Gateway]
+    Internet((Internet)) --> NLB[NLB<br/>NGINX Ingress]
+    Internet --> Grafana[EC2 Monitoring<br/>Grafana:3000]
+
+    subgraph VPC ["VPC — 10.1.0.0/16"]
+        subgraph Public ["Public Subnets<br/>10.1.1.0/24, 10.1.2.0/24"]
+            NLB
             NAT[NAT Gateway]
-            
-            subgraph PublicSubnets[Public Subnets]
-                PubSub1[10.0.1.0/24]
-                PubSub2[10.0.2.0/24]
-            end
-            
-            subgraph PrivateSubnets[Private Subnets]
-                PrivSub1[10.0.101.0/24]
-                PrivSub2[10.0.102.0/24]
+            EC2[Monitoring EC2<br/>t3.medium<br/>Prometheus + Grafana]
+        end
+        
+        subgraph Private ["Private Subnets<br/>10.1.10.0/24, 10.1.11.0/24"]
+            subgraph EKS ["EKS Cluster"]
+                CP[Control Plane<br/>API + Audit Logging<br/>OIDC Provider]
                 
-                subgraph EKS[EKS Cluster]
-                    CP[Control Plane]
-                    
-                    subgraph NodeGroup[Managed Node Group]
-                        Node1[Worker Node<br/>t3.medium/large]
+                subgraph NodeGroup ["Managed Node Group"]
+                    Node1[Worker Node<br/>t3.medium/large<br/>IMDSv2 Enforced]
+                end
+                
+                subgraph Mesh ["Linkerd Service Mesh"]
+                    subgraph LinkerdCP ["Linkerd Control Plane"]
+                        ID[Identity]
+                        DST[Destination]
+                        PRX[Proxy Injector]
                     end
+                    
+                    NGINX[NGINX Ingress<br/>Controller<br/>+ Linkerd Sidecar]
+                    
+                    subgraph App ["Application Pods"]
+                        P1[nginx-unprivileged<br/>+ Linkerd Sidecar<br/>+ ConfigMap]
+                        P2[Pod Replica<br/>+ Linkerd Sidecar]
+                    end
+                end
+                
+                subgraph Monitoring ["Monitoring Stack"]
+                    PROM[Prometheus<br/>Operator<br/>+ ServiceMonitors]
+                    GRAF[Grafana<br/>In-Cluster<br/>+ Linkerd Sidecar]
+                    AM[Alertmanager]
+                    KSM[Kube State<br/>Metrics]
+                    NE[Node<br/>Exporter]
                 end
             end
         end
-        
-        IAM[IAM Roles]
-        SG[Security Groups]
     end
     
-    Internet((Internet)) --> IGW
-    IGW --> PublicSubnets
-    PublicSubnets --> NAT
-    NAT --> PrivateSubnets
+    subgraph AWS ["AWS Services"]
+        AMP[Amazon Managed<br/>Prometheus<br/>Long-term Storage]
+        OIDC[OIDC Provider<br/>IRSA]
+        IAM[IAM Roles<br/>Cluster + Node<br/>+ IRSA Roles]
+    end
+
+    NLB --> NGINX
+    NGINX --> P1 & P2
+    NAT -.-> Private
     
-    IAM -.->|Cluster Role| CP
-    IAM -.->|Node Role| NodeGroup
-    SG -.->|Protects| EKS
+    CP -.->|IRSA| OIDC
+    OIDC -.->|Assume Role| IAM
     
+    PROM -->|Remote Write<br/>SigV4 Auth| AMP
+    PROM -.->|Scrapes| P1 & P2 & NGINX & Node1
+    PROM -->|Exposes via<br/>LoadBalancer| Internet
+    
+    EC2 -->|Queries| PROM
+    Grafana -->|Displays| EC2
+    
+    LinkerdCP -.->|Injects| P1 & P2 & NGINX & GRAF
+    LinkerdCP -.->|mTLS| Mesh
+
     style VPC fill:#e3f2fd
-    style PublicSubnets fill:#c8e6c9
-    style PrivateSubnets fill:#ffccbc
+    style Public fill:#c8e6c9
+    style Private fill:#ffccbc
     style EKS fill:#b39ddb
-    style NodeGroup fill:#90caf9
+    style Mesh fill:#e1bee7
+    style LinkerdCP fill:#ce93d8
+    style Monitoring fill:#fff9c4
+    style App fill:#90caf9
+    style AWS fill:#fff3e0
+    style NLB fill:#2196f3,color:#fff
+    style NGINX fill:#00897b,color:#fff
+    style EC2 fill:#ff9800,color:#fff
+    style PROM fill:#e65100,color:#fff
+    style AMP fill:#ff6f00,color:#fff
 ```
+
+**Key Features:**
+- **VPC**: Public/private subnets with NAT Gateway
+- **EKS**: Managed Kubernetes with IRSA and control plane logging
+- **Linkerd**: Service mesh with automatic mTLS between all pods
+- **NGINX Ingress**: Single entry point on AWS NLB
+- **Monitoring**: 
+  - In-cluster Prometheus scraping all workloads
+  - Remote write to Amazon Managed Prometheus
+  - EC2 instance with Grafana for public dashboards
+  - Real-time metrics via LoadBalancer
+- **Security**: IMDSv2, non-root containers, encrypted EBS, mTLS mesh
 
 ---
 
