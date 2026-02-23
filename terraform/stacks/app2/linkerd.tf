@@ -57,10 +57,12 @@ resource "tls_locally_signed_cert" "linkerd_issuer" {
 # -----------------------------------------------
 resource "helm_release" "linkerd_crds" {
   name             = "linkerd-crds"
-  repository       = "https://helm.linkerd.io/edge"
+  repository       = "https://helm.linkerd.io/stable"
   chart            = "linkerd-crds"
   namespace        = "linkerd"
   create_namespace = true
+  timeout          = 300
+  wait             = true
 
   depends_on = [module.eks]
 }
@@ -70,9 +72,11 @@ resource "helm_release" "linkerd_crds" {
 # -----------------------------------------------
 resource "helm_release" "linkerd_control_plane" {
   name       = "linkerd-control-plane"
-  repository = "https://helm.linkerd.io/edge"
+  repository = "https://helm.linkerd.io/stable"
   chart      = "linkerd-control-plane"
   namespace  = "linkerd"
+  timeout    = 600
+  wait       = true
 
   set {
     name  = "identityTrustAnchorsPEM"
