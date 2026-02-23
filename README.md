@@ -31,7 +31,7 @@ graph TB
     subgraph "Application Stacks"
         direction LR
         APP1["App1<br/>ALB + EC2<br/>us-east-1"]
-        APP2["App2<br/>EKS Cluster<br/>us-east-1"]
+        APP2["App2<br/>EKS + Linkerd<br/>us-east-1"]
         APP3["App3<br/>Multi-Region<br/>us-west-2 + us-east-1"]
     end
 
@@ -73,14 +73,14 @@ q/
 │   ├── modules/                   # Reusable infrastructure components
 │   │   ├── vpc/                   #   VPC, subnets, IGW, NAT, flow logs
 │   │   ├── ec2/                   #   EC2 instances, IAM, security groups
-│   │   ├── eks/                   #   EKS cluster, node groups, IAM
+│   │   ├── eks/                   #   EKS cluster, node groups, IAM, IRSA
 │   │   ├── ecs/                   #   Fargate cluster, task definitions
 │   │   ├── iam/                   #   Centralized roles & policies
 │   │   ├── bedrock/               #   Bedrock agent (Amazon Titan)
 │   │   └── dynamodb/              #   Global tables, cross-region replication
 │   └── stacks/                    # Deployment targets (dev/qa/prod each)
 │       ├── app1/                  #   ALB + EC2, Lambda scheduler, ACM/TLS
-│       ├── app2/                  #   EKS + Helm chart, private subnets
+│       ├── app2/                  #   EKS + Linkerd mesh, NGINX Ingress, Helm
 │       └── app3/                  #   Multi-region, Global Accelerator, DynamoDB global
 ├── .github/workflows/             # CI/CD pipelines
 │   ├── terraform-app1.yml         #   App1 plan/apply/destroy
@@ -147,42 +147,63 @@ graph TB
 - Lambda-based scheduler: auto-start at 6 AM ET, auto-stop at midnight
 - IMDSv2 enforced, KMS-encrypted EBS volumes
 
-### App2 — EKS Kubernetes
+### App2 — EKS with Linkerd Service Mesh
 
 ```mermaid
 graph TB
-    Internet((Internet)) --> IGW[Internet Gateway]
+    Internet((Internet)) --> NLB[NLB<br/>NGINX Ingress]
 
-    subgraph VPC ["VPC — 10.0.0.0/16"]
+    subgraph VPC ["VPC — 10.x.0.0/16"]
         subgraph Public ["Public Subnets"]
-            IGW
+            NLB
             NAT[NAT Gateway]
         end
         subgraph Private ["Private Subnets"]
             subgraph EKS ["EKS Cluster"]
-                CP[Control Plane]
-                subgraph Nodes ["Managed Node Group"]
-                    W1[Worker Node<br/>t3.medium]
+                CP[Control Plane<br/>API + Audit Logging]
+                subgraph Mesh ["Linkerd Service Mesh"]
+                    NGINX[NGINX Ingress<br/>Controller]
+                    subgraph App ["App Pods"]
+                        P1[Pod + Sidecar]
+                        P2[Pod + Sidecar]
+                    end
+                end
+                subgraph LinkerdCP ["Linkerd Control Plane"]
+                    ID[Identity]
+                    DST[Destination]
+                    PRX[Proxy Injector]
                 end
             end
         end
     end
 
-    IGW --> NAT --> Private
-    IAM[IAM Roles<br/>Cluster + Node] -.-> EKS
+    NLB --> NGINX
+    NGINX --> P1 & P2
+    NAT -.-> Private
+    IRSA[OIDC / IRSA] -.-> EKS
 
     style VPC fill:#e3f2fd
     style Public fill:#c8e6c9
     style Private fill:#ffccbc
     style EKS fill:#b39ddb
-    style Nodes fill:#90caf9
+    style Mesh fill:#e1bee7
+    style LinkerdCP fill:#ce93d8
+    style App fill:#90caf9
+    style NLB fill:#2196f3,color:#fff
+    style NGINX fill:#00897b,color:#fff
 ```
 
 **Key features:**
 - EKS cluster in private subnets with NAT Gateway
-- Managed node group with configurable scaling
-- Helm chart included for Kubernetes deployments
-- Admin access via EKS Access Entry
+- **Linkerd service mesh** with automatic mTLS between all pods
+- **NGINX Ingress Controller** on AWS NLB (single entry point)
+- **IRSA** (IAM Roles for Service Accounts) via OIDC provider
+- EKS control plane logging (api, audit, authenticator)
+- Production-grade Helm chart with:
+  - ServiceAccount, Ingress, ConfigMap, HPA, PDB, NetworkPolicy
+  - Liveness/readiness probes, security context (non-root)
+  - Environment-specific values (dev, qa, prod)
+- All infrastructure deployed via Terraform Helm provider
 
 ### App3 — Multi-Region Active-Active
 
@@ -261,7 +282,7 @@ Each stack has its own workflow with:
 |--------|-----------|---------|
 | **vpc** | VPC, Subnets, IGW, NAT, Route Tables, Flow Logs | Network foundation with public/private subnet pattern |
 | **ec2** | EC2, IAM Role, Security Group, KMS | Compute with Route53 + DynamoDB access, IMDSv2 |
-| **eks** | EKS Cluster, Node Group, IAM Roles, Access Entry | Managed Kubernetes with admin access |
+| **eks** | EKS Cluster, Node Group, IAM Roles, OIDC/IRSA, Access Entry | Managed Kubernetes with IRSA, logging, admin access |
 | **ecs** | ECS Cluster, Fargate Task Def, Service, CloudWatch | Container orchestration with Container Insights |
 | **iam** | 15+ pre-defined IAM Roles | Roles for EKS, SageMaker, CodeBuild, SSM, etc. |
 | **bedrock** | Bedrock Agent, IAM, Alias | AI agent using Amazon Titan text model |
@@ -287,10 +308,13 @@ mindmap
       KMS for EBS volumes
       AES-256 state files
       ACM for TLS
+      Linkerd mTLS between pods
     Compute
       IMDSv2 enforced
       Least-privilege IAM
+      IRSA for pod-level access
       Restricted default SG
+      Non-root containers
     Scanning
       Trivy infrastructure
       SonarCloud quality
