@@ -1,30 +1,37 @@
 # App2 Backend Configuration
 
-Each environment uses a separate state file to prevent conflicts:
+The backend state key should match the environment being deployed.
 
-- **dev**: `backend.tf` → `app2/dev/terraform.tfstate`
-- **qa**: `backend-qa.tf` → `app2/qa/terraform.tfstate`
-- **prod**: `backend-prod.tf` → `app2/prod/terraform.tfstate`
+## Current Configuration
 
-## Usage
-
-When deploying a specific environment, rename the appropriate backend file:
-
-```bash
-# For QA deployment
-mv backend.tf backend-dev.tf
-mv backend-qa.tf backend.tf
-terraform init -reconfigure
-terraform plan -var-file="vars/qa.tfvars"
-
-# For PROD deployment
-mv backend.tf backend-qa.tf
-mv backend-prod.tf backend.tf
-terraform init -reconfigure
-terraform plan -var-file="vars/prod.tfvars"
+`backend.tf` is set to **dev** environment by default:
+```
+key = "app2/dev/terraform.tfstate"
 ```
 
-Or use backend config override:
+## Deploying Other Environments
+
+Update the `key` in `backend.tf` before deploying:
+
+**For QA:**
+```hcl
+key = "app2/qa/terraform.tfstate"
+```
+
+**For PROD:**
+```hcl
+key = "app2/prod/terraform.tfstate"
+```
+
+Then run:
+```bash
+terraform init -reconfigure
+terraform plan -var-file="vars/{environment}.tfvars"
+```
+
+## Alternative: Backend Config Override
+
+Keep `backend.tf` unchanged and override at runtime:
 
 ```bash
 terraform init -backend-config="key=app2/qa/terraform.tfstate"
