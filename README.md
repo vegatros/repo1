@@ -92,7 +92,6 @@ repo1/
 │   ├── check-workflow.sh          #   Validate workflow status
 │   ├── cleanup-old-state.sh       #   Remove stale S3 state files
 │   └── cloudtrail/                #   Real-time AWS event monitoring
-├── trading/                       # NQ futures backtesting engine
 ├── policies/                      # AWS policy definitions
 └── DIAGRAMS.md                    # Full Mermaid diagram collection
 ```
