@@ -1,0 +1,76 @@
+name: Terraform App5
+
+run-name: app5-${{ inputs.environment }}-${{ inputs.action }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment'
+        required: true
+        type: choice
+        options:
+          - dev
+          - qa
+          - prod
+      action:
+        description: 'Terraform action'
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  terraform:
+    name: ${{ inputs.environment }} - ${{ inputs.action }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+      
+      - name: Terraform Init
+        working-directory: terraform/stacks/app5
+        run: terraform init -reconfigure
+      
+      - name: Run Trivy Security Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: 'terraform/stacks/app5'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          exit-code: '0'
+      
+      - name: Terraform Plan
+        working-directory: terraform/stacks/app5
+        run: terraform plan -var-file="vars/${{ inputs.environment }}.tfvars" -out=tfplan
+      
+      - name: Terraform Apply
+        if: inputs.action == 'apply'
+        working-directory: terraform/stacks/app5
+        run: terraform apply -auto-approve tfplan
+      
+      - name: Terraform Destroy
+        if: inputs.action == 'destroy'
+        working-directory: terraform/stacks/app5
+        run: terraform destroy -var-file="vars/${{ inputs.environment }}.tfvars" -auto-approve
