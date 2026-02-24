@@ -35,7 +35,7 @@ variable "private_subnet_cidrs" {
 variable "container_image" {
   description = "Docker image for ECS task"
   type        = string
-  default     = "nginx:latest"
+  default     = ""
 }
 
 variable "container_port" {

@@ -196,8 +196,9 @@ resource "aws_ecs_task_definition" "main" {
   container_definitions = jsonencode([
     {
       name      = "${var.project_name}-container"
-      image     = var.container_image
+      image     = var.container_image != "" ? var.container_image : "${aws_ecr_repository.main.repository_url}:latest"
       essential = true
+      command   = ["/bin/sh", "-c", "while true; do echo 'Hello from Amazon Linux'; sleep 30; done"]
       portMappings = [
         {
           containerPort = var.container_port
