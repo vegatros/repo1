@@ -94,8 +94,7 @@ repo1/
 │   └── cloudtrail/                #   Real-time AWS event monitoring
 ├── trading/                       # NQ futures backtesting engine
 ├── policies/                      # AWS policy definitions
-├── DIAGRAMS.md                    # Full Mermaid diagram collection
-└── CLAUDE.md                      # AI assistant project guidance
+└── DIAGRAMS.md                    # Full Mermaid diagram collection
 ```
 
 ---
@@ -372,30 +371,9 @@ terraform destroy -var-file="vars/dev.tfvars"
 
 ---
 
-## Trading Module (Bonus)
-
-NQ (NASDAQ-100) futures backtesting engine using **EMA 9/21 crossover** strategy.
-
-| Parameter | Value |
-|-----------|-------|
-| Contract | NQ ($20/pt) or MNQ ($2/pt) |
-| Timeframe | 1-minute bars |
-| Session | 9:30 AM - 4:00 PM ET |
-| Stop Loss | 50 points hard stop |
-| Trailing Stop | Activates at +25pt, trails 40pt |
-
-```bash
-cd trading
-pip install pandas numpy yfinance matplotlib
-python nq_ema_backtest.py
-```
-
----
-
 ## Additional Documentation
 
 - [DIAGRAMS.md](DIAGRAMS.md) — Full collection of Mermaid architecture and workflow diagrams
-- [CLAUDE.md](CLAUDE.md) — AI assistant project guidance and conventions
 
 ---
 
