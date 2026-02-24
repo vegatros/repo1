@@ -1,4 +1,4 @@
-# AWS Infrastructure as Code — `vegatros/q`
+# AWS Infrastructure as Code
 
 Production-grade Terraform infrastructure managing EC2, EKS, and multi-region active-active deployments on AWS, with fully automated CI/CD via GitHub Actions.
 
@@ -68,7 +68,7 @@ graph TB
 ## Repository Structure
 
 ```
-q/
+repo1/
 ├── terraform/
 │   ├── modules/                   # Reusable infrastructure components
 │   │   ├── vpc/                   #   VPC, subnets, IGW, NAT, flow logs
