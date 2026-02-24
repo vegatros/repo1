@@ -100,7 +100,7 @@ repo1/
 
 ## Application Stacks
 
-### App1 — EC2 with ALB
+### App1 — EC2 with ALB & Lambda Instance Scheduler 
 
 ```mermaid
 graph TB
