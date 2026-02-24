@@ -3,6 +3,11 @@ output "vpc_id" {
   value       = module.vpc.vpc_id
 }
 
+output "ecr_repository_url" {
+  description = "ECR repository URL"
+  value       = aws_ecr_repository.main.repository_url
+}
+
 output "cluster_id" {
   description = "ECS cluster ID"
   value       = aws_ecs_cluster.main.id
