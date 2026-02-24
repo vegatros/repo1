@@ -1,0 +1,11 @@
+environment          = "prod"
+project_name         = "myapp4-prod"
+aws_region           = "us-east-1"
+vpc_cidr             = "10.6.0.0/16"
+public_subnet_cidrs  = ["10.6.1.0/24", "10.6.2.0/24"]
+private_subnet_cidrs = ["10.6.10.0/24", "10.6.11.0/24"]
+container_image      = "nginx:latest"
+container_port       = 80
+desired_count        = 3
+cpu                  = "512"
+memory               = "1024"

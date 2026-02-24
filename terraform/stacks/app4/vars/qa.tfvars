@@ -1,0 +1,11 @@
+environment          = "qa"
+project_name         = "myapp4-qa"
+aws_region           = "us-east-1"
+vpc_cidr             = "10.5.0.0/16"
+public_subnet_cidrs  = ["10.5.1.0/24", "10.5.2.0/24"]
+private_subnet_cidrs = ["10.5.10.0/24", "10.5.11.0/24"]
+container_image      = "nginx:latest"
+container_port       = 80
+desired_count        = 2
+cpu                  = "512"
+memory               = "1024"
