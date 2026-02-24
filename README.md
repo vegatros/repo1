@@ -1,4 +1,4 @@
-# AWS IaC Examples
+# AWS Terraform DevOps Examples
 
 Production-grade Terraform infrastructure managing EC2, EKS, and multi-region active-active deployments on AWS, with fully automated CI/CD via GitHub Actions.
 
