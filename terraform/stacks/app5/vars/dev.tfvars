@@ -1,0 +1,5 @@
+aws_region         = "us-east-1"
+environment        = "dev"
+project_name       = "app5-bedrock"
+agent_name         = "app5-bedrock-agent-dev"
+agent_instruction  = "You are a helpful AI assistant that provides accurate and concise responses."
