@@ -37,7 +37,7 @@ resource "aws_iam_role_policy" "bedrock_agent" {
       Action = [
         "bedrock:InvokeModel"
       ]
-      Resource = "arn:aws:bedrock:${var.aws_region}::foundation-model/amazon.titan-text-express-v1"
+      Resource = "arn:aws:bedrock:${var.aws_region}::foundation-model/amazon.nova-micro-v1:0"
     }]
   })
 }
@@ -45,7 +45,7 @@ resource "aws_iam_role_policy" "bedrock_agent" {
 resource "aws_bedrockagent_agent" "main" {
   agent_name              = var.agent_name
   agent_resource_role_arn = aws_iam_role.bedrock_agent.arn
-  foundation_model        = "amazon.titan-text-express-v1"
+  foundation_model        = "amazon.nova-micro-v1:0"
   instruction             = var.agent_instruction
 }
 
