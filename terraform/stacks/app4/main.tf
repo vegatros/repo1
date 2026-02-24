@@ -14,20 +14,17 @@ module "vpc" {
   }
 }
 
-# ECS Module
-module "ecs" {
-  source = "../../modules/ecs"
+# ECS Cluster
+resource "aws_ecs_cluster" "main" {
+  name = var.project_name
 
-  cluster_name    = var.project_name
-  vpc_id          = module.vpc.vpc_id
-  subnet_ids      = module.vpc.private_subnet_ids
-  container_image = var.container_image
-  container_port  = var.container_port
-  desired_count   = var.desired_count
-  cpu             = var.cpu
-  memory          = var.memory
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
 
   tags = {
+    Name        = var.project_name
     Environment = var.environment
   }
 }
@@ -151,7 +148,7 @@ resource "aws_lb_listener" "http" {
 # ECS Service
 resource "aws_ecs_service" "main" {
   name            = "${var.project_name}-service"
-  cluster         = module.ecs.cluster_id
+  cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.main.arn
   desired_count   = var.desired_count
   launch_type     = "FARGATE"

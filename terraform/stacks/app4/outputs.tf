@@ -5,12 +5,12 @@ output "vpc_id" {
 
 output "cluster_id" {
   description = "ECS cluster ID"
-  value       = module.ecs.cluster_id
+  value       = aws_ecs_cluster.main.id
 }
 
 output "cluster_name" {
   description = "ECS cluster name"
-  value       = module.ecs.cluster_name
+  value       = aws_ecs_cluster.main.name
 }
 
 output "alb_dns_name" {
