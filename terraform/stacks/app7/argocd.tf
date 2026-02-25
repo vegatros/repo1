@@ -39,15 +39,6 @@ resource "helm_release" "argocd" {
     value = "false"
   }
 
-  # Admin password (if provided)
-  dynamic "set_sensitive" {
-    for_each = var.argocd_admin_password_bcrypt != "" ? [1] : []
-    content {
-      name  = "configs.secret.argocdServerAdminPassword"
-      value = var.argocd_admin_password_bcrypt
-    }
-  }
-
   # HA configuration for production
   set {
     name  = "redis-ha.enabled"
