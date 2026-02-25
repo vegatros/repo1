@@ -1,0 +1,157 @@
+//@version=6
+indicator("Dual EMA 9/21 Cross + 200 EMA + Close Confirm", overlay=true, max_labels_count=500)
+
+// ── Inputs: EMA Lengths ──────────────────────────────────────────────
+emaFastLength  = input.int(9,   title="Fast EMA Length",  minval=1)
+emaSlowLength  = input.int(21,  title="Slow EMA Length",  minval=1)
+emaTrendLength = input.int(200, title="Trend EMA Length",  minval=1)
+
+// ── Inputs: Breakout Confirmation ────────────────────────────────────
+string grpConfirm    = "Close Confirmation"
+tickOffset           = input.int(2,  title="Ticks Beyond Close for Close Confirm", minval=1, group=grpConfirm)
+confirmWindowMins    = input.int(5,  title="Confirmation Window (minutes)",    minval=1, group=grpConfirm)
+
+// ── Inputs: Colors ───────────────────────────────────────────────────
+bullishColor  = input.color(color.green,  title="Bullish Color")
+bearishColor  = input.color(color.red,    title="Bearish Color")
+trendEmaColor = input.color(color.orange, title="200 EMA Color")
+entryColor    = input.color(color.aqua,   title="Confirmed Entry Color")
+
+// ═══════════════════════════════════════════════════════════════════════
+// EMA CALCULATIONS
+// ═══════════════════════════════════════════════════════════════════════
+emaFast  = ta.ema(close, emaFastLength)
+emaSlow  = ta.ema(close, emaSlowLength)
+emaTrend = ta.ema(close, emaTrendLength)
+
+// 200 EMA trend filter
+aboveTrendEma = close > emaTrend
+belowTrendEma = close < emaTrend
+
+// Determine trend direction (for EMA coloring)
+isBullish = emaFast > emaSlow
+
+// ═══════════════════════════════════════════════════════════════════════
+// EMA CROSSOVER SIGNALS (existing logic preserved)
+// ═══════════════════════════════════════════════════════════════════════
+bullishCrossRaw = ta.crossover(emaFast, emaSlow)
+bearishCrossRaw = ta.crossunder(emaFast, emaSlow)
+
+// Filtered: longs only above 200 EMA, shorts only below 200 EMA
+bullishCross = bullishCrossRaw and aboveTrendEma
+bearishCross = bearishCrossRaw and belowTrendEma
+
+// ═══════════════════════════════════════════════════════════════════════
+// CLOSE CONFIRMATION FILTER
+// ═══════════════════════════════════════════════════════════════════════
+// After a filtered crossover fires, a candle must close above the signal
+// candle's close (for longs) or below its close (for shorts) by N ticks
+// within the confirmation window. Only then does the confirmed BUY/SELL
+// entry trigger.
+
+tickSize = syminfo.mintick
+
+// Persistent state for pending signals
+var bool  pendingLong       = false
+var bool  pendingShort      = false
+var float longBreakLevel    = na
+var float shortBreakLevel   = na
+var int   longSignalTime    = na
+var int   shortSignalTime   = na
+
+// Convert confirmation window to milliseconds
+confirmWindowMs = confirmWindowMins * 60 * 1000
+
+// ── Set pending on new crossover signal ──────────────────────────────
+if bullishCross
+    pendingLong    := true
+    longBreakLevel := close + tickOffset * tickSize
+    longSignalTime := time
+    // Cancel any opposite pending signal
+    pendingShort   := false
+
+if bearishCross
+    pendingShort    := true
+    shortBreakLevel := close - tickOffset * tickSize
+    shortSignalTime := time
+    // Cancel any opposite pending signal
+    pendingLong     := false
+
+// ── Check for confirmation or expiry ─────────────────────────────────
+bool longConfirmed  = false
+bool shortConfirmed = false
+
+// Long confirmation: candle closes above signal candle close + ticks
+if pendingLong
+    if close >= longBreakLevel and (time - longSignalTime) <= confirmWindowMs
+        longConfirmed := true
+        pendingLong   := false
+    else if (time - longSignalTime) > confirmWindowMs
+        pendingLong   := false   // Expired — no entry
+
+// Short confirmation: candle closes below signal candle close - ticks
+if pendingShort
+    if close <= shortBreakLevel and (time - shortSignalTime) <= confirmWindowMs
+        shortConfirmed := true
+        pendingShort   := false
+    else if (time - shortSignalTime) > confirmWindowMs
+        pendingShort   := false  // Expired — no entry
+
+// ═══════════════════════════════════════════════════════════════════════
+// PLOTS
+// ═══════════════════════════════════════════════════════════════════════
+
+// ── EMA lines ────────────────────────────────────────────────────────
+fastEmaColor = isBullish ? bullishColor : bearishColor
+slowEmaColor = isBullish ? bullishColor : bearishColor
+
+p1 = plot(emaFast,  title="Fast EMA",  color=fastEmaColor,  linewidth=2)
+p2 = plot(emaSlow,  title="Slow EMA",  color=slowEmaColor,  linewidth=2)
+plot(emaTrend, title="200 EMA", color=trendEmaColor, linewidth=3)
+
+// ── EMA fill ─────────────────────────────────────────────────────────
+fillColor = isBullish ? color.new(bullishColor, 90) : color.new(bearishColor, 90)
+fill(p1, p2, color=fillColor, title="EMA Fill")
+
+// ── Crossover signal markers (initial signal — pending confirmation) ─
+plotshape(bullishCross, title="Bullish Cross (Pending)", location=location.belowbar, 
+          color=bullishColor, style=shape.triangleup, size=size.small)
+plotshape(bearishCross, title="Bearish Cross (Pending)", location=location.abovebar, 
+          color=bearishColor, style=shape.triangledown, size=size.small)
+
+// ── Confirmed entry markers ──────────────────────────────────────────
+plotshape(longConfirmed, title="BUY Confirmed", location=location.belowbar, 
+          color=entryColor, style=shape.labelup, size=size.large, text="BUY")
+plotshape(shortConfirmed, title="SELL Confirmed", location=location.abovebar, 
+          color=entryColor, style=shape.labeldown, size=size.large, text="SELL")
+
+// ── Breakout level lines (show pending level while waiting) ──────────
+plot(pendingLong  ? longBreakLevel  : na, title="Long Confirm Level",  color=color.new(bullishColor, 50), style=plot.style_linebr, linewidth=1)
+plot(pendingShort ? shortBreakLevel : na, title="Short Confirm Level", color=color.new(bearishColor, 50), style=plot.style_linebr, linewidth=1)
+
+// ═══════════════════════════════════════════════════════════════════════
+// ALERTS
+// ═══════════════════════════════════════════════════════════════════════
+
+// ── Crossover alert conditions (initial signal) ─────────────────────
+alertcondition(bullishCross, title="Bullish Cross (Pending)", 
+              message="🟡 PENDING LONG: 9/21 cross above 200 EMA — waiting for close confirmation on {{ticker}}")
+alertcondition(bearishCross, title="Bearish Cross (Pending)", 
+              message="🟡 PENDING SHORT: 9/21 cross below 200 EMA — waiting for close confirmation on {{ticker}}")
+
+// ── Confirmed entry alert conditions ─────────────────────────────────
+alertcondition(longConfirmed, title="BUY Confirmed", 
+              message="🟢 BUY CONFIRMED: Candle closed above signal candle close on {{ticker}}")
+alertcondition(shortConfirmed, title="SELL Confirmed", 
+              message="🔴 SELL CONFIRMED: Candle closed below signal candle close on {{ticker}}")
+
+// ── Combined alert (if/else — only one fires per bar) ────────────────
+// Setup: Add alert → Condition: this indicator → "Any alert() function call"
+if longConfirmed
+    alert("🟢 BUY CONFIRMED: Candle closed above signal candle close on " + syminfo.ticker, alert.freq_once_per_bar_close)
+else if shortConfirmed
+    alert("🔴 SELL CONFIRMED: Candle closed below signal candle close on " + syminfo.ticker, alert.freq_once_per_bar_close)
+else if bullishCross
+    alert("🟡 PENDING LONG: 9/21 cross above 200 EMA — waiting for close confirmation on " + syminfo.ticker, alert.freq_once_per_bar_close)
+else if bearishCross
+    alert("🟡 PENDING SHORT: 9/21 cross below 200 EMA — waiting for close confirmation on " + syminfo.ticker, alert.freq_once_per_bar_close)
