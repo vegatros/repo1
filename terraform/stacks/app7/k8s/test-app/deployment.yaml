@@ -18,6 +18,9 @@ spec:
         image: nginx:alpine
         ports:
         - containerPort: 80
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
         resources:
           requests:
             cpu: 100m
@@ -25,3 +28,7 @@ spec:
           limits:
             cpu: 200m
             memory: 256Mi
+      volumes:
+      - name: html
+        configMap:
+          name: nginx-html
