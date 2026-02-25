@@ -4,7 +4,7 @@ metadata:
   name: nginx-test
   namespace: test-app
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: nginx-test
@@ -13,6 +13,18 @@ spec:
       labels:
         app: nginx-test
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - nginx-test
+              topologyKey: topology.kubernetes.io/zone
       containers:
       - name: nginx
         image: nginx:alpine
