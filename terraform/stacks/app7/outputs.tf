@@ -32,3 +32,8 @@ output "argocd_namespace" {
   description = "Namespace where Argo CD is installed"
   value       = helm_release.argocd.namespace
 }
+
+output "argocd_url" {
+  description = "Argo CD server URL (retrieve NLB DNS after deploy)"
+  value       = "Run: kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'"
+}
