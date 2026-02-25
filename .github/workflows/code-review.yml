@@ -23,21 +23,23 @@ jobs:
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code
 
+      - name: Get changed files
+        id: changed
+        run: |
+          CHANGED_FILES=$(git diff --name-only origin/master...HEAD | tr '\n' ' ')
+          echo "files=$CHANGED_FILES" >> "$GITHUB_OUTPUT"
+          echo "Reviewing: $CHANGED_FILES"
+
       - name: Run code review
+        if: steps.changed.outputs.files != ''
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          CHANGED_FILES=$(git diff --name-only origin/master...HEAD)
+          REVIEW_PROMPT="Review the following changed files for security vulnerabilities, best practices, performance, error handling, and correctness. For each finding, assign a severity (High/Medium/Low) and provide actionable fixes with specific file and line references. End with a summary table of findings by severity.
 
-          if [ -z "$CHANGED_FILES" ]; then
-            echo "No changed files to review."
-            exit 0
-          fi
+          Changed files: ${{ steps.changed.outputs.files }}"
 
-          echo "Reviewing changed files:"
-          echo "$CHANGED_FILES"
-
-          claude -p "/code-review on the following changed files: $CHANGED_FILES" --output-format text > review.md
+          claude -p "$REVIEW_PROMPT" --output-format text --max-turns 10 > review.md
 
       - name: Post review as PR comment
         if: success()
