@@ -1,27 +1,20 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: app7-dev
+  name: test-app
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
     repoURL: https://github.com/vegatros/repo1.git
     targetRevision: master
-    path: terraform/stacks/app7/helm/app-chart
-    helm:
-      valueFiles:
-        - values.yaml
-        - values-dev.yaml
+    path: terraform/stacks/app7/k8s/test-app
   destination:
     server: https://kubernetes.default.svc
-    namespace: app7-dev
+    namespace: test-app
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ApplyOutOfSyncOnly=true
