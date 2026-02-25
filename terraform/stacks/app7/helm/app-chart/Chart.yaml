@@ -1,0 +1,6 @@
+apiVersion: v2
+name: app-chart
+description: Helm chart for EKS deployments managed by Argo CD
+type: application
+version: 1.0.0
+appVersion: "1.0"
