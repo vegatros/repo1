@@ -50,3 +50,15 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "public_subnet_tags" {
+  description = "Additional tags for public subnets (e.g. kubernetes.io/role/elb)"
+  type        = map(string)
+  default     = {}
+}
+
+variable "private_subnet_tags" {
+  description = "Additional tags for private subnets (e.g. kubernetes.io/role/internal-elb)"
+  type        = map(string)
+  default     = {}
+}
