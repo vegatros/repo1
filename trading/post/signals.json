@@ -27,3 +27,5 @@ https://webhooks.traderspost.io/trading/webhook/90b39ed6-eb95-49a2-bcb7-774379f2
 "price": "{{close}}",
 "time": "{{timenow}}"
 }
+
+https://webhooks.traderspost.io/trading/webhook/2d75c752-692b-4402-90b2-0a705b256ed6/2376115c438658e359d84136902b1605
