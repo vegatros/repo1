@@ -1,0 +1,11 @@
+environment          = "qa"
+project_name         = "myapp7-qa"
+aws_region           = "us-east-1"
+vpc_cidr             = "10.8.0.0/16"
+public_subnet_cidrs  = ["10.8.1.0/24", "10.8.2.0/24"]
+private_subnet_cidrs = ["10.8.10.0/24", "10.8.11.0/24"]
+instance_type        = "t3.medium"
+desired_size         = 1
+min_size             = 1
+max_size             = 3
+admin_arns           = ["arn:aws:iam::925185632967:user/admin-user"]
