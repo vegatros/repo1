@@ -11,10 +11,26 @@ resource "helm_release" "argocd" {
   timeout          = 600
   wait             = true
 
-  # Server configuration
+  # Server configuration — expose via NLB
   set {
     name  = "server.service.type"
-    value = "ClusterIP"
+    value = "LoadBalancer"
+  }
+
+  set {
+    name  = "server.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-type"
+    value = "nlb"
+  }
+
+  set {
+    name  = "server.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-scheme"
+    value = "internet-facing"
+  }
+
+  # Enable TLS termination at Argo CD server
+  set {
+    name  = "server.extraArgs[0]"
+    value = "--insecure"
   }
 
   # Disable Dex (use built-in auth)
