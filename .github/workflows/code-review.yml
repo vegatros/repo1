@@ -34,12 +34,9 @@ jobs:
         if: steps.changed.outputs.files != ''
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CHANGED_FILES: ${{ steps.changed.outputs.files }}
         run: |
-          REVIEW_PROMPT="Review the following changed files for security vulnerabilities, best practices, performance, error handling, and correctness. For each finding, assign a severity (High/Medium/Low) and provide actionable fixes with specific file and line references. End with a summary table of findings by severity.
-
-          Changed files: ${{ steps.changed.outputs.files }}"
-
-          claude -p "$REVIEW_PROMPT" --output-format text --max-turns 10 > review.md
+          claude -p "Review these changed files for security, best practices, performance, error handling, and correctness. Assign severity High/Medium/Low per finding with file and line refs. End with a summary table. Files: ${CHANGED_FILES}" --output-format text --max-turns 10 > review.md
 
       - name: Post review as PR comment
         if: success()
