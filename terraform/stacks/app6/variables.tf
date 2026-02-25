@@ -22,7 +22,13 @@ variable "bucket_name" {
 }
 
 variable "domain_name" {
-  description = "Domain name for the website (optional)"
+  description = "Domain name for the website"
   type        = string
-  default     = ""
+  default     = "cloudconscious.io"
+}
+
+variable "hosted_zone_id" {
+  description = "Route53 hosted zone ID"
+  type        = string
+  default     = "Z3LLP0B81D4CRA"
 }
