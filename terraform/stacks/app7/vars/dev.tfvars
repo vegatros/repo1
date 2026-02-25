@@ -1,0 +1,11 @@
+environment          = "dev"
+project_name         = "myapp7-dev"
+aws_region           = "us-east-1"
+vpc_cidr             = "10.7.0.0/16"
+public_subnet_cidrs  = ["10.7.1.0/24", "10.7.2.0/24"]
+private_subnet_cidrs = ["10.7.10.0/24", "10.7.11.0/24"]
+instance_type        = "t3.medium"
+desired_size         = 1
+min_size             = 1
+max_size             = 1
+admin_arns           = ["arn:aws:iam::925185632967:user/admin-user"]
