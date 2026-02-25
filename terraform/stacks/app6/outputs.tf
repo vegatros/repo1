@@ -20,5 +20,15 @@ output "cloudfront_distribution_id" {
 
 output "website_url" {
   description = "Website URL"
-  value       = "https://${aws_cloudfront_distribution.website.domain_name}"
+  value       = "https://${var.domain_name}"
+}
+
+output "acm_certificate_arn" {
+  description = "ACM certificate ARN"
+  value       = aws_acm_certificate.website.arn
+}
+
+output "route53_nameservers" {
+  description = "Route53 nameservers"
+  value       = "ns-923.awsdns-51.net, ns-1304.awsdns-35.org, ns-497.awsdns-62.com, ns-1661.awsdns-15.co.uk"
 }
