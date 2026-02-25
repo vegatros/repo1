@@ -1,0 +1,29 @@
+#template
+
+{
+"ticker": "{{ticker}}",
+"action": "buy",
+"price": "{{close}}",
+"time": "{{timenow}}",
+"interval": "{{interval}}"
+}
+
+#long
+{
+"ticker": "MNQH2026",
+"action": "buy",
+"quantity": 5,
+"price": "{{close}}",
+"time": "{{timenow}}"
+}
+
+https://webhooks.traderspost.io/trading/webhook/90b39ed6-eb95-49a2-bcb7-774379f2ead0/f98160a121dbcb3069c6026f789bed3c
+
+#short
+{
+"ticker": "MNQH2026",
+"action": "sell",
+"quantity": 5,
+"price": "{{close}}",
+"time": "{{timenow}}"
+}
