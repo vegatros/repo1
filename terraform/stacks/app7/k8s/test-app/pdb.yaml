@@ -4,7 +4,7 @@ metadata:
   name: nginx-test-pdb
   namespace: test-app
 spec:
-  minAvailable: 2
+  minAvailable: 1
   selector:
     matchLabels:
       app: nginx-test
