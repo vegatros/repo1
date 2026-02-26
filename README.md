@@ -71,17 +71,31 @@ graph TB
 repo1/
 ├── terraform/
 │   ├── modules/                   # Reusable infrastructure components
-│   │   ├── vpc/                   #   VPC, subnets, IGW, NAT, flow logs
-│   │   ├── ec2/                   #   EC2 instances, IAM, security groups
-│   │   ├── eks/                   #   EKS cluster, node groups, IAM, IRSA
-│   │   ├── ecs/                   #   Fargate cluster, task definitions
+│   │   ├── network/               # Network infrastructure
+│   │   │   ├── vpc/               #   VPC, subnets, IGW, NAT, flow logs
+│   │   │   └── transit-gateway/   #   Transit Gateway for VPC connectivity
+│   │   ├── compute/               # Compute resources
+│   │   │   └── ec2/               #   EC2 instances, IAM, security groups
+│   │   ├── containers/            # Container orchestration
+│   │   │   ├── eks/               #   EKS cluster, node groups, IAM, IRSA
+│   │   │   └── ecs/               #   Fargate cluster, task definitions
+│   │   ├── database/              # Database services
+│   │   │   └── dynamodb/          #   Global tables, cross-region replication
+│   │   ├── ai/                    # AI/ML services
+│   │   │   └── bedrock/           #   Bedrock agent (Amazon Titan)
 │   │   ├── iam/                   #   Centralized roles & policies
-│   │   ├── bedrock/               #   Bedrock agent (Amazon Titan)
-│   │   └── dynamodb/              #   Global tables, cross-region replication
-│   └── stacks/                    # Deployment targets (dev/qa/prod each)
-│       ├── app1/                  #   ALB + EC2, Lambda scheduler, ACM/TLS
-│       ├── app2/                  #   EKS + Linkerd mesh, NGINX Ingress, Helm
-│       └── app3/                  #   Multi-region, Global Accelerator, DynamoDB global
+│   │   └── backend/               #   S3 + DynamoDB state backend
+│   └── stacks/                    # Deployment targets
+│       ├── builds/                # Application stacks (dev/qa/prod)
+│       │   ├── app1/              #   ALB + EC2, Lambda scheduler, ACM/TLS
+│       │   ├── app2/              #   EKS + Linkerd mesh, NGINX Ingress, Helm
+│       │   ├── app3/              #   Multi-region, Global Accelerator, DynamoDB
+│       │   ├── app4/              #   ECS Fargate cluster
+│       │   ├── app5/              #   Bedrock AI agent
+│       │   ├── app6/              #   S3 static website + CloudFront
+│       │   └── app7/              #   EKS + ArgoCD GitOps
+│       └── network/               # Network infrastructure
+│           └── tgw/               #   Transit Gateway with 2 VPCs
 ├── .github/workflows/             # CI/CD pipelines
 │   ├── terraform-app1.yml         #   App1 plan/apply/destroy
 │   ├── terraform-app2.yml         #   App2 plan/apply/destroy
@@ -236,6 +250,57 @@ graph TB
 - Active-active architecture across us-west-2 and us-east-1
 - Route53 DNS pointing to Global Accelerator
 
+### App4 — ECS Fargate Cluster
+
+**Key features:**
+- Serverless container orchestration with AWS Fargate
+- ECS cluster with Container Insights enabled
+- Task definitions with CloudWatch logging
+- No EC2 instance management required
+
+### App5 — Bedrock AI Agent
+
+**Key features:**
+- Amazon Bedrock agent using Titan text model
+- IAM roles for secure API access
+- Agent alias for version management
+- Foundation model integration
+
+### App6 — S3 Static Website + CloudFront
+
+**Key features:**
+- S3 bucket configured for static website hosting
+- CloudFront distribution with custom domain
+- ACM certificate for HTTPS (TLS 1.2+)
+- Route53 DNS with apex and www subdomain
+- Origin Access Control (OAC) for secure S3 access
+- HTTP to HTTPS redirect
+- Custom error pages
+
+### App7 — EKS + ArgoCD GitOps
+
+**Key features:**
+- EKS cluster with ArgoCD for GitOps deployments
+- Declarative application management
+- Automated sync from Git repository
+- Multi-environment support (dev, qa, prod)
+- Kubernetes manifests and Helm charts
+- Self-healing and automated rollbacks
+
+---
+
+## Network Infrastructure
+
+### Transit Gateway (TGW)
+
+**Key features:**
+- Connects multiple VPCs in hub-and-spoke topology
+- 2 VPCs with private subnets (10.1.0.0/16, 10.2.0.0/16)
+- EC2 instances in each VPC for connectivity testing
+- Security groups allowing ICMP between VPCs
+- SSM access for remote management
+- Verified cross-VPC communication via Transit Gateway
+
 ---
 
 ## CI/CD Pipeline
@@ -278,13 +343,14 @@ Each stack has its own workflow with:
 
 | Module | Resources | Purpose |
 |--------|-----------|---------|
-| **vpc** | VPC, Subnets, IGW, NAT, Route Tables, Flow Logs | Network foundation with public/private subnet pattern |
-| **ec2** | EC2, IAM Role, Security Group, KMS | Compute with Route53 + DynamoDB access, IMDSv2 |
-| **eks** | EKS Cluster, Node Group, IAM Roles, OIDC/IRSA, Access Entry | Managed Kubernetes with IRSA, logging, admin access |
-| **ecs** | ECS Cluster, Fargate Task Def, Service, CloudWatch | Container orchestration with Container Insights |
+| **network/vpc** | VPC, Subnets, IGW, NAT, Route Tables, Flow Logs | Network foundation with public/private subnet pattern |
+| **network/transit-gateway** | Transit Gateway, VPC Attachments | Hub-and-spoke VPC connectivity |
+| **compute/ec2** | EC2, IAM Role, Security Group, KMS | Compute with Route53 + DynamoDB access, IMDSv2 |
+| **containers/eks** | EKS Cluster, Node Group, IAM Roles, OIDC/IRSA, Access Entry | Managed Kubernetes with IRSA, logging, admin access |
+| **containers/ecs** | ECS Cluster, Fargate Task Def, Service, CloudWatch | Container orchestration with Container Insights |
+| **database/dynamodb** | Global Table, Replicas, Streams | Cross-region replication with PITR |
+| **ai/bedrock** | Bedrock Agent, IAM, Alias | AI agent using Amazon Titan text model |
 | **iam** | 15+ pre-defined IAM Roles | Roles for EKS, SageMaker, CodeBuild, SSM, etc. |
-| **bedrock** | Bedrock Agent, IAM, Alias | AI agent using Amazon Titan text model |
-| **dynamodb** | Global Table, Replicas, Streams | Cross-region replication with PITR |
 
 ---
 
@@ -332,7 +398,7 @@ mindmap
 
 ```bash
 # Navigate to a stack
-cd terraform/stacks/app1
+cd terraform/stacks/builds/app1
 
 # Initialize and deploy
 terraform init
