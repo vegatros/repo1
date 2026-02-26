@@ -1,0 +1,6 @@
+aws_region    = "us-east-1"
+environment   = "dev"
+project_name  = "app8-transit-gateway"
+vpc1_cidr     = "10.1.0.0/16"
+vpc2_cidr     = "10.2.0.0/16"
+instance_type = "t2.micro"
