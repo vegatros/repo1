@@ -44,3 +44,21 @@ variable "on_premise_cidr" {
   type        = string
   default     = "192.168.1.0/24"
 }
+
+variable "linux_password" {
+  description = "Password for Linux user cada5000"
+  type        = string
+  sensitive   = true
+}
+
+variable "jenkins_username" {
+  description = "Jenkins admin username"
+  type        = string
+  default     = "cada5000"
+}
+
+variable "jenkins_password" {
+  description = "Jenkins admin password"
+  type        = string
+  sensitive   = true
+}
