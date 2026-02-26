@@ -17,6 +17,8 @@ q-binary
 # AI Assistant Documentation
 .ai/
 CLAUDE.md
+claude/
+.kiro/
 
 # trading
 trading/
