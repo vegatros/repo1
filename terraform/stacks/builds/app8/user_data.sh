@@ -4,9 +4,17 @@ set -e
 # Update system
 dnf update -y
 
+# Install AWS CLI and jq
+dnf install -y aws-cli jq
+
+# Get credentials from Secrets Manager
+SECRET_JSON=$(aws secretsmanager get-secret-value --secret-id ${secret_name} --region ${region} --query SecretString --output text)
+LINUX_PASSWORD=$(echo $SECRET_JSON | jq -r '.linux_password')
+JENKINS_PASSWORD=$(echo $SECRET_JSON | jq -r '.jenkins_password')
+
 # Create user cada5000
 useradd -m -s /bin/bash cada5000
-echo 'cada5000:REDACTED_PASSWORD' | chpasswd
+echo "cada5000:$LINUX_PASSWORD" | chpasswd
 
 # Add user to sudoers
 echo 'cada5000 ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/cada5000
@@ -30,22 +38,23 @@ systemctl start jenkins
 sleep 30
 
 # Get initial admin password
-JENKINS_PASSWORD=$(cat /var/lib/jenkins/secrets/initialAdminPassword 2>/dev/null || echo "Not ready yet")
+JENKINS_INITIAL_PASSWORD=$(cat /var/lib/jenkins/secrets/initialAdminPassword 2>/dev/null || echo "Not ready yet")
 
 # Create info file
 cat > /home/cada5000/jenkins-info.txt <<EOF
 Jenkins Installation Complete
 =============================
-Jenkins URL: http://10.10.1.60:8080
-Initial Admin Password: $JENKINS_PASSWORD
+Jenkins URL: http://$(hostname -I | awk '{print $1}'):8080
+Initial Admin Password: $JENKINS_INITIAL_PASSWORD
 
 User: cada5000
-Password: REDACTED_PASSWORD
+Password: Retrieved from AWS Secrets Manager
 
 To access Jenkins:
-1. From your local machine: http://10.10.1.60:8080
+1. From your local machine: http://$(hostname -I | awk '{print $1}'):8080
 2. Use the initial admin password above
 3. Complete the setup wizard
+4. Create admin user with credentials from Secrets Manager
 EOF
 
 chown cada5000:cada5000 /home/cada5000/jenkins-info.txt

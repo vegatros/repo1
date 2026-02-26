@@ -62,6 +62,42 @@ resource "aws_vpn_gateway_route_propagation" "private" {
   route_table_id = module.vpc.private_route_table_ids[0]
 }
 
+# Secrets Manager for Jenkins credentials
+resource "aws_secretsmanager_secret" "jenkins_credentials" {
+  name                    = "${var.project_name}-jenkins-credentials"
+  description             = "Jenkins and Linux user credentials"
+  recovery_window_in_days = 7
+}
+
+resource "aws_secretsmanager_secret_version" "jenkins_credentials" {
+  secret_id = aws_secretsmanager_secret.jenkins_credentials.id
+  secret_string = jsonencode({
+    linux_password   = var.linux_password
+    jenkins_username = var.jenkins_username
+    jenkins_password = var.jenkins_password
+  })
+}
+
+# IAM policy for Secrets Manager access
+resource "aws_iam_role_policy" "secrets_access" {
+  name = "${var.project_name}-secrets-access"
+  role = aws_iam_role.ssm.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Resource = aws_secretsmanager_secret.jenkins_credentials.arn
+      }
+    ]
+  })
+}
+
 # AWS Key Pair
 resource "aws_key_pair" "jenkins" {
   key_name   = "${var.project_name}-jenkins-key"
@@ -76,7 +112,10 @@ resource "aws_instance" "test" {
   vpc_security_group_ids = [aws_security_group.test_instance.id]
   iam_instance_profile   = aws_iam_instance_profile.ssm.name
   key_name               = aws_key_pair.jenkins.key_name
-  user_data              = base64encode(templatefile("${path.module}/user_data.sh", {}))
+  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
+    secret_name = aws_secretsmanager_secret.jenkins_credentials.name
+    region      = var.aws_region
+  }))
 
   tags = {
     Name = "${var.project_name}-jenkins-server"

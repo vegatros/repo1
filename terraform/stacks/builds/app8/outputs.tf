@@ -35,16 +35,25 @@ output "jenkins_url" {
 
 output "ssh_command" {
   description = "SSH command to connect"
-  value       = "ssh cada5000@${aws_instance.test.private_ip}"
+  value       = "ssh -i ~/.ssh/temp_key cada5000@${aws_instance.test.private_ip}"
+}
+
+output "secrets_manager_name" {
+  description = "AWS Secrets Manager secret name"
+  value       = aws_secretsmanager_secret.jenkins_credentials.name
+}
+
+output "get_credentials_command" {
+  description = "Command to retrieve credentials from Secrets Manager"
+  value       = "aws secretsmanager get-secret-value --secret-id ${aws_secretsmanager_secret.jenkins_credentials.name} --region ${var.aws_region} --query SecretString --output text | jq"
 }
 
 output "jenkins_credentials" {
   description = "Jenkins access information"
   value = {
     url      = "http://${aws_instance.test.private_ip}:8080"
-    user     = "cada5000"
-    password = "REDACTED_PASSWORD"
-    note     = "Initial admin password will be in /var/lib/jenkins/secrets/initialAdminPassword"
+    note     = "Credentials stored in AWS Secrets Manager: ${aws_secretsmanager_secret.jenkins_credentials.name}"
+    retrieve = "aws secretsmanager get-secret-value --secret-id ${aws_secretsmanager_secret.jenkins_credentials.name} --region ${var.aws_region} --query SecretString --output text | jq"
   }
 }
 
