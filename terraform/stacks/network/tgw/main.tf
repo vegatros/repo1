@@ -47,7 +47,7 @@ resource "aws_route_table" "vpc1" {
 
   route {
     cidr_block         = var.vpc2_cidr
-    transit_gateway_id = aws_ec2_transit_gateway.main.id
+    transit_gateway_id = module.transit_gateway.transit_gateway_id
   }
 
   tags = {
@@ -99,7 +99,7 @@ resource "aws_route_table" "vpc2" {
 
   route {
     cidr_block         = var.vpc1_cidr
-    transit_gateway_id = aws_ec2_transit_gateway.main.id
+    transit_gateway_id = module.transit_gateway.transit_gateway_id
   }
 
   tags = {
@@ -113,19 +113,16 @@ resource "aws_route_table_association" "vpc2" {
 }
 
 # Transit Gateway
-resource "aws_ec2_transit_gateway" "main" {
-  description                     = "${var.project_name} Transit Gateway"
-  default_route_table_association = "enable"
-  default_route_table_propagation = "enable"
+module "transit_gateway" {
+  source = "../../../modules/network/transit-gateway"
 
-  tags = {
-    Name = "${var.project_name}-tgw"
-  }
+  name        = "${var.project_name}-tgw"
+  description = "${var.project_name} Transit Gateway"
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "vpc1" {
   subnet_ids         = [aws_subnet.vpc1_private.id]
-  transit_gateway_id = aws_ec2_transit_gateway.main.id
+  transit_gateway_id = module.transit_gateway.transit_gateway_id
   vpc_id             = aws_vpc.vpc1.id
 
   tags = {
@@ -135,7 +132,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "vpc1" {
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "vpc2" {
   subnet_ids         = [aws_subnet.vpc2_private.id]
-  transit_gateway_id = aws_ec2_transit_gateway.main.id
+  transit_gateway_id = module.transit_gateway.transit_gateway_id
   vpc_id             = aws_vpc.vpc2.id
 
   tags = {

@@ -1,6 +1,6 @@
 # VPC Module
 module "vpc" {
-  source = "../../modules/vpc"
+  source = "../../../modules/network/vpc"
 
   project_name         = var.project_name
   vpc_cidr             = var.vpc_cidr
