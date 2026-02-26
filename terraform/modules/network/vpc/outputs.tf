@@ -32,3 +32,13 @@ output "default_security_group_id" {
   description = "Default security group ID"
   value       = aws_default_security_group.default.id
 }
+
+output "private_route_table_ids" {
+  description = "Private route table IDs"
+  value       = [aws_route_table.private.id]
+}
+
+output "public_route_table_id" {
+  description = "Public route table ID"
+  value       = aws_route_table.public.id
+}
