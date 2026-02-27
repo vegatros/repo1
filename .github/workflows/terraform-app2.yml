@@ -49,28 +49,28 @@ jobs:
         uses: hashicorp/setup-terraform@v3
       
       - name: Terraform Init
-        working-directory: terraform/stacks/app2
+        working-directory: terraform/stacks/builds/app2
         run: terraform init -reconfigure
       
       - name: Run Trivy Security Scan
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'config'
-          scan-ref: 'terraform/stacks/app2'
+          scan-ref: 'terraform/stacks/builds/app2'
           format: 'sarif'
           output: 'trivy-results.sarif'
           exit-code: '0'
       
       - name: Terraform Plan
-        working-directory: terraform/stacks/app2
+        working-directory: terraform/stacks/builds/app2
         run: terraform plan -var-file="vars/${{ inputs.environment }}.tfvars" -out=tfplan
       
       - name: Terraform Apply
         if: inputs.action == 'apply'
-        working-directory: terraform/stacks/app2
+        working-directory: terraform/stacks/builds/app2
         run: terraform apply -auto-approve tfplan
       
       - name: Terraform Destroy
         if: inputs.action == 'destroy'
-        working-directory: terraform/stacks/app2
+        working-directory: terraform/stacks/builds/app2
         run: terraform destroy -var-file="vars/${{ inputs.environment }}.tfvars" -auto-approve
