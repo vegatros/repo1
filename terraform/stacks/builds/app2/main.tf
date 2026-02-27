@@ -1,6 +1,6 @@
 # VPC Module
 module "vpc" {
-  source = "../../../modules/network/vpc"
+  source = "../../../../modules/network/vpc"
 
   project_name         = var.project_name
   vpc_cidr             = var.vpc_cidr
@@ -17,7 +17,7 @@ module "vpc" {
 
 # EKS Module
 module "eks" {
-  source = "../../../modules/eks"
+  source = "../../../../modules/eks"
 
   cluster_name           = var.project_name
   vpc_id                 = module.vpc.vpc_id
