@@ -1,6 +1,6 @@
 # VPC Module
 module "vpc" {
-  source = "../../../../modules/network/vpc"
+  source = "../../../modules/network/vpc"
 
   project_name             = var.project_name
   vpc_cidr                 = var.vpc_cidr
@@ -50,7 +50,7 @@ resource "aws_security_group" "alb" {
 
 # EC2 Module
 module "ec2" {
-  source = "../../../../modules/ec2"
+  source = "../../../modules/ec2"
 
   project_name            = var.project_name
   vpc_id                  = module.vpc.vpc_id
