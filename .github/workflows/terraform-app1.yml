@@ -49,7 +49,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
       
       - name: Terraform Init
-        working-directory: terraform/stacks/app1
+        working-directory: terraform/stacks/builds/app1
         run: |
           terraform init \
             -backend-config="key=stacks/app1/${{ inputs.environment }}/terraform.tfstate" \
@@ -59,21 +59,21 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'config'
-          scan-ref: 'terraform/stacks/app1'
+          scan-ref: 'terraform/stacks/builds/app1'
           format: 'table'
           exit-code: '0'
           severity: 'CRITICAL,HIGH,MEDIUM'
       
       - name: Terraform Plan
-        working-directory: terraform/stacks/app1
+        working-directory: terraform/stacks/builds/app1
         run: terraform plan -var-file="vars/${{ inputs.environment }}.tfvars" -out=tfplan
       
       - name: Terraform Apply
         if: inputs.action == 'apply'
-        working-directory: terraform/stacks/app1
+        working-directory: terraform/stacks/builds/app1
         run: terraform apply -auto-approve tfplan
       
       - name: Terraform Destroy
         if: inputs.action == 'destroy'
-        working-directory: terraform/stacks/app1
+        working-directory: terraform/stacks/builds/app1
         run: terraform destroy -var-file="vars/${{ inputs.environment }}.tfvars" -auto-approve

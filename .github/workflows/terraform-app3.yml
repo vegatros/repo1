@@ -25,12 +25,12 @@ on:
     branches:
       - master
     paths:
-      - 'terraform/stacks/app3/**'
+      - 'terraform/stacks/builds/app3/**'
   push:
     branches:
       - master
     paths:
-      - 'terraform/stacks/app3/**'
+      - 'terraform/stacks/builds/app3/**'
 
 permissions:
   id-token: write
@@ -45,7 +45,7 @@ jobs:
     timeout-minutes: 15
     defaults:
       run:
-        working-directory: terraform/stacks/app3
+        working-directory: terraform/stacks/builds/app3
 
     steps:
       - name: Checkout
@@ -78,7 +78,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'config'
-          scan-ref: 'terraform/stacks/app3'
+          scan-ref: 'terraform/stacks/builds/app3'
           format: 'sarif'
           output: 'trivy-results.sarif'
           exit-code: '0'
