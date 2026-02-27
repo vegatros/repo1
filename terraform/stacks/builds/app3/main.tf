@@ -33,7 +33,7 @@ module "vpc_west" {
 }
 
 module "ec2_west" {
-  source = "../../../modules/ec2"
+  source = "../../../modules/compute/ec2"
   providers = {
     aws = aws.us-west-2
   }
@@ -62,7 +62,7 @@ module "vpc_east" {
 }
 
 module "ec2_east" {
-  source = "../../../modules/ec2"
+  source = "../../../modules/compute/ec2"
   providers = {
     aws = aws.us-east-1
   }
@@ -147,7 +147,7 @@ resource "aws_route53_record" "accelerator" {
 
 # DynamoDB Global Table
 module "dynamodb" {
-  source = "../../../modules/dynamodb"
+  source = "../../../modules/database/dynamodb"
   providers = {
     aws = aws.us-west-2
   }
