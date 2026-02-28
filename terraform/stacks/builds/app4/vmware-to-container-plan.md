@@ -4,6 +4,90 @@
 
 This document outlines the recommended approach for migrating VMware VMs to AWS container images for deployment on ECS Fargate (app4).
 
+---
+
+## Migration Flow Diagram
+
+```mermaid
+graph TB
+    subgraph "On-Premises"
+        VM[VMware VM<br/>Application Server]
+    end
+
+    subgraph "Strategy 1: Lift-and-Shift"
+        direction TB
+        OVA[Export as OVA<br/>5-10 GB]
+        S3A[Upload to S3]
+        AMI[Import to AMI<br/>EC2 Image]
+        EC2[Launch EC2<br/>from AMI]
+        TAR[Extract Filesystem<br/>tar.gz]
+        SCRATCH[FROM scratch<br/>Large Image 5GB]
+        ECRA[Push to ECR]
+    end
+
+    subgraph "Strategy 2: Replatform (Recommended)"
+        direction TB
+        ANALYZE[Analyze VM<br/>Dependencies & Config]
+        DOCKERFILE[Create Dockerfile<br/>Minimal Base]
+        BUILD[Build Image<br/>300-500 MB]
+        TEST[Test Locally<br/>docker run]
+        ECRB[Push to ECR]
+    end
+
+    subgraph "AWS ECS Fargate"
+        direction LR
+        ECR[(Amazon ECR<br/>Container Registry)]
+        TASK[ECS Task<br/>Definition]
+        SERVICE[ECS Service<br/>Fargate]
+        ALB[Application<br/>Load Balancer]
+        USERS((Users))
+    end
+
+    VM -->|Lift-and-Shift| OVA
+    OVA --> S3A
+    S3A --> AMI
+    AMI --> EC2
+    EC2 --> TAR
+    TAR --> SCRATCH
+    SCRATCH --> ECRA
+
+    VM -->|Replatform| ANALYZE
+    ANALYZE --> DOCKERFILE
+    DOCKERFILE --> BUILD
+    BUILD --> TEST
+    TEST --> ECRB
+
+    ECRA --> ECR
+    ECRB --> ECR
+    ECR --> TASK
+    TASK --> SERVICE
+    SERVICE --> ALB
+    ALB --> USERS
+
+    style VM fill:#ff9800,color:#fff
+    style OVA fill:#f44336,color:#fff
+    style SCRATCH fill:#f44336,color:#fff
+    style ANALYZE fill:#4caf50,color:#fff
+    style DOCKERFILE fill:#4caf50,color:#fff
+    style BUILD fill:#4caf50,color:#fff
+    style ECR fill:#2196f3,color:#fff
+    style SERVICE fill:#9c27b0,color:#fff
+    style ALB fill:#00bcd4,color:#fff
+```
+
+### Migration Comparison
+
+| Aspect | Lift-and-Shift | Replatform |
+|--------|----------------|------------|
+| **Timeline** | 1-2 weeks | 2-4 weeks |
+| **Image Size** | 5-10 GB | 300-500 MB |
+| **Security** | ❌ Poor | ✅ Excellent |
+| **Maintenance** | ❌ High | ✅ Low |
+| **Cost** | ❌ Higher | ✅ Lower |
+| **Cloud-Native** | ❌ No | ✅ Yes |
+
+---
+
 ## Migration Strategies
 
 ### Strategy 1: Lift-and-Shift (Quick Migration)
