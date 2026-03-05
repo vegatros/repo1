@@ -2,6 +2,7 @@
 .terraform/
 *.tfstate
 *.tfstate.backup
+*.lock.hcl
 
 # Large binaries
 *.zip
@@ -20,5 +21,7 @@ CLAUDE.md
 claude/
 .kiro/
 
-# trading
+*.pem
+*.pub
 
+*.kiro-session.log
