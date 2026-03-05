@@ -24,8 +24,13 @@ The pending tracked changes improve security posture by removing exposed secrets
   - Sensitive VPN config material tracked in git.
 
 - Residual risk to address next:
-  - Secret values may still exist in git history and should be rotated/purged.
+  - Previously exposed credentials should still be rotated even after history rewrite.
   - Untracked local key files exist in workspace (`myapp-dev-key.pem`, `myapp-dev-key.pub`) and should remain uncommitted.
+
+## Post-Review Actions Completed
+1. Rewrote git history to remove leaked values (`Linux@2026!cada`, `Jenkins@2026!cada`) and purge historical `vpn-config.xml` content.
+2. Verified secret scans across all refs returned no matches for the removed credential strings.
+3. Force-pushed rewritten history to remote branches and then deleted local branches `b1`, `feature/eks-argocd`, and `test-coderabbit` (kept `master` only).
 
 ## Recommendations
 1. Rotate any credentials/keys previously exposed in repository history.
@@ -35,3 +40,4 @@ The pending tracked changes improve security posture by removing exposed secrets
 ## Validation
 - Review performed via local git diff and file inspection.
 - No infrastructure apply/test execution performed in this pass.
+- Follow-up history sanitation completed with verification scans and force-push.
