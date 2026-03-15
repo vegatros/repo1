@@ -26,32 +26,14 @@ variable "public_subnet_cidrs" {
   default     = []
 }
 
-variable "container_port" {
-  description = "Container port"
-  type        = number
-  default     = 3000
-}
-
-variable "desired_count" {
-  description = "Desired number of tasks"
-  type        = number
-  default     = 1
-}
-
-variable "cpu" {
-  description = "Task CPU units"
+variable "instance_type" {
+  description = "EC2 instance type"
   type        = string
-  default     = "1024"
+  default     = "t3.small"
 }
 
-variable "memory" {
-  description = "Task memory in MB"
+variable "key_name" {
+  description = "SSH key pair name"
   type        = string
-  default     = "2048"
-}
-
-variable "nanoclaw_image_tag" {
-  description = "Docker image tag for nanoclaw"
-  type        = string
-  default     = "latest"
+  default     = ""
 }

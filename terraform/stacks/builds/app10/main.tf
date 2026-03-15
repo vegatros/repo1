@@ -5,14 +5,12 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
 }
 
-# Public Subnets
 data "aws_availability_zones" "available" { state = "available" }
 
 resource "aws_subnet" "public" {
-  count                   = length(var.public_subnet_cidrs)
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.public_subnet_cidrs[count.index]
-  availability_zone       = data.aws_availability_zones.available.names[count.index]
+  cidr_block              = var.public_subnet_cidrs[0]
+  availability_zone       = data.aws_availability_zones.available.names[0]
   map_public_ip_on_launch = true
 }
 
@@ -22,7 +20,6 @@ resource "aws_internet_gateway" "main" {
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
-
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.main.id
@@ -30,41 +27,20 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "public" {
-  count          = length(var.public_subnet_cidrs)
-  subnet_id      = aws_subnet.public[count.index].id
+  subnet_id      = aws_subnet.public.id
   route_table_id = aws_route_table.public.id
 }
 
-# ECR Repository
-resource "aws_ecr_repository" "nanoclaw" {
-  name                 = "${var.project_name}-nanoclaw"
-  image_tag_mutability = "MUTABLE"
-  force_delete         = true
-
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-}
-
-# ECS Cluster
-resource "aws_ecs_cluster" "main" {
-  name = var.project_name
-
-  setting {
-    name  = "containerInsights"
-    value = "enabled"
-  }
-}
-
-# Security Group — direct public access to container
-resource "aws_security_group" "ecs_tasks" {
-  name        = "${var.project_name}-ecs-sg"
-  description = "Allow public access to ECS tasks"
+# Security Group
+resource "aws_security_group" "nanoclaw" {
+  name        = "${var.project_name}-sg"
+  description = "Security group for nanoclaw EC2"
   vpc_id      = aws_vpc.main.id
 
   ingress {
-    from_port   = var.container_port
-    to_port     = var.container_port
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -77,91 +53,87 @@ resource "aws_security_group" "ecs_tasks" {
   }
 }
 
-# CloudWatch Logs
-resource "aws_cloudwatch_log_group" "ecs" {
-  name              = "/ecs/${var.project_name}"
-  retention_in_days = 7
-}
-
-# ECS Execution Role
-resource "aws_iam_role" "ecs_execution" {
-  name = "${var.project_name}-ecs-execution-role"
-
+# IAM Role with SSM access
+resource "aws_iam_role" "nanoclaw" {
+  name = "${var.project_name}-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
       Action = "sts:AssumeRole"
       Effect = "Allow"
-      Principal = { Service = "ecs-tasks.amazonaws.com" }
+      Principal = { Service = "ec2.amazonaws.com" }
     }]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "ecs_execution" {
-  role       = aws_iam_role.ecs_execution.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+resource "aws_iam_role_policy_attachment" "ssm" {
+  role       = aws_iam_role.nanoclaw.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-# ECS Task Role
-resource "aws_iam_role" "ecs_task" {
-  name = "${var.project_name}-ecs-task-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = { Service = "ecs-tasks.amazonaws.com" }
-    }]
-  })
+resource "aws_iam_instance_profile" "nanoclaw" {
+  name = "${var.project_name}-profile"
+  role = aws_iam_role.nanoclaw.name
 }
 
-# Task Definition
-resource "aws_ecs_task_definition" "main" {
-  family                   = "${var.project_name}-task"
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = var.cpu
-  memory                   = var.memory
-  execution_role_arn       = aws_iam_role.ecs_execution.arn
-  task_role_arn            = aws_iam_role.ecs_task.arn
-
-  container_definitions = jsonencode([{
-    name      = "${var.project_name}-nanoclaw"
-    image     = "${aws_ecr_repository.nanoclaw.repository_url}:${var.nanoclaw_image_tag}"
-    essential = true
-    portMappings = [{
-      containerPort = var.container_port
-      protocol      = "tcp"
-    }]
-    logConfiguration = {
-      logDriver = "awslogs"
-      options = {
-        "awslogs-group"         = aws_cloudwatch_log_group.ecs.name
-        "awslogs-region"        = var.aws_region
-        "awslogs-stream-prefix" = "nanoclaw"
-      }
-    }
-    entryPoint = ["node", "/app/server.mjs"]
-    command    = []
-    environment = [
-      { name = "NODE_ENV", value = "production" },
-      { name = "PORT", value = tostring(var.container_port) }
-    ]
-  }])
+# Latest Amazon Linux 2023 AMI
+data "aws_ami" "al2023" {
+  most_recent = true
+  owners      = ["amazon"]
+  filter {
+    name   = "name"
+    values = ["al2023-ami-*-x86_64"]
+  }
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
 }
 
-# ECS Service — public subnet, public IP, no ALB
-resource "aws_ecs_service" "main" {
-  name            = "${var.project_name}-service"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.main.arn
-  desired_count   = var.desired_count
-  launch_type     = "FARGATE"
+# EC2 Instance
+resource "aws_instance" "nanoclaw" {
+  ami                    = data.aws_ami.al2023.id
+  instance_type          = var.instance_type
+  subnet_id              = aws_subnet.public.id
+  vpc_security_group_ids = [aws_security_group.nanoclaw.id]
+  iam_instance_profile   = aws_iam_instance_profile.nanoclaw.name
+  key_name               = var.key_name != "" ? var.key_name : null
 
-  network_configuration {
-    subnets          = aws_subnet.public[*].id
-    security_groups  = [aws_security_group.ecs_tasks.id]
-    assign_public_ip = true
+  associate_public_ip_address = true
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
+
+  root_block_device {
+    volume_size = 30
+    volume_type = "gp3"
+    encrypted   = true
+  }
+
+  user_data = <<-EOF
+    #!/bin/bash
+    set -e
+
+    # Install Docker
+    dnf install -y docker git
+    systemctl enable docker && systemctl start docker
+    usermod -aG docker ec2-user
+
+    # Install Node.js 22
+    dnf install -y nodejs22 nodejs22-npm
+
+    # Clone nanoclaw
+    su - ec2-user -c 'git clone https://github.com/qwibitai/nanoclaw.git /home/ec2-user/nanoclaw'
+
+    # Install dependencies
+    su - ec2-user -c 'cd /home/ec2-user/nanoclaw && npm install'
+
+    echo "NanoClaw ready. SSH in and run: cd nanoclaw && claude"
+  EOF
+
+  tags = {
+    Name = "${var.project_name}-ec2"
   }
 }
