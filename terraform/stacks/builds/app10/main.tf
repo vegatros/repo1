@@ -142,6 +142,8 @@ resource "aws_ecs_task_definition" "main" {
         "awslogs-stream-prefix" = "nanoclaw"
       }
     }
+    entryPoint = ["node", "/app/server.mjs"]
+    command    = []
     environment = [
       { name = "NODE_ENV", value = "production" },
       { name = "PORT", value = tostring(var.container_port) }
