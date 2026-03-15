@@ -1,0 +1,10 @@
+environment          = "prod"
+project_name         = "nanoclaw-prod"
+aws_region           = "us-east-1"
+vpc_cidr             = "10.10.0.0/16"
+public_subnet_cidrs  = ["10.10.1.0/24", "10.10.2.0/24"]
+container_port       = 3000
+desired_count        = 2
+cpu                  = "2048"
+memory               = "4096"
+nanoclaw_image_tag   = "latest"
