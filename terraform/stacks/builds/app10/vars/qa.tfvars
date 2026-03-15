@@ -1,10 +1,7 @@
-environment          = "qa"
-project_name         = "nanoclaw-qa"
-aws_region           = "us-east-1"
-vpc_cidr             = "10.10.0.0/16"
-public_subnet_cidrs  = ["10.10.1.0/24", "10.10.2.0/24"]
-container_port       = 3000
-desired_count        = 2
-cpu                  = "1024"
-memory               = "2048"
-nanoclaw_image_tag   = "latest"
+environment         = "qa"
+project_name        = "nanoclaw-qa"
+aws_region          = "us-east-1"
+vpc_cidr            = "10.10.0.0/16"
+public_subnet_cidrs = ["10.10.1.0/24"]
+instance_type       = "t3.small"
+key_name            = ""

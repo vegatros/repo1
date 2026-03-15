@@ -1,14 +1,14 @@
-output "ecr_repository_url" {
-  description = "ECR repository URL for nanoclaw image"
-  value       = aws_ecr_repository.nanoclaw.repository_url
+output "instance_id" {
+  description = "EC2 instance ID"
+  value       = aws_instance.nanoclaw.id
 }
 
-output "cluster_name" {
-  description = "ECS cluster name"
-  value       = aws_ecs_cluster.main.name
+output "public_ip" {
+  description = "Public IP address"
+  value       = aws_instance.nanoclaw.public_ip
 }
 
-output "service_name" {
-  description = "ECS service name"
-  value       = aws_ecs_service.main.name
+output "ssh_command" {
+  description = "SSH command to connect"
+  value       = var.key_name != "" ? "ssh -i ${var.key_name}.pem ec2-user@${aws_instance.nanoclaw.public_ip}" : "Use SSM: aws ssm start-session --target ${aws_instance.nanoclaw.id}"
 }
