@@ -87,7 +87,8 @@ jobs:
       - name: Build and Push Docker Image
         if: inputs.action == 'apply'
         run: |
-          docker build -t nanoclaw -f /tmp/nanoclaw/container/Dockerfile /tmp/nanoclaw/container
+          docker build -t nanoclaw-base -f /tmp/nanoclaw/container/Dockerfile /tmp/nanoclaw/container
+          docker build -t nanoclaw --build-arg BASE_IMAGE=nanoclaw-base -f terraform/stacks/builds/app10/container/Dockerfile terraform/stacks/builds/app10/container
           docker tag nanoclaw:latest ${{ steps.ecr.outputs.repo_url }}:latest
           docker tag nanoclaw:latest ${{ steps.ecr.outputs.repo_url }}:${{ github.sha }}
           docker push ${{ steps.ecr.outputs.repo_url }}:latest
