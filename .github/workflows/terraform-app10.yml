@@ -69,7 +69,37 @@ jobs:
         if: inputs.action == 'apply'
         working-directory: terraform/stacks/builds/app10
         run: terraform apply -auto-approve tfplan
-      
+
+      - name: Clone NanoClaw repo
+        if: inputs.action == 'apply'
+        run: git clone --depth 1 https://github.com/qwibitai/nanoclaw.git /tmp/nanoclaw
+
+      - name: Login to ECR
+        if: inputs.action == 'apply'
+        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 925185632967.dkr.ecr.us-east-1.amazonaws.com
+
+      - name: Get ECR Repository URL
+        if: inputs.action == 'apply'
+        id: ecr
+        working-directory: terraform/stacks/builds/app10
+        run: echo "repo_url=$(terraform output -raw ecr_repository_url)" >> "$GITHUB_OUTPUT"
+
+      - name: Build and Push Docker Image
+        if: inputs.action == 'apply'
+        run: |
+          docker build -t nanoclaw -f /tmp/nanoclaw/container/Dockerfile /tmp/nanoclaw/container
+          docker tag nanoclaw:latest ${{ steps.ecr.outputs.repo_url }}:latest
+          docker tag nanoclaw:latest ${{ steps.ecr.outputs.repo_url }}:${{ github.sha }}
+          docker push ${{ steps.ecr.outputs.repo_url }}:latest
+          docker push ${{ steps.ecr.outputs.repo_url }}:${{ github.sha }}
+
+      - name: Force ECS Redeployment
+        if: inputs.action == 'apply'
+        run: |
+          CLUSTER="nanoclaw-${{ inputs.environment }}"
+          SERVICE="${CLUSTER}-service"
+          aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --force-new-deployment --region us-east-1
+
       - name: Terraform Destroy
         if: inputs.action == 'destroy'
         working-directory: terraform/stacks/builds/app10
