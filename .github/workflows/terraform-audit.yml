@@ -1,0 +1,234 @@
+name: Terraform Security & AI Audit
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'terraform/stacks/azure/region-failover/**'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'terraform/stacks/azure/region-failover/**'
+  workflow_dispatch:
+    inputs:
+      terraform_dir:
+        description: 'Terraform stack to audit'
+        required: true
+        default: 'terraform/stacks/azure/region-failover'
+      run_crewai:
+        description: 'Run CrewAI audit'
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+env:
+  TERRAFORM_DIR: ${{ inputs.terraform_dir || 'terraform/stacks/azure/region-failover' }}
+
+jobs:
+  ##────────────────────────────────────────────────────────────
+  ## Job 1: Snyk IaC Security Scan
+  ##────────────────────────────────────────────────────────────
+  snyk-iac:
+    name: Snyk IaC Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Snyk CLI
+        uses: snyk/actions/setup@master
+
+      - name: Run Snyk IaC scan
+        id: snyk_scan
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          snyk iac test ${{ env.TERRAFORM_DIR }} \
+            --severity-threshold=low \
+            --report \
+            --json-file-output=snyk-results.json \
+            2>&1 | tee snyk-output.txt
+
+      - name: Generate Snyk SARIF output
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          snyk iac test ${{ env.TERRAFORM_DIR }} \
+            --sarif-file-output=snyk-results.sarif \
+            || true
+
+      - name: Upload SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk-results.sarif
+        continue-on-error: true
+
+      - name: Generate Snyk summary report
+        if: always()
+        run: |
+          echo "## Snyk IaC Scan Results" > snyk-report.md
+          echo "" >> snyk-report.md
+          echo "**Target:** \`${{ env.TERRAFORM_DIR }}\`" >> snyk-report.md
+          echo "" >> snyk-report.md
+
+          if [ -f snyk-results.json ]; then
+            CRITICAL=$(cat snyk-results.json | python3 -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          issues = data if isinstance(data, list) else [data]
+          counts = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0}
+          for result in issues:
+              for vuln in result.get('infrastructureAsCodeIssues', []):
+                  sev = vuln.get('severity', 'low').lower()
+                  counts[sev] = counts.get(sev, 0) + 1
+          print(f\"| Critical | {counts['critical']} |\")
+          print(f\"| High | {counts['high']} |\")
+          print(f\"| Medium | {counts['medium']} |\")
+          print(f\"| Low | {counts['low']} |\")
+          " 2>/dev/null)
+
+            echo "| Severity | Count |" >> snyk-report.md
+            echo "|----------|-------|" >> snyk-report.md
+            echo "$CRITICAL" >> snyk-report.md
+          else
+            echo "No JSON results available." >> snyk-report.md
+          fi
+
+          echo "" >> snyk-report.md
+          echo "### Details" >> snyk-report.md
+          echo '```' >> snyk-report.md
+          cat snyk-output.txt >> snyk-report.md 2>/dev/null || echo "See artifacts for full output."
+          echo '```' >> snyk-report.md
+
+      - name: Upload Snyk artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snyk-results
+          path: |
+            snyk-results.json
+            snyk-results.sarif
+            snyk-report.md
+            snyk-output.txt
+          retention-days: 30
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: snyk-iac
+          path: snyk-report.md
+        continue-on-error: true
+
+  ##────────────────────────────────────────────────────────────
+  ## Job 2: CrewAI Terraform Audit
+  ##────────────────────────────────────────────────────────────
+  crewai-audit:
+    name: CrewAI AI Audit
+    runs-on: ubuntu-latest
+    if: ${{ inputs.run_crewai != false }}
+    needs: snyk-iac
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: terraform/stacks/ai/crew/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r terraform/stacks/ai/crew/requirements.txt
+
+      - name: Download Snyk results
+        uses: actions/download-artifact@v4
+        with:
+          name: snyk-results
+          path: snyk-results
+
+      - name: Run CrewAI audit
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python terraform/stacks/ai/crew/main.py \
+            --dir ${{ env.TERRAFORM_DIR }} \
+            --out audit-report.md
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crewai-audit-report
+          path: audit-report.md
+          retention-days: 30
+
+      - name: Comment audit report on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: crewai-audit
+          path: audit-report.md
+        continue-on-error: true
+
+  ##────────────────────────────────────────────────────────────
+  ## Job 3: Combined Summary
+  ##────────────────────────────────────────────────────────────
+  summary:
+    name: Audit Summary
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [snyk-iac, crewai-audit]
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Generate combined summary
+        run: |
+          echo "# Terraform Audit Summary" > combined-report.md
+          echo "" >> combined-report.md
+          echo "**Run:** ${{ github.run_id }}" >> combined-report.md
+          echo "**Target:** \`${{ env.TERRAFORM_DIR }}\`" >> combined-report.md
+          echo "**Date:** $(date -u '+%Y-%m-%d %H:%M UTC')" >> combined-report.md
+          echo "" >> combined-report.md
+          echo "---" >> combined-report.md
+          echo "" >> combined-report.md
+
+          if [ -f artifacts/snyk-results/snyk-report.md ]; then
+            cat artifacts/snyk-results/snyk-report.md >> combined-report.md
+            echo "" >> combined-report.md
+            echo "---" >> combined-report.md
+            echo "" >> combined-report.md
+          fi
+
+          if [ -f artifacts/crewai-audit-report/audit-report.md ]; then
+            echo "## CrewAI AI Audit" >> combined-report.md
+            echo "" >> combined-report.md
+            cat artifacts/crewai-audit-report/audit-report.md >> combined-report.md
+          fi
+
+      - name: Upload combined report
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined-audit-report
+          path: combined-report.md
+          retention-days: 90
+
+      - name: Post job summary
+        run: cat combined-report.md >> $GITHUB_STEP_SUMMARY
