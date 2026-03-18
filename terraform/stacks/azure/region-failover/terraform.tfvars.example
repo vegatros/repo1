@@ -1,0 +1,15 @@
+project              = "regionfo"
+environment          = "prod"
+primary_location     = "eastus2"
+secondary_location   = "westus2"
+vm_size              = "Standard_B2s"
+vm_admin_username    = "azureadmin"
+vm_admin_ssh_public_key = "ssh-rsa AAAA..."
+db_admin_login       = "sqladmin"
+db_admin_password    = "CHANGE_ME_use_keyvault_in_prod"
+db_sku               = "S0"
+storage_replication_type = "GZRS"
+
+tags = {
+  owner = "your-team"
+}
