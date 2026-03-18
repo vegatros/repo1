@@ -1,9 +1,9 @@
 ##──────────────────────────────────────────────────────────────
 ## Traffic Manager – DNS-Based Auto-Failover
 ##──────────────────────────────────────────────────────────────
-## Priority routing: all traffic goes to the primary VM.
+## Priority routing: all traffic goes to the primary LB.
 ## If the primary health probe fails, traffic automatically
-## shifts to the secondary VM.
+## shifts to the secondary LB.
 
 resource "azurerm_traffic_manager_profile" "main" {
   name                   = "${local.name_prefix}-tm"
@@ -13,7 +13,7 @@ resource "azurerm_traffic_manager_profile" "main" {
 
   dns_config {
     relative_name = "${local.name_prefix}-app"
-    ttl           = 60 # Low TTL for fast failover
+    ttl           = 60
   }
 
   monitor_config {
@@ -26,20 +26,20 @@ resource "azurerm_traffic_manager_profile" "main" {
   }
 }
 
-##── Primary Endpoint (priority 1) ───────────────────────────
+##── Primary Endpoint (priority 1 – LB public IP) ───────────
 
 resource "azurerm_traffic_manager_azure_endpoint" "primary" {
   name               = "primary-endpoint"
   profile_id         = azurerm_traffic_manager_profile.main.id
-  target_resource_id = azurerm_public_ip.vm["primary"].id
+  target_resource_id = azurerm_public_ip.lb["primary"].id
   priority           = 1
 }
 
-##── Secondary Endpoint (priority 2 – failover target) ──────
+##── Secondary Endpoint (priority 2 – failover LB) ──────────
 
 resource "azurerm_traffic_manager_azure_endpoint" "secondary" {
   name               = "secondary-endpoint"
   profile_id         = azurerm_traffic_manager_profile.main.id
-  target_resource_id = azurerm_public_ip.vm["secondary"].id
+  target_resource_id = azurerm_public_ip.lb["secondary"].id
   priority           = 2
 }

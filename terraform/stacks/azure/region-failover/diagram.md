@@ -20,9 +20,14 @@
                   │   (Primary)        │           │   (Secondary)      │
                   │                    │           │                    │
                   │  ┌──────────────┐  │           │  ┌──────────────┐  │
+                  │  │ Load Balancer│  │           │  │ Load Balancer│  │
+                  │  │  (Public IP) │  │           │  │  (Public IP) │  │
+                  │  └──────┬───────┘  │           │  └──────┬───────┘  │
+                  │         │          │           │         │          │
+                  │  ┌──────▼───────┐  │           │  ┌──────▼───────┐  │
                   │  │  B2s VM      │  │           │  │  B2s VM      │  │
                   │  │  Ubuntu 22   │  │           │  │  Ubuntu 22   │  │
-                  │  │  Public IP   │  │           │  │  Public IP   │  │
+                  │  │  Private IP  │  │           │  │  Private IP  │  │
                   │  └──────┬───────┘  │           │  └──────┬───────┘  │
                   │         │          │           │         │          │
                   │  ┌──────▼───────┐  │           │  ┌──────▼───────┐  │
@@ -31,9 +36,15 @@
                   │  │  64 GB       │  │           │  │  64 GB       │  │
                   │  └──────────────┘  │           │  └──────────────┘  │
                   │                    │           │                    │
+                  │  ┌──────────────┐  │           │  ┌──────────────┐  │
+                  │  │  NAT Gateway │  │           │  │  NAT Gateway │  │
+                  │  │  (Outbound)  │  │           │  │  (Outbound)  │  │
+                  │  └──────────────┘  │           │  └──────────────┘  │
+                  │                    │           │                    │
                   │  VNet 10.1.0.0/16  │           │  VNet 10.2.0.0/16  │
                   │  ├─ vm-subnet /24  │           │  ├─ vm-subnet /24  │
-                  │  └─ db-subnet /24  │           │  └─ db-subnet /24  │
+                  │  ├─ db-subnet /24  │           │  ├─ db-subnet /24  │
+                  │  └─ pe-subnet /24  │           │  └─ pe-subnet /24  │
                   │                    │           │                    │
                   └────────┬───────────┘           └───────────┬────────┘
                            │         VNet Peering              │
@@ -41,36 +52,52 @@
                            │                                   │
 ```
 
-## Database Layer – SQL Auto-Failover Group
+## Database Layer – Private Endpoints, SQL Auto-Failover Group
 
 ```
-          ┌──────────────────────┐              ┌──────────────────────┐
-          │  SQL Server (Primary)│              │ SQL Server (Secondary)│
-          │  eastus2             │              │  westus2              │
-          │                     │  Automatic   │                       │
-          │  ┌────────────────┐ │  Geo-Sync    │  ┌─────────────────┐  │
-          │  │  Database (S0) │ │◄────────────►│  │  Database (S0)  │  │
-          │  │  7-day PITR    │ │              │  │  Read replica   │  │
-          │  │  Weekly + Mo.  │ │              │  │                 │  │
-          │  │  LTR backups   │ │              │  │                 │  │
-          │  └────────────────┘ │              │  └─────────────────┘  │
-          └──────────┬──────────┘              └──────────┬────────────┘
-                     │                                    │
-                     └──────────┬─────────────────────────┘
-                                │
-                   ┌────────────▼────────────┐
-                   │    Failover Group        │
-                   │                          │
-                   │  R/W:  <fog>.database    │
-                   │        .windows.net      │
-                   │                          │
-                   │  R/O:  <fog>.secondary   │
-                   │        .database         │
-                   │        .windows.net      │
-                   │                          │
-                   │  Mode: Automatic         │
-                   │  Grace: 60 min           │
-                   └──────────────────────────┘
+          ┌──────────────────────────┐          ┌──────────────────────────┐
+          │  SQL Server (Primary)     │          │ SQL Server (Secondary)    │
+          │  eastus2                  │          │  westus2                  │
+          │  Public access: DISABLED  │          │  Public access: DISABLED  │
+          │                          │ Automatic│                           │
+          │  ┌────────────────┐      │ Geo-Sync │  ┌─────────────────┐     │
+          │  │  Database (S0) │      │◄────────►│  │  Database (S0)  │     │
+          │  │  7-day PITR    │      │          │  │  Read replica   │     │
+          │  │  Weekly + Mo.  │      │          │  │                 │     │
+          │  │  LTR backups   │      │          │  │                 │     │
+          │  └────────────────┘      │          │  └─────────────────┘     │
+          └────────────┬─────────────┘          └────────────┬─────────────┘
+                       │                                     │
+          ┌────────────▼─────────────┐          ┌────────────▼─────────────┐
+          │  Private Endpoint        │          │  Private Endpoint        │
+          │  pe-subnet 10.1.3.0/24   │          │  pe-subnet 10.2.3.0/24   │
+          │  privatelink.database    │          │  privatelink.database    │
+          │  .windows.net            │          │  .windows.net            │
+          └────────────┬─────────────┘          └────────────┬─────────────┘
+                       │                                     │
+                       └──────────┬──────────────────────────┘
+                                  │
+                     ┌────────────▼────────────┐
+                     │   Private DNS Zone       │
+                     │   privatelink.database   │
+                     │   .windows.net           │
+                     │                          │
+                     │   Linked to both VNets   │
+                     └────────────┬─────────────┘
+                                  │
+                     ┌────────────▼────────────┐
+                     │    Failover Group        │
+                     │                          │
+                     │  R/W:  <fog>.database    │
+                     │        .windows.net      │
+                     │                          │
+                     │  R/O:  <fog>.secondary   │
+                     │        .database         │
+                     │        .windows.net      │
+                     │                          │
+                     │  Mode: Automatic         │
+                     │  Grace: 60 min           │
+                     └──────────────────────────┘
 ```
 
 ## Storage Layer – Geo-Redundant with Tiered Lifecycle
@@ -116,15 +143,30 @@
           │  vm-subnet  10.1.1.0/24│        │  vm-subnet  10.2.1.0/24│
           │  ┌──────────────────┐  │        │  ┌──────────────────┐  │
           │  │  NSG              │  │        │  │  NSG              │  │
-          │  │  Allow: 22,80,443│  │◄──────►│  │  Allow: 22,80,443│  │
-          │  └──────────────────┘  │ Peering│  └──────────────────┘  │
+          │  │  LB→80,443       │  │        │  │  LB→80,443       │  │
+          │  │  VNet→22 (SSH)   │  │◄──────►│  │  VNet→22 (SSH)   │  │
+          │  │  Deny all other  │  │ Peering│  │  Deny all other  │  │
+          │  └──────────────────┘  │        │  └──────────────────┘  │
+          │  ┌──────────────────┐  │        │  ┌──────────────────┐  │
+          │  │  NAT Gateway     │  │        │  │  NAT Gateway     │  │
+          │  │  (outbound only) │  │        │  │  (outbound only) │  │
+          │  └──────────────────┘  │        │  └──────────────────┘  │
           │                        │        │                        │
           │  db-subnet  10.1.2.0/24│        │  db-subnet  10.2.2.0/24│
+          │                        │        │                        │
+          │  pe-subnet  10.1.3.0/24│        │  pe-subnet  10.2.3.0/24│
           │  ┌──────────────────┐  │        │  ┌──────────────────┐  │
-          │  │  SQL VNet Rule   │  │        │  │  SQL VNet Rule   │  │
+          │  │ SQL Private      │  │        │  │ SQL Private      │  │
+          │  │ Endpoint         │  │        │  │ Endpoint         │  │
           │  └──────────────────┘  │        │  └──────────────────┘  │
           │                        │        │                        │
           └────────────────────────┘        └────────────────────────┘
+
+          Traffic flow:
+          ─────────────
+          INBOUND:   Internet → LB (public IP) → VM (private IP)
+          OUTBOUND:  VM → NAT Gateway → Internet
+          DATABASE:  VM → Private Endpoint → SQL Server (no public access)
 ```
 
 ## Failover Flow
@@ -132,15 +174,16 @@
 ```
   Normal Operation
   ────────────────
-  User → Traffic Manager → Primary VM (eastus2) → SQL Failover R/W endpoint
-                                                 → Storage primary endpoint
+  User → Traffic Manager → Primary LB → Primary VM (private)
+                                           ├→ SQL via Private Endpoint
+                                           └→ Storage primary endpoint
 
   Primary Region Failure
   ──────────────────────
-  1. Traffic Manager probe fails 3x on primary     (30 seconds)
-  2. DNS re-routes traffic to secondary VM          (+ 60s TTL)
-  3. SQL Failover Group promotes secondary          (up to 60 min grace)
-  4. Storage GZRS: read from secondary endpoint     (automatic)
+  1. Traffic Manager probe fails 3x on primary LB    (30 seconds)
+  2. DNS re-routes traffic to secondary LB             (+ 60s TTL)
+  3. SQL Failover Group promotes secondary             (up to 60 min grace)
+  4. Storage GZRS: read from secondary endpoint        (automatic)
 
   Recovery (Failback)
   ───────────────────
@@ -161,8 +204,14 @@
   │ Azure SQL S0 + geo-replica    │    ~$30     │
   │ Storage (GZRS, usage-based)   │     ~$5     │
   │ Traffic Manager (per query)   │     ~$1     │
-  │ 2× Standard Public IPs        │    ~$10     │
+  │ 2× Standard LB               │    ~$36     │
+  │ 2× NAT Gateway               │    ~$64     │
+  │ 4× Standard Public IPs       │    ~$20     │
+  │ 2× SQL Private Endpoints     │    ~$15     │
   ├────────────────────────────────┼────────────┤
-  │ TOTAL                          │  ~$123/mo  │
+  │ TOTAL                          │  ~$248/mo  │
   └────────────────────────────────┴────────────┘
+
+  Note: Private networking adds ~$125/mo but eliminates
+  public attack surface on VMs and database servers.
 ```

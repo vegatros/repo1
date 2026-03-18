@@ -1,5 +1,5 @@
 ##──────────────────────────────────────────────────────────────
-## Virtual Machines – Low-Cost B-Series with Replicated Storage
+## Virtual Machines – Private Subnets, Behind Load Balancers
 ##──────────────────────────────────────────────────────────────
 
 locals {
@@ -17,12 +17,12 @@ locals {
   }
 }
 
-##── Public IPs ──────────────────────────────────────────────
+##── Public Load Balancers (front door for Traffic Manager) ──
 
-resource "azurerm_public_ip" "vm" {
+resource "azurerm_public_ip" "lb" {
   for_each = local.regions
 
-  name                = "${local.name_prefix}-${each.key}-vm-pip"
+  name                = "${local.name_prefix}-${each.key}-lb-pip"
   location            = each.value.rg.location
   resource_group_name = each.value.rg.name
   allocation_method   = "Static"
@@ -30,7 +30,68 @@ resource "azurerm_public_ip" "vm" {
   tags                = local.common_tags
 }
 
-##── NICs ─────────────────────────────────────────────────────
+resource "azurerm_lb" "main" {
+  for_each = local.regions
+
+  name                = "${local.name_prefix}-${each.key}-lb"
+  location            = each.value.rg.location
+  resource_group_name = each.value.rg.name
+  sku                 = "Standard"
+  tags                = local.common_tags
+
+  frontend_ip_configuration {
+    name                 = "frontend"
+    public_ip_address_id = azurerm_public_ip.lb[each.key].id
+  }
+}
+
+resource "azurerm_lb_backend_address_pool" "main" {
+  for_each = local.regions
+
+  name            = "vm-backend-pool"
+  loadbalancer_id = azurerm_lb.main[each.key].id
+}
+
+resource "azurerm_lb_probe" "health" {
+  for_each = local.regions
+
+  name                = "http-health"
+  loadbalancer_id     = azurerm_lb.main[each.key].id
+  protocol            = "Tcp"
+  port                = 443
+  interval_in_seconds = 10
+  number_of_probes    = 3
+}
+
+resource "azurerm_lb_rule" "https" {
+  for_each = local.regions
+
+  name                           = "https-rule"
+  loadbalancer_id                = azurerm_lb.main[each.key].id
+  protocol                       = "Tcp"
+  frontend_port                  = 443
+  backend_port                   = 443
+  frontend_ip_configuration_name = "frontend"
+  backend_address_pool_ids       = [azurerm_lb_backend_address_pool.main[each.key].id]
+  probe_id                       = azurerm_lb_probe.health[each.key].id
+  disable_outbound_snat          = true
+}
+
+resource "azurerm_lb_rule" "http" {
+  for_each = local.regions
+
+  name                           = "http-rule"
+  loadbalancer_id                = azurerm_lb.main[each.key].id
+  protocol                       = "Tcp"
+  frontend_port                  = 80
+  backend_port                   = 80
+  frontend_ip_configuration_name = "frontend"
+  backend_address_pool_ids       = [azurerm_lb_backend_address_pool.main[each.key].id]
+  probe_id                       = azurerm_lb_probe.health[each.key].id
+  disable_outbound_snat          = true
+}
+
+##── NICs (private only – no public IPs) ─────────────────────
 
 resource "azurerm_network_interface" "vm" {
   for_each = local.regions
@@ -44,7 +105,6 @@ resource "azurerm_network_interface" "vm" {
     name                          = "internal"
     subnet_id                     = each.value.subnet.id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.vm[each.key].id
   }
 }
 
@@ -55,7 +115,15 @@ resource "azurerm_network_interface_security_group_association" "vm" {
   network_security_group_id = each.value.nsg.id
 }
 
-##── Virtual Machines (B-series – low cost burstable) ────────
+resource "azurerm_network_interface_backend_address_pool_association" "vm" {
+  for_each = local.regions
+
+  network_interface_id    = azurerm_network_interface.vm[each.key].id
+  ip_configuration_name   = "internal"
+  backend_address_pool_id = azurerm_lb_backend_address_pool.main[each.key].id
+}
+
+##── Virtual Machines (B-series – private, no public IP) ─────
 
 resource "azurerm_linux_virtual_machine" "vm" {
   for_each = local.regions
@@ -80,7 +148,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   os_disk {
     name                 = "${local.name_prefix}-${each.key}-osdisk"
     caching              = "ReadWrite"
-    storage_account_type = "StandardSSD_ZRS" # Zone-redundant within region
+    storage_account_type = "StandardSSD_ZRS"
     disk_size_gb         = 30
   }
 
