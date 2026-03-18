@@ -161,12 +161,14 @@ jobs:
           path: snyk-results
 
       - name: Run CrewAI audit
+        timeout-minutes: 10
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
+          cd $GITHUB_WORKSPACE
           python terraform/stacks/ai/crew/main.py \
-            --dir ${{ env.TERRAFORM_DIR }} \
-            --out audit-report.md
+            --dir "$GITHUB_WORKSPACE/${{ env.TERRAFORM_DIR }}" \
+            --out "$GITHUB_WORKSPACE/audit-report.md"
 
       - name: Upload audit report
         if: always()

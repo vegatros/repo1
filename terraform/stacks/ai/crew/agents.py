@@ -13,6 +13,8 @@ def _get_llm() -> LLM:
     return LLM(
         model="anthropic/claude-sonnet-4-20250514",
         temperature=0.2,
+        timeout=120,
+        max_retries=3,
     )
 
 
