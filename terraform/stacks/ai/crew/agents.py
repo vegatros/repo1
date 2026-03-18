@@ -1,12 +1,19 @@
 """Agent definitions for the Terraform Audit Crew."""
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from crewai import Agent, LLM
 from tools import read_terraform_files, list_terraform_stacks, write_report
 
-llm = LLM(
-    model="anthropic/claude-sonnet-4-20250514",
-    temperature=0.2,
-)
+
+def _get_llm() -> LLM:
+    return LLM(
+        model="anthropic/claude-sonnet-4-20250514",
+        temperature=0.2,
+    )
 
 
 def create_security_agent() -> Agent:
@@ -21,7 +28,7 @@ def create_security_agent() -> Agent:
             "and data protection issues."
         ),
         tools=[read_terraform_files, list_terraform_stacks],
-        llm=llm,
+        llm=_get_llm(),
         verbose=True,
     )
 
@@ -38,7 +45,7 @@ def create_cost_agent() -> Agent:
             "sacrificing reliability."
         ),
         tools=[read_terraform_files],
-        llm=llm,
+        llm=_get_llm(),
         verbose=True,
     )
 
@@ -54,6 +61,6 @@ def create_report_agent() -> Agent:
             "executive summaries that both engineers and leadership can act on."
         ),
         tools=[write_report],
-        llm=llm,
+        llm=_get_llm(),
         verbose=True,
     )
