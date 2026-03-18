@@ -46,6 +46,11 @@ jobs:
       - name: Setup Snyk CLI
         uses: snyk/actions/setup@master
 
+      - name: Verify Snyk auth
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk auth --token "$SNYK_TOKEN"
+
       - name: Run Snyk IaC scan
         id: snyk_scan
         continue-on-error: true
