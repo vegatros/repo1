@@ -273,7 +273,8 @@ resource "aws_sagemaker_pipeline" "main" {
             }
           }
           AppSpecification = {
-            ImageUri = "683313688378.dkr.ecr.${var.aws_region}.amazonaws.com/sagemaker-scikit-learn:1.2-1-cpu-py3"
+            ImageUri             = "683313688378.dkr.ecr.${var.aws_region}.amazonaws.com/sagemaker-scikit-learn:1.2-1-cpu-py3"
+            ContainerEntrypoint  = ["python3", "/opt/ml/processing/code/preprocess.py"]
           }
           RoleArn = aws_iam_role.sagemaker.arn
           ProcessingInputs = [
@@ -282,6 +283,15 @@ resource "aws_sagemaker_pipeline" "main" {
               S3Input = {
                 S3Uri            = { "Get" = "Parameters.InputData" }
                 LocalPath        = "/opt/ml/processing/input"
+                S3DataType       = "S3Prefix"
+                S3InputMode      = "File"
+              }
+            },
+            {
+              InputName = "code"
+              S3Input = {
+                S3Uri            = "s3://${aws_s3_bucket.pipeline.id}/scripts/preprocess.py"
+                LocalPath        = "/opt/ml/processing/code"
                 S3DataType       = "S3Prefix"
                 S3InputMode      = "File"
               }
