@@ -3,3 +3,7 @@ environment        = "dev"
 project_name       = "app5-bedrock"
 agent_name         = "app5-bedrock-agent-dev"
 agent_instruction  = "You are a helpful AI assistant that provides accurate and concise responses."
+vpc_cidr           = "10.5.0.0/16"
+private_subnet_cidrs = ["10.5.1.0/24"]
+public_subnet_cidrs  = ["10.5.101.0/24"]
+instance_type      = "t3.micro"
