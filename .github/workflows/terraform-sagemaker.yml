@@ -50,25 +50,25 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        working-directory: terraform/stacks/aws/builds/sagemaker
+        working-directory: terraform/stacks/aws/builds/app-sagemaker
         run: terraform init -reconfigure
 
       - name: Run Trivy Security Scan
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'config'
-          scan-ref: 'terraform/stacks/aws/builds/sagemaker'
+          scan-ref: 'terraform/stacks/aws/builds/app-sagemaker'
           format: 'sarif'
           output: 'trivy-results.sarif'
           exit-code: '0'
 
       - name: Terraform Plan
-        working-directory: terraform/stacks/aws/builds/sagemaker
+        working-directory: terraform/stacks/aws/builds/app-sagemaker
         run: terraform plan -var-file="vars/${{ inputs.environment }}.tfvars" -out=tfplan
 
       - name: Terraform Apply
         if: inputs.action == 'apply'
-        working-directory: terraform/stacks/aws/builds/sagemaker
+        working-directory: terraform/stacks/aws/builds/app-sagemaker
         run: terraform apply -auto-approve tfplan
 
       - name: Trigger Pipeline Execution
@@ -82,5 +82,5 @@ jobs:
 
       - name: Terraform Destroy
         if: inputs.action == 'destroy'
-        working-directory: terraform/stacks/aws/builds/sagemaker
+        working-directory: terraform/stacks/aws/builds/app-sagemaker
         run: terraform destroy -var-file="vars/${{ inputs.environment }}.tfvars" -auto-approve
