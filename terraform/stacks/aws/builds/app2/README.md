@@ -330,4 +330,4 @@ GitHub Actions workflow: `.github/workflows/terraform-app2.yml`
 **Security:**
 - Trivy infrastructure scanning
 - OIDC authentication (no static credentials)
-- S3 backend with DynamoDB locking
+- S3 backend with native S3 locking

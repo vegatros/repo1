@@ -1,19 +1,15 @@
-# Backend Infrastructure
+# Backend Infrastructure — DECOMMISSIONED
 
-Creates the DynamoDB table for Terraform state locking.
+State locking has been migrated from DynamoDB to S3 native locking (`use_lockfile = true`), available in Terraform >= 1.10.
 
-## Usage
+## Cleanup
 
-Run this once to create the DynamoDB table:
+To remove the legacy DynamoDB table:
 
 ```bash
-cd terraform/modules/backend
+cd terraform/backend
 terraform init
-terraform apply
+terraform destroy
 ```
 
-This creates:
-- DynamoDB table: `terraform-state-lock`
-- Billing mode: PAY_PER_REQUEST (no upfront costs)
-
-After creation, all other Terraform configurations can use state locking.
+After destroying, this directory can be deleted.

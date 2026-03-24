@@ -128,7 +128,7 @@ sequenceDiagram
 flowchart TD
     Start([Trigger terraform-app7 Workflow]) --> Select[Select Environment & Action]
     Select --> Auth[AWS OIDC Authentication]
-    Auth --> Init[Terraform Init<br/>S3 Backend + DynamoDB Lock]
+    Auth --> Init[Terraform Init<br/>S3 Backend + S3 Native Lock]
     Init --> Scan[Trivy Security Scan]
     Scan --> Plan[Terraform Plan<br/>-var-file vars/ENV.tfvars]
 
@@ -267,4 +267,4 @@ terraform destroy -var-file="vars/dev.tfvars"
 - Terraform >= 1.0
 - kubectl
 - Helm (for local chart testing)
-- S3 backend bucket and DynamoDB lock table (shared across stacks)
+- S3 backend bucket (shared across stacks, using S3 native locking)

@@ -2,7 +2,7 @@
 
 ## Architecture Overview
 
-6 application stacks backed by 8 reusable modules. Well-organized `modules/` + `stacks/` layout with per-environment tfvars. S3 backend with DynamoDB locking across all stacks.
+6 application stacks backed by 8 reusable modules. Well-organized `modules/` + `stacks/` layout with per-environment tfvars. S3 backend with native S3 locking across all stacks.
 
 ---
 

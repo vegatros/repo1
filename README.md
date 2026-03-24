@@ -332,7 +332,7 @@ Each stack has its own workflow with:
 | **Auth** | AWS OIDC — no static credentials |
 | **Security** | Trivy infrastructure scanning, SARIF reports |
 | **Quality** | SonarCloud code analysis |
-| **State** | S3 backend with DynamoDB locking, AES-256 encryption |
+| **State** | S3 backend with native S3 locking, AES-256 encryption |
 | **Environments** | dev, qa, prod via tfvars |
 | **Timeout** | 15-minute max per run |
 | **Trigger** | Manual dispatch, PR, or push to master |
@@ -429,7 +429,7 @@ terraform destroy -var-file="vars/dev.tfvars"
 | Component | Value |
 |-----------|-------|
 | **S3 Bucket** | `terraform-state-925185632967` |
-| **DynamoDB Table** | `terraform-state-lock` (us-east-1) |
+| **DynamoDB Table** | Decommissioned — using S3 native locking |
 | **Versioning** | Enabled |
 | **Encryption** | AES-256 |
 | **Key Pattern** | `{stack}/{environment}/terraform.tfstate` |

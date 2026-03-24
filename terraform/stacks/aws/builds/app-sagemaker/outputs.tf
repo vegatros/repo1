@@ -13,3 +13,11 @@ output "s3_bucket" {
 output "sagemaker_role_arn" {
   value = aws_iam_role.sagemaker.arn
 }
+
+output "model_package_group" {
+  value = aws_sagemaker_model_package_group.main.model_package_group_name
+}
+
+output "endpoint_name" {
+  value = "${var.project_name}-endpoint"
+}
