@@ -1,6 +1,8 @@
-# AWS EC2 → Azure VM Migration Plan
+# AWS → Azure Migration Plan
 
-End-to-end migration plan using Azure Migrate for lift-and-shift of EC2 workloads to Azure VMs with near-zero downtime.
+End-to-end migration plan covering:
+- **EC2 → Azure VM** via Azure Migrate (lift-and-shift, near-zero downtime)
+- **RDS SQL Server → Azure SQL Database** via Azure Database Migration Service (DMS)
 
 ---
 
@@ -278,6 +280,168 @@ End-to-end migration plan using Azure Migrate for lift-and-shift of EC2 workload
 
 ---
 
+## RDS SQL Server → Azure SQL Database Migration
+
+### Overview
+
+```
+  AWS (Source)                                        Azure (Target)
+  ──────────────────────────────────────────────────────────────────────
+
+  ┌──────────────────────┐                  ┌──────────────────────────┐
+  │  RDS SQL Server      │                  │  Azure SQL Database      │
+  │  (Multi-AZ optional) │                  │  (General Purpose /      │
+  │                      │                  │   Business Critical)     │
+  │  ┌────────────────┐  │                  │                          │
+  │  │  Databases     │  │  ─── DMS ──────► │  ┌────────────────────┐  │
+  │  │  Tables        │  │  Online / Offline│  │  Databases         │  │
+  │  │  Stored Procs  │  │                  │  │  Tables            │  │
+  │  │  Views         │  │                  │  │  Stored Procs      │  │
+  │  │  Indexes       │  │                  │  │  Views / Indexes   │  │
+  │  └────────────────┘  │                  │  └────────────────────┘  │
+  │                      │                  │                          │
+  │  Security Groups     │                  │  Firewall Rules / VNet   │
+  │  IAM Auth (optional) │                  │  Azure AD Auth           │
+  └──────────────────────┘                  └──────────────────────────┘
+            │                                             │
+            └──────────── VPN / ExpressRoute ─────────────┘
+                         (required for online migration)
+```
+
+### RDS → Azure SQL Mapping
+
+| RDS SQL Server | Azure SQL Database | Notes |
+|---|---|---|
+| db.t3.medium (2 vCPU, 4 GB) | General Purpose, 2 vCores | Burstable workloads |
+| db.m5.large (2 vCPU, 8 GB) | General Purpose, 4 vCores | Standard workloads |
+| db.m5.xlarge (4 vCPU, 16 GB) | General Purpose, 8 vCores | |
+| db.m5.2xlarge (8 vCPU, 32 GB) | Business Critical, 8 vCores | High availability |
+| db.r5.large (2 vCPU, 16 GB) | Business Critical, 4 vCores | Memory-optimized |
+| Multi-AZ deployment | Business Critical tier | Built-in HA replicas |
+| Read Replica | Geo-replication / Readable secondary | |
+| RDS Automated Backups | Azure SQL PITR (1–35 days) | |
+| RDS Snapshots | Long-term retention backups | |
+| Parameter Groups | Azure SQL configuration | |
+| Option Groups | N/A (managed service) | |
+| Security Groups | Firewall rules + VNet service endpoint | |
+| IAM DB Auth | Azure AD authentication | |
+| SSL/TLS in-transit | TLS enforced by default | |
+| Encryption at rest (KMS) | TDE (Transparent Data Encryption) | Enabled by default |
+
+### Migration Approach: Online vs Offline
+
+```
+  OFFLINE (Simpler, requires downtime)
+  ─────────────────────────────────────────────────────────────────────
+  1. Stop application writes
+  2. Export RDS → BACPAC file (SQL Server Management Studio or sqlpackage)
+  3. Upload BACPAC to Azure Blob Storage
+  4. Import BACPAC into Azure SQL Database
+  5. Validate data integrity
+  6. Update connection strings → Azure SQL endpoint
+  7. Resume application
+
+  Best for: Dev/QA, small databases (<10 GB), acceptable downtime window
+
+  ONLINE (Near-zero downtime via DMS)
+  ─────────────────────────────────────────────────────────────────────
+  1. Enable CDC (Change Data Capture) on RDS SQL Server
+  2. Create Azure DMS instance (Premium tier for online migration)
+  3. Configure DMS migration project (source: RDS, target: Azure SQL)
+  4. Full load — initial bulk copy of all tables
+  5. CDC sync — continuous replication of changes
+  6. Monitor lag (target: < 1 min)
+  7. Cutover — stop writes, apply final changes, update connection strings
+
+  Best for: Production, large databases, minimal downtime requirement
+```
+
+### DMS Migration Flow
+
+```
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │                  AZURE DMS ONLINE MIGRATION                          │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  RDS SQL Server                  Azure DMS                Azure SQL DB
+  ──────────────────────────────────────────────────────────────────────
+
+  ┌──────────────┐   Full Load    ┌─────────────┐  Bulk Insert  ┌──────────┐
+  │  All Tables  │ ─────────────► │             │ ────────────► │  Tables  │
+  └──────────────┘                │  Migration  │               └──────────┘
+                                  │  Service    │
+  ┌──────────────┐   CDC Stream   │  (Premium)  │  Apply CDC    ┌──────────┐
+  │  CDC Log     │ ─────────────► │             │ ────────────► │  Changes │
+  │  (changes)   │                └─────────────┘               └──────────┘
+  └──────────────┘
+         │                              │
+         │         VPN / ER             │
+         └──────────────────────────────┘
+              (private connectivity)
+
+  Monitoring:
+  ├─ DMS Activity Monitor → lag, rows migrated, errors
+  └─ Azure Portal → migration status per table
+```
+
+### Pre-Migration Requirements
+
+| Requirement | RDS Setting | Action |
+|---|---|---|
+| CDC enabled | `rds.replication_task_enable_cdc = 1` | Enable in parameter group |
+| Backup retention | ≥ 1 day | Already default on RDS |
+| SQL Server version | 2012+ | Verify compatibility level |
+| `sysadmin` or `db_owner` | Source credentials | Required by DMS |
+| Network access | Port 1433 open to DMS | Update security group |
+| Azure SQL firewall | Allow DMS subnet | Configure in Azure |
+
+### Connection String Update
+
+```
+  Before (RDS):
+  Server=mydb.xxxx.us-east-1.rds.amazonaws.com,1433;
+  Database=myapp;User Id=admin;Password=xxx;Encrypt=True;
+
+  After (Azure SQL):
+  Server=myserver.database.windows.net,1433;
+  Database=myapp;User Id=admin@myserver;Password=xxx;
+  Encrypt=True;TrustServerCertificate=False;
+```
+
+### Database Checklist
+
+#### Pre-Migration
+- [ ] Audit all RDS instances, databases, sizes, and SQL Server versions
+- [ ] Check for unsupported features (linked servers, SQL Agent jobs, CLR, etc.)
+- [ ] Enable CDC on source RDS instance
+- [ ] Create Azure SQL Database (match vCores to RDS instance size)
+- [ ] Configure VNet service endpoint or private endpoint for Azure SQL
+- [ ] Create Azure DMS instance (Premium tier for online)
+- [ ] Verify network connectivity: DMS → RDS (port 1433) and DMS → Azure SQL
+- [ ] Run DMS Schema Assessment to catch compatibility issues
+
+#### During Migration
+- [ ] Monitor full load progress per table
+- [ ] Verify CDC lag stays under 1 minute
+- [ ] Validate row counts match between source and target
+- [ ] Test application queries against Azure SQL (read-only test)
+
+#### Cutover
+- [ ] Stop application writes to RDS
+- [ ] Wait for CDC lag to reach 0
+- [ ] Update application connection strings to Azure SQL endpoint
+- [ ] Validate application functionality
+- [ ] Stop DMS replication task
+
+#### Post-Migration
+- [ ] Enable Azure SQL Threat Detection
+- [ ] Configure Azure AD authentication
+- [ ] Set up geo-replication (if required)
+- [ ] Configure PITR retention policy
+- [ ] Decommission RDS instance (after 48h validation hold)
+
+---
+
 ## Mermaid Diagrams
 
 ### End-to-End Migration Flow
@@ -484,4 +648,129 @@ flowchart TD
     style Investigate fill:#ff9800,color:#fff
     style DNS fill:#0078d4,color:#fff
     style Boot fill:#0078d4,color:#fff
+```
+
+---
+
+### RDS SQL Server → Azure SQL Migration Flow
+
+```mermaid
+flowchart LR
+    subgraph AWS ["☁️ AWS (Source)"]
+        RDS[RDS SQL Server\nMulti-AZ]
+        CDC[CDC Log\nChange Stream]
+        SG2[Security Group\nPort 1433]
+    end
+
+    subgraph DMS ["🔄 Azure DMS"]
+        FULL[Full Load\nBulk Copy]
+        SYNC[CDC Sync\nContinuous]
+        MON[Activity Monitor\nLag Tracking]
+    end
+
+    subgraph Azure ["🔷 Azure (Target)"]
+        ASQL[Azure SQL Database\nGeneral Purpose /\nBusiness Critical]
+        VNET2[VNet Service\nEndpoint]
+        AAD[Azure AD Auth\n+ TDE Encryption]
+    end
+
+    RDS -->|initial snapshot| FULL
+    CDC -->|change stream| SYNC
+    FULL -->|bulk insert| ASQL
+    SYNC -->|apply changes| ASQL
+    SG2 <-->|port 1433 VPN| VNET2
+    VNET2 --> ASQL
+    ASQL --> AAD
+    MON -.->|monitors| FULL & SYNC
+
+    style AWS fill:#ff9900,color:#fff
+    style DMS fill:#0078d4,color:#fff
+    style Azure fill:#0078d4,color:#fff
+    style RDS fill:#f90,color:#000
+    style CDC fill:#e65100,color:#fff
+    style FULL fill:#29b6f6,color:#fff
+    style SYNC fill:#29b6f6,color:#fff
+    style MON fill:#29b6f6,color:#fff
+    style ASQL fill:#1565c0,color:#fff
+    style AAD fill:#1565c0,color:#fff
+```
+
+---
+
+### Online vs Offline Decision
+
+```mermaid
+flowchart TD
+    Start([Start: Plan DB Migration]) --> Size{Database\nSize?}
+    Size -->|< 10 GB| Downtime{Downtime\nAcceptable?}
+    Size -->|>= 10 GB| Online[Online Migration\nvia Azure DMS]
+    Downtime -->|Yes| Offline[Offline Migration\nBACPAC Export/Import]
+    Downtime -->|No| Online
+    Offline --> BACPACExport[Export BACPAC\nfrom RDS]
+    BACPACExport --> Upload[Upload to\nAzure Blob]
+    Upload --> Import[Import to\nAzure SQL]
+    Import --> Validate
+    Online --> CDC2[Enable CDC\non RDS]
+    CDC2 --> DMS2[Configure DMS\nMigration Project]
+    DMS2 --> FullLoad[Full Load]
+    FullLoad --> CDCSync[CDC Sync\nContinuous]
+    CDCSync --> LagCheck{Lag\n< 1 min?}
+    LagCheck -->|No| Wait2[Wait]
+    Wait2 --> LagCheck
+    LagCheck -->|Yes| Cutover2[Stop Writes\nApply Final CDC]
+    Cutover2 --> Validate[Validate\nRow Counts & App]
+    Validate --> ConnStr[Update Connection\nStrings]
+    ConnStr --> Done([Migration Complete ✅])
+
+    style Start fill:#4caf50,color:#fff
+    style Done fill:#4caf50,color:#fff
+    style Online fill:#0078d4,color:#fff
+    style Offline fill:#ff9800,color:#fff
+    style Cutover2 fill:#ef5350,color:#fff
+```
+
+---
+
+### Full Stack Migration Overview
+
+```mermaid
+graph TB
+    subgraph Source ["AWS — Source Stack"]
+        EC2S[EC2 Instances]
+        RDSS[RDS SQL Server]
+        ALBS[ALB]
+        VPCS[VPC + Security Groups]
+    end
+
+    subgraph Tools ["Migration Tools"]
+        AZM[Azure Migrate\nEC2 → VM]
+        DMST[Azure DMS\nRDS → Azure SQL]
+        VPN[VPN / ExpressRoute\nHybrid Connectivity]
+    end
+
+    subgraph Target ["Azure — Target Stack"]
+        VMS[Azure VMs]
+        SQLT[Azure SQL Database]
+        AGWT[Application Gateway]
+        VNETT[VNet + NSGs]
+    end
+
+    EC2S -->|replicate| AZM --> VMS
+    RDSS -->|full load + CDC| DMST --> SQLT
+    ALBS -.->|replace with| AGWT
+    VPCS -.->|mirror| VNETT
+    VPN <-->|private link| Tools
+
+    style Source fill:#ff9900,color:#fff
+    style Tools fill:#37474f,color:#fff
+    style Target fill:#0078d4,color:#fff
+    style EC2S fill:#f90,color:#000
+    style RDSS fill:#f90,color:#000
+    style ALBS fill:#f90,color:#000
+    style AZM fill:#29b6f6,color:#fff
+    style DMST fill:#29b6f6,color:#fff
+    style VPN fill:#546e7a,color:#fff
+    style VMS fill:#1565c0,color:#fff
+    style SQLT fill:#1565c0,color:#fff
+    style AGWT fill:#1565c0,color:#fff
 ```
