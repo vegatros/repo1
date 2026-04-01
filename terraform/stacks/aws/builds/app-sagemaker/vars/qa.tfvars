@@ -1,0 +1,9 @@
+aws_region               = "us-east-1"
+environment              = "qa"
+project_name             = "sagemaker-pipeline"
+vpc_cidr                 = "10.7.0.0/16"
+private_subnet_cidrs     = ["10.7.1.0/24", "10.7.2.0/24"]
+public_subnet_cidrs      = ["10.7.101.0/24", "10.7.102.0/24"]
+processing_instance_type = "ml.m5.large"
+training_instance_type   = "ml.m5.xlarge"
+endpoint_instance_type   = "ml.m5.large"

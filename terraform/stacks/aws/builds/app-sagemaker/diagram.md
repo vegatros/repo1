@@ -169,3 +169,71 @@ aws sagemaker start-pipeline-execution \
   --pipeline-name sagemaker-pipeline-pipeline \
   --region us-east-1
 ```
+
+---
+
+## Environment Sizing & Cost Estimate
+
+```mermaid
+graph LR
+    subgraph Dev ["Dev — Low Cost"]
+        D1[Processing: ml.t3.medium]
+        D2[Training: ml.m5.large]
+        D3[Endpoint: ml.t2.medium]
+        D4[VPC: 2 AZs, no NAT]
+        D5[Runs: On-demand]
+    end
+
+    subgraph QA ["QA — Moderate Cost"]
+        Q1[Processing: ml.m5.large]
+        Q2[Training: ml.m5.xlarge]
+        Q3[Endpoint: ml.m5.large]
+        Q4[VPC: 2 AZs, no NAT]
+        Q5[Runs: Scheduled daily]
+    end
+
+    subgraph Prod ["Prod — Higher Cost"]
+        P1[Processing: ml.m5.xlarge]
+        P2[Training: ml.m5.2xlarge]
+        P3[Endpoint: ml.m5.xlarge x2]
+        P4[VPC: 2 AZs, no NAT]
+        P5[Runs: Scheduled + triggered]
+    end
+
+    style Dev fill:#e8f5e9
+    style QA fill:#fff3e0
+    style Prod fill:#ffebee
+```
+
+### Resource Comparison by Environment
+
+| Resource | Dev | QA | Prod |
+|----------|-----|-----|------|
+| **Processing Instance** | ml.t3.medium (2 vCPU, 4 GB) | ml.m5.large (2 vCPU, 8 GB) | ml.m5.xlarge (4 vCPU, 16 GB) |
+| **Training Instance** | ml.m5.large (2 vCPU, 8 GB) | ml.m5.xlarge (4 vCPU, 16 GB) | ml.m5.2xlarge (8 vCPU, 32 GB) |
+| **Endpoint Instance** | ml.t2.medium × 1 | ml.m5.large × 1 | ml.m5.xlarge × 2 |
+| **Endpoint Availability** | Single instance | Single instance | Multi-AZ (2 instances) |
+| **VPC Endpoints** | 5 (S3, SM API, SM Runtime, STS, Logs) | 5 | 5 |
+| **S3 Storage** | ~1 GB | ~10 GB | ~100 GB+ |
+| **Pipeline Frequency** | On-demand / manual | Daily scheduled | Scheduled + event-triggered |
+| **Flow Logs Retention** | 7 days | 14 days | 30 days |
+
+### Cost Drivers
+
+```mermaid
+pie title Estimated Cost Distribution
+    "SageMaker Endpoint (always-on)" : 45
+    "VPC Endpoints (5 × hourly)" : 25
+    "Training Jobs (per run)" : 15
+    "Processing Jobs (per run)" : 10
+    "S3 Storage" : 5
+```
+
+**Key cost notes:**
+- **Biggest cost:** The SageMaker endpoint runs 24/7 — this dominates the bill in all environments
+- **VPC Endpoints:** 5 interface endpoints each billed hourly (~$0.01/hr each) — fixed cost regardless of usage
+- **Training/Processing:** Only billed while jobs run — cost scales with frequency and instance size
+- **Dev savings tip:** Tear down the endpoint when not testing; use serverless inference for intermittent workloads
+- **S3 Gateway endpoint:** Free (no hourly charge, unlike interface endpoints)
+
+> **For accurate pricing:** Use the [AWS Pricing Calculator](https://calculator.aws.amazon.com/) with the instance types above for your region. Prices vary by region and change over time.
