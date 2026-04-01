@@ -275,3 +275,213 @@ End-to-end migration plan using Azure Migrate for lift-and-shift of EC2 workload
 - [ ] Decommission EC2 instances
 - [ ] Remove VPN/ExpressRoute (if no longer needed)
 - [ ] Update documentation and runbooks
+
+---
+
+## Mermaid Diagrams
+
+### End-to-End Migration Flow
+
+```mermaid
+flowchart LR
+    subgraph AWS ["☁️ AWS (Source)"]
+        EC2[EC2 Instance\nEBS Volumes]
+        SG[Security Group]
+        IAM[IAM Role]
+        ALB[ALB / NLB]
+        VPC[VPC]
+    end
+
+    subgraph Migrate ["🔄 Azure Migrate"]
+        APP[Appliance\nDiscovery]
+        REP[Replication\nDelta Sync]
+        VAULT[Recovery\nServices Vault]
+    end
+
+    subgraph Azure ["🔷 Azure (Target)"]
+        VM[Azure VM\nManaged Disks]
+        NSG[NSG]
+        MI[Managed Identity]
+        LB[App Gateway / LB]
+        VNET[VNet]
+    end
+
+    EC2 -->|discover| APP
+    APP -->|assess| REP
+    REP -->|block-level replication| VAULT
+    VAULT -->|cutover| VM
+    SG -.->|translate| NSG
+    IAM -.->|map to| MI
+    ALB -.->|replace with| LB
+    VPC -.->|mirror| VNET
+
+    style AWS fill:#ff9900,color:#fff
+    style Migrate fill:#0078d4,color:#fff
+    style Azure fill:#0078d4,color:#fff
+    style EC2 fill:#f90,color:#000
+    style APP fill:#29b6f6,color:#fff
+    style REP fill:#29b6f6,color:#fff
+    style VAULT fill:#29b6f6,color:#fff
+    style VM fill:#0078d4,color:#fff
+    style NSG fill:#0078d4,color:#fff
+    style MI fill:#0078d4,color:#fff
+    style LB fill:#0078d4,color:#fff
+```
+
+---
+
+### Migration Phases Timeline
+
+```mermaid
+gantt
+    title AWS → Azure Migration Timeline
+    dateFormat  YYYY-MM-DD
+    section Phase 1 — Assess
+    Inventory EC2s & dependencies     :a1, 2024-01-01, 14d
+    Size Azure VMs & estimate costs   :a2, after a1, 7d
+    section Phase 2 — Prepare
+    Create VNet, NSGs, VPN Gateway    :b1, after a2, 5d
+    Deploy Azure Migrate appliance    :b2, after b1, 2d
+    section Phase 3 — Replicate
+    Initial replication               :c1, after b2, 7d
+    Continuous delta sync             :c2, after c1, 7d
+    section Phase 4 — Test
+    Test migration (no cutover)       :d1, after c1, 5d
+    App validation & perf testing     :d2, after d1, 3d
+    section Phase 5 — Cutover
+    Maintenance window & DNS update   :crit, e1, after d2, 1d
+    Post-cutover monitoring           :e2, after e1, 2d
+    Decommission EC2s                 :e3, after e2, 1d
+```
+
+---
+
+### Network Architecture
+
+```mermaid
+graph TB
+    Users((Users / DNS)) --> TM
+
+    subgraph Hybrid ["Hybrid Connectivity"]
+        TM[Route53 / DNS]
+    end
+
+    subgraph AWS ["AWS — Source"]
+        VPC[VPC 10.0.0.0/16]
+        EC2A[EC2 Instance A]
+        EC2B[EC2 Instance B]
+        AWSVPN[VPN Gateway /\nDirect Connect]
+        VPC --> EC2A & EC2B
+        VPC --> AWSVPN
+    end
+
+    subgraph Azure ["Azure — Target"]
+        VNET[VNet 10.100.0.0/16]
+        VMA[Azure VM A]
+        VMB[Azure VM B]
+        AZVPN[VPN Gateway /\nExpressRoute]
+        VNET --> VMA & VMB
+        VNET --> AZVPN
+    end
+
+    TM -->|during migration| EC2A
+    TM -->|cutover| VMA
+    AWSVPN <-->|Site-to-Site VPN| AZVPN
+
+    style AWS fill:#ff9900,color:#fff
+    style Azure fill:#0078d4,color:#fff
+    style Hybrid fill:#37474f,color:#fff
+    style EC2A fill:#f90,color:#000
+    style EC2B fill:#f90,color:#000
+    style VMA fill:#29b6f6,color:#fff
+    style VMB fill:#29b6f6,color:#fff
+    style AWSVPN fill:#e65100,color:#fff
+    style AZVPN fill:#1565c0,color:#fff
+    style TM fill:#4caf50,color:#fff
+```
+
+---
+
+### Resource Mapping
+
+```mermaid
+graph LR
+    subgraph AWS ["AWS Resources"]
+        A1[EC2 Instance]
+        A2[EBS Volume]
+        A3[Security Group]
+        A4[IAM Role]
+        A5[ALB / NLB]
+        A6[VPC / Subnet]
+        A7[Route53]
+        A8[CloudWatch]
+    end
+
+    subgraph Azure ["Azure Equivalents"]
+        B1[Azure VM]
+        B2[Managed Disk]
+        B3[NSG]
+        B4[Managed Identity]
+        B5[App Gateway / LB]
+        B6[VNet / Subnet]
+        B7[Azure DNS]
+        B8[Azure Monitor]
+    end
+
+    A1 --> B1
+    A2 --> B2
+    A3 --> B3
+    A4 --> B4
+    A5 --> B5
+    A6 --> B6
+    A7 --> B7
+    A8 --> B8
+
+    style AWS fill:#ff9900,color:#fff
+    style Azure fill:#0078d4,color:#fff
+    style A1 fill:#f90,color:#000
+    style A2 fill:#f90,color:#000
+    style A3 fill:#f90,color:#000
+    style A4 fill:#f90,color:#000
+    style A5 fill:#f90,color:#000
+    style A6 fill:#f90,color:#000
+    style A7 fill:#f90,color:#000
+    style A8 fill:#f90,color:#000
+    style B1 fill:#29b6f6,color:#fff
+    style B2 fill:#29b6f6,color:#fff
+    style B3 fill:#29b6f6,color:#fff
+    style B4 fill:#29b6f6,color:#fff
+    style B5 fill:#29b6f6,color:#fff
+    style B6 fill:#29b6f6,color:#fff
+    style B7 fill:#29b6f6,color:#fff
+    style B8 fill:#29b6f6,color:#fff
+```
+
+---
+
+### Cutover Decision Flow
+
+```mermaid
+flowchart TD
+    Start([Maintenance Window]) --> Pause[Pause App Writes]
+    Pause --> Sync[Final Delta Sync]
+    Sync --> Check{Delta Sync\nComplete?}
+    Check -->|No| Wait[Wait 15 min]
+    Wait --> Check
+    Check -->|Yes| Boot[Start Azure VMs]
+    Boot --> Validate{App Health\nCheck Pass?}
+    Validate -->|Yes| DNS[Update DNS Records]
+    DNS --> Monitor[Monitor 1h]
+    Monitor --> Stable{Stable?}
+    Stable -->|Yes| Done([Cutover Complete ✅])
+    Stable -->|No| Rollback[Revert DNS to EC2]
+    Validate -->|No| Rollback
+    Rollback --> Investigate([Investigate & Retry ⚠️])
+
+    style Start fill:#4caf50,color:#fff
+    style Done fill:#4caf50,color:#fff
+    style Rollback fill:#ef5350,color:#fff
+    style Investigate fill:#ff9800,color:#fff
+    style DNS fill:#0078d4,color:#fff
+    style Boot fill:#0078d4,color:#fff
+```
