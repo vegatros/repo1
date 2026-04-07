@@ -1,6 +1,6 @@
-# AWS Terraform DevOps Examples
+# Cloud Infrastructure — Terraform DevOps
 
-Production-grade Terraform infrastructure managing EC2, EKS, and multi-region active-active deployments on AWS, with fully automated CI/CD via GitHub Actions.
+Production-grade Terraform infrastructure across AWS and Azure, covering application stacks, AI/ML pipelines, multi-cloud networking, governance, and migration planning. Fully automated CI/CD via GitHub Actions.
 
 ---
 
@@ -8,59 +8,75 @@ Production-grade Terraform infrastructure managing EC2, EKS, and multi-region ac
 
 ```mermaid
 graph TB
-    subgraph "CI/CD Layer"
+    subgraph CICD ["CI/CD Layer"]
         GH[GitHub Actions]
         OIDC[AWS OIDC Auth]
         Trivy[Trivy Security Scan]
         Sonar[SonarCloud Analysis]
     end
 
-    subgraph "Terraform Layer"
+    subgraph AWS ["AWS Infrastructure"]
         direction LR
-        subgraph Modules
-            VPC[vpc]
-            EC2M[ec2]
-            EKSM[eks]
-            ECSM[ecs]
-            IAMM[iam]
-            BRM[bedrock]
-            DDB[dynamodb]
+        subgraph AWSStacks ["Application Stacks"]
+            APP1["App1 — ALB + EC2"]
+            APP2["App2 — EKS + Linkerd"]
+            APP3["App3 — Multi-Region"]
+            APP4["App4 — ECS Fargate"]
+            APP6["App6 — S3 + CloudFront"]
+            APP7["App7 — EKS + ArgoCD"]
+            APP8["App8 — VPN + Jenkins"]
+            APP10["App10 — Lambda Container"]
+        end
+        subgraph AWSAI ["AI / ML"]
+            BEDROCK["Bedrock Agent\nAmazon Nova"]
+            SAGEMAKER["SageMaker\nMLOps Pipeline"]
+            CREW["CrewAI\nAI Agents"]
+        end
+        subgraph AWSGlobal ["Global / Governance"]
+            CT["Control Tower\nMulti-Region"]
+        end
+        subgraph AWSNet ["Networking"]
+            TGW["Transit Gateway\nHub-and-Spoke"]
         end
     end
 
-    subgraph "Application Stacks"
+    subgraph Azure ["Azure Infrastructure"]
         direction LR
-        APP1["App1<br/>ALB + EC2<br/>us-east-1"]
-        APP2["App2<br/>EKS + Linkerd<br/>us-east-1"]
-        APP3["App3<br/>Multi-Region<br/>us-west-2 + us-east-1"]
+        subgraph AzureStacks ["Deployments"]
+            AZRF["Region Failover\nTraffic Manager"]
+        end
+        subgraph AzureGlobal ["Global / Governance"]
+            ALZ["Landing Zone\nHub-and-Spoke"]
+        end
+        subgraph AzureMigrate ["Migration Plans"]
+            AWSMIG["AWS → Azure\nMigration"]
+            ONPMIG["On-Prem VMware\n+ SQL → Azure"]
+        end
     end
 
-    subgraph "AWS Infrastructure"
-        direction LR
-        R53[Route53<br/>cloudconscious.io]
-        ALB[Application<br/>Load Balancer]
-        EKS[EKS Cluster]
-        GA[Global<br/>Accelerator]
-        S3[(S3 State<br/>Backend)]
+    subgraph Modules ["Reusable Modules"]
+        MVPC[vpc] 
+        MEC2[ec2]
+        MEKS[eks]
+        MECS[ecs]
+        MIAM[iam]
+        MBRK[bedrock]
+        MDDB[dynamodb]
+        MTGW[transit-gateway]
     end
 
     GH --> OIDC --> Trivy --> Sonar
     Sonar --> Modules
-    Modules --> APP1 & APP2 & APP3
-    APP1 --> ALB --> R53
-    APP2 --> EKS
-    APP3 --> GA --> R53
-    APP1 & APP2 & APP3 -.-> S3
+    Modules --> AWSStacks & AWSAI
 
-    style GH fill:#24292e,color:#fff
-    style OIDC fill:#ff9900,color:#fff
-    style Trivy fill:#1904da,color:#fff
-    style Sonar fill:#f3702a,color:#fff
-    style APP1 fill:#4caf50,color:#fff
-    style APP2 fill:#2196f3,color:#fff
-    style APP3 fill:#9c27b0,color:#fff
-    style R53 fill:#8c6bb1
-    style S3 fill:#ff9800
+    style CICD fill:#24292e,color:#fff
+    style AWS fill:#ff9900,color:#000
+    style Azure fill:#0078d4,color:#fff
+    style Modules fill:#37474f,color:#fff
+    style BEDROCK fill:#9c27b0,color:#fff
+    style SAGEMAKER fill:#9c27b0,color:#fff
+    style CT fill:#ef5350,color:#fff
+    style ALZ fill:#0078d4,color:#fff
 ```
 
 ---
@@ -70,236 +86,221 @@ graph TB
 ```
 repo1/
 ├── terraform/
-│   ├── modules/                   # Reusable infrastructure components
-│   │   ├── network/               # Network infrastructure
-│   │   │   ├── vpc/               #   VPC, subnets, IGW, NAT, flow logs
-│   │   │   └── transit-gateway/   #   Transit Gateway for VPC connectivity
-│   │   ├── compute/               # Compute resources
-│   │   │   └── ec2/               #   EC2 instances, IAM, security groups
-│   │   ├── containers/            # Container orchestration
-│   │   │   ├── eks/               #   EKS cluster, node groups, IAM, IRSA
-│   │   │   └── ecs/               #   Fargate cluster, task definitions
-│   │   ├── database/              # Database services
-│   │   │   └── dynamodb/          #   Global tables, cross-region replication
-│   │   ├── ai/                    # AI/ML services
-│   │   │   └── bedrock/           #   Bedrock agent (Amazon Titan)
-│   │   ├── iam/                   #   Centralized roles & policies
-│   │   └── backend/               #   S3 + DynamoDB state backend
-│   └── stacks/                    # Deployment targets
-│       ├── builds/                # Application stacks (dev/qa/prod)
-│       │   ├── app1/              #   ALB + EC2, Lambda scheduler, ACM/TLS
-│       │   ├── app2/              #   EKS + Linkerd mesh, NGINX Ingress, Helm
-│       │   ├── app3/              #   Multi-region, Global Accelerator, DynamoDB
-│       │   ├── app4/              #   ECS Fargate cluster
-│       │   ├── app5/              #   Bedrock AI agent
-│       │   ├── app6/              #   S3 static website + CloudFront
-│       │   └── app7/              #   EKS + ArgoCD GitOps
-│       └── network/               # Network infrastructure
-│           └── tgw/               #   Transit Gateway with 2 VPCs
-├── .github/workflows/             # CI/CD pipelines
-│   ├── terraform-app1.yml         #   App1 plan/apply/destroy
-│   ├── terraform-app2.yml         #   App2 plan/apply/destroy
-│   ├── terraform-app3.yml         #   App3 plan/apply/destroy + SARIF
-│   └── code-scan.yml              #   SonarCloud code quality
-├── scripts/                       # Utility scripts
-│   ├── create-stack.sh            #   Scaffold new stacks from template
-│   ├── check-workflow.sh          #   Validate workflow status
-│   ├── cleanup-old-state.sh       #   Remove stale S3 state files
-│   └── cloudtrail/                #   Real-time AWS event monitoring
-├── policies/                      # AWS policy definitions
-└── DIAGRAMS.md                    # Full Mermaid diagram collection
+│   ├── live/                          # All deployed infrastructure
+│   │   ├── aws/
+│   │   │   ├── stacks/                # AWS application stacks
+│   │   │   │   ├── app1/              #   ALB + EC2, Lambda scheduler, ACM/TLS
+│   │   │   │   ├── app2/              #   EKS + Linkerd mesh, NGINX Ingress, Helm
+│   │   │   │   ├── app3/              #   Multi-region, Global Accelerator, DynamoDB
+│   │   │   │   ├── app4/              #   ECS Fargate cluster
+│   │   │   │   ├── app6/              #   S3 static website + CloudFront
+│   │   │   │   ├── app7/              #   EKS + ArgoCD GitOps
+│   │   │   │   ├── app8/              #   Site-to-Site VPN + Jenkins CI/CD
+│   │   │   │   └── app10/             #   Lambda container (Node.js)
+│   │   │   ├── ai/
+│   │   │   │   ├── app-bedrock/       #   Bedrock agent (Amazon Nova)
+│   │   │   │   ├── app-sagemaker/     #   SageMaker MLOps pipeline
+│   │   │   │   └── crew/              #   CrewAI multi-agent framework
+│   │   │   ├── network/
+│   │   │   │   └── tgw/               #   Transit Gateway, 2 VPCs
+│   │   │   ├── global/
+│   │   │   │   └── control-tower/     #   Control Tower plan (multi-region)
+│   │   │   └── security/
+│   │   │       └── cloudtrail/        #   Real-time CloudTrail monitoring
+│   │   └── azure/
+│   │       ├── region-failover/       #   Multi-region VMs + Traffic Manager
+│   │       ├── global/
+│   │       │   └── landing-zone/      #   Azure Landing Zone plan
+│   │       ├── aws-azure-migrate/     #   AWS EC2 + RDS → Azure migration plan
+│   │       └── onprem-to-azure/       #   VMware + SQL Server → Azure plan
+│   └── modules/
+│       ├── aws/
+│       │   ├── network/vpc/           #   VPC, subnets, IGW, NAT, flow logs
+│       │   ├── network/transit-gateway/  # Transit Gateway attachments
+│       │   ├── compute/ec2/           #   EC2, IAM, security groups, KMS
+│       │   ├── containers/eks/        #   EKS cluster, node groups, IRSA
+│       │   ├── containers/ecs/        #   Fargate cluster, task definitions
+│       │   ├── database/dynamodb/     #   Global tables, streams, PITR
+│       │   ├── ai/bedrock/            #   Bedrock agent, IAM, alias
+│       │   └── iam/                   #   Roles, managed policies
+│       └── azure/                     #   (in progress)
+├── .github/workflows/                 # CI/CD pipelines
+│   ├── terraform-app1.yml
+│   ├── terraform-app2.yml
+│   ├── terraform-app3.yml
+│   └── code-scan.yml
+└── scripts/
+    ├── create-stack.sh                # Scaffold new stacks
+    ├── check-workflow.sh              # Validate workflow status
+    └── cleanup-old-state.sh           # Remove stale S3 state files
 ```
 
 ---
 
-## Application Stacks
+## AWS Stacks
 
-### App1 — EC2 with ALB & Lambda Instance Scheduler 
+### App1 — EC2 with ALB & Lambda Scheduler
 
 ```mermaid
 graph TB
-    Internet((Internet)) --> R53[Route53<br/>cloudconscious.io]
-    R53 --> ALB
-
+    Internet((Internet)) --> R53[Route53\ncloudconscious.io]
+    R53 --> ALB[ALB\nHTTP→HTTPS]
     subgraph VPC ["VPC — 10.0.0.0/16"]
         subgraph Public ["Public Subnets"]
-            ALB[Application Load Balancer<br/>HTTP→HTTPS redirect]
+            ALB
             NAT[NAT Gateway]
         end
         subgraph Private ["Private Subnets"]
-            EC2a[EC2 Instance 1<br/>t2.nano]
-            EC2b[EC2 Instance 2<br/>t2.nano]
+            EC2a[EC2 t2.nano]
+            EC2b[EC2 t2.nano]
         end
     end
-
-    ALB -->|Target Group| EC2a & EC2b
-    NAT --> EC2a & EC2b
-    ACM[ACM Certificate<br/>TLS/HTTPS] -.-> ALB
-
-    subgraph Scheduler ["EC2 Scheduler"]
-        Lambda1["Lambda: Start<br/>6 AM ET"]
-        Lambda2["Lambda: Stop<br/>12 AM ET"]
-        EB[EventBridge Cron]
-    end
-
-    EB --> Lambda1 & Lambda2
+    ALB --> EC2a & EC2b
+    EB[EventBridge] --> Lambda1[Lambda Start\n6 AM ET] & Lambda2[Lambda Stop\n12 AM ET]
     Lambda1 & Lambda2 -.-> EC2a & EC2b
-
+    ACM[ACM TLS] -.-> ALB
     style VPC fill:#e3f2fd
     style Public fill:#c8e6c9
     style Private fill:#ffccbc
-    style Scheduler fill:#f3e5f5
     style ALB fill:#2196f3,color:#fff
-    style ACM fill:#ff9800,color:#fff
 ```
 
-**Key features:**
-- EC2 instances in private subnets with NAT Gateway for outbound
-- ALB with ACM certificate for HTTPS, auto HTTP redirect
-- Lambda-based scheduler: auto-start at 6 AM ET, auto-stop at midnight
-- IMDSv2 enforced, KMS-encrypted EBS volumes
+- ALB + ACM HTTPS, HTTP redirect, private EC2 subnets
+- Lambda scheduler: start 6 AM / stop midnight ET via EventBridge
+- IMDSv2 enforced, KMS-encrypted EBS
 
-### App2 — EKS with Linkerd Service Mesh
+### App2 — EKS + Linkerd Service Mesh
 
-```mermaid
-graph TB
-    Internet((Internet)) --> NLB[NLB<br/>NGINX Ingress]
-
-    subgraph VPC ["VPC — 10.x.0.0/16"]
-        subgraph Public ["Public Subnets"]
-            NLB
-            NAT[NAT Gateway]
-        end
-        subgraph Private ["Private Subnets"]
-            subgraph EKS ["EKS Cluster"]
-                CP[Control Plane<br/>API + Audit Logging]
-                subgraph Mesh ["Linkerd Service Mesh"]
-                    NGINX[NGINX Ingress<br/>Controller]
-                    subgraph App ["App Pods"]
-                        P1[Pod + Sidecar]
-                        P2[Pod + Sidecar]
-                    end
-                end
-                subgraph LinkerdCP ["Linkerd Control Plane"]
-                    ID[Identity]
-                    DST[Destination]
-                    PRX[Proxy Injector]
-                end
-            end
-        end
-    end
-
-    NLB --> NGINX
-    NGINX --> P1 & P2
-    NAT -.-> Private
-    IRSA[OIDC / IRSA] -.-> EKS
-
-    style VPC fill:#e3f2fd
-    style Public fill:#c8e6c9
-    style Private fill:#ffccbc
-    style EKS fill:#b39ddb
-    style Mesh fill:#e1bee7
-    style LinkerdCP fill:#ce93d8
-    style App fill:#90caf9
-    style NLB fill:#2196f3,color:#fff
-    style NGINX fill:#00897b,color:#fff
-```
-
-**Key features:**
-- EKS cluster in private subnets with NAT Gateway
-- **Linkerd service mesh** with automatic mTLS between all pods
-- **NGINX Ingress Controller** on AWS NLB (single entry point)
-- **IRSA** (IAM Roles for Service Accounts) via OIDC provider
-- EKS control plane logging (api, audit, authenticator)
-- Production-grade Helm chart with:
-  - ServiceAccount, Ingress, ConfigMap, HPA, PDB, NetworkPolicy
-  - Liveness/readiness probes, security context (non-root)
-  - Environment-specific values (dev, qa, prod)
-- All infrastructure deployed via Terraform Helm provider
+- EKS in private subnets, NGINX Ingress on NLB
+- Linkerd mTLS between all pods, IRSA via OIDC
+- Production Helm chart: HPA, PDB, NetworkPolicy, non-root containers
+- Prometheus + Grafana monitoring stack
 
 ### App3 — Multi-Region Active-Active
 
-```mermaid
-graph TB
-    Users((Users)) --> R53[Route53<br/>cloudconscious.io]
-    R53 --> GA[Global Accelerator<br/>TCP 443]
-
-    subgraph Region1 ["us-west-2 (Primary)"]
-        VPC1[VPC] --> EC2w1[EC2 Instances]
-        DDB1[(DynamoDB<br/>Global Table)]
-    end
-
-    subgraph Region2 ["us-east-1 (Secondary)"]
-        VPC2[VPC] --> EC2e1[EC2 Instances]
-        DDB2[(DynamoDB<br/>Replica)]
-    end
-
-    GA -->|"50% traffic"| Region1
-    GA -->|"50% traffic"| Region2
-    DDB1 <-->|"Stream Replication"| DDB2
-
-    style Region1 fill:#e8f5e9
-    style Region2 fill:#e3f2fd
-    style GA fill:#9c27b0,color:#fff
-    style R53 fill:#8c6bb1,color:#fff
-```
-
-**Key features:**
-- Global Accelerator with 50/50 traffic split
+- Global Accelerator 50/50 traffic split across us-east-1 / us-west-2
 - DynamoDB global tables with cross-region stream replication
-- Active-active architecture across us-west-2 and us-east-1
-- Route53 DNS pointing to Global Accelerator
+- Route53 → Global Accelerator → regional EC2 fleets
 
-### App4 — ECS Fargate Cluster
+### App4 — ECS Fargate
 
-**Key features:**
-- Serverless container orchestration with AWS Fargate
-- ECS cluster with Container Insights enabled
-- Task definitions with CloudWatch logging
-- No EC2 instance management required
-
-### App5 — Bedrock AI Agent
-
-**Key features:**
-- Amazon Bedrock agent using Titan text model
-- IAM roles for secure API access
-- Agent alias for version management
-- Foundation model integration
+- Serverless containers, Container Insights, CloudWatch logging
 
 ### App6 — S3 Static Website + CloudFront
 
-**Key features:**
-- S3 bucket configured for static website hosting
-- CloudFront distribution with custom domain
-- ACM certificate for HTTPS (TLS 1.2+)
-- Route53 DNS with apex and www subdomain
-- Origin Access Control (OAC) for secure S3 access
-- HTTP to HTTPS redirect
-- Custom error pages
+- CloudFront + ACM TLS, Origin Access Control, HTTP→HTTPS redirect
 
 ### App7 — EKS + ArgoCD GitOps
 
-**Key features:**
-- EKS cluster with ArgoCD for GitOps deployments
-- Declarative application management
-- Automated sync from Git repository
-- Multi-environment support (dev, qa, prod)
-- Kubernetes manifests and Helm charts
-- Self-healing and automated rollbacks
+- ArgoCD declarative sync, multi-env (dev/qa/prod), self-healing rollbacks
+
+### App8 — Site-to-Site VPN + Jenkins
+
+- AWS Site-to-Site VPN to on-premises network
+- Jenkins CI/CD server on EC2 with pipeline automation
+
+### App10 — Lambda Container
+
+- Containerized Node.js Lambda via ECR, API Gateway trigger
+
+---
+
+## AI / ML
+
+### Bedrock Agent (app-bedrock)
+
+- Amazon Bedrock agent using Nova micro model
+- VPC with private subnets, VPC endpoints (no internet)
+- IAM roles for secure API access, agent alias for versioning
+
+### SageMaker MLOps Pipeline (app-sagemaker)
+
+```mermaid
+flowchart LR
+    S3[(S3 Input)] --> Pre[Preprocess\nscikit-learn]
+    Pre --> Train[Train\nXGBoost]
+    Train --> Eval[Evaluate\nMetrics]
+    Eval --> Gate{Accuracy\n≥ 0.75?}
+    Gate -->|Pass| Reg[Register\nModel]
+    Gate -->|Pass| Deploy[Deploy\nEndpoint]
+    Gate -->|Fail| Fail[Pipeline Fail]
+    Reg --> MR[(Model Registry)]
+    Deploy --> EP[SageMaker Endpoint]
+    style Pre fill:#42a5f5,color:#fff
+    style Train fill:#66bb6a,color:#fff
+    style Eval fill:#ab47bc,color:#fff
+    style Gate fill:#ffa726,color:#fff
+    style Deploy fill:#26a69a,color:#fff
+    style Fail fill:#ef5350,color:#fff
+```
+
+- Full MLOps: preprocess → XGBoost train → evaluate → conditional register + deploy
+- Accuracy threshold gate (default 0.75) — pipeline fails if not met
+- Model Registry for versioned artifacts, real-time inference endpoint
+- VPC with 2 AZs, all traffic via VPC endpoints (no NAT)
+- [diagram.md](terraform/live/aws/ai/app-sagemaker/diagram.md)
+
+### CrewAI Agents (crew)
+
+- Multi-agent AI framework using CrewAI
+- Automated infrastructure audit and reporting
 
 ---
 
 ## Network Infrastructure
 
-### Transit Gateway (TGW)
+### Transit Gateway
 
-**Key features:**
-- Connects multiple VPCs in hub-and-spoke topology
-- 2 VPCs with private subnets (10.1.0.0/16, 10.2.0.0/16)
-- EC2 instances in each VPC for connectivity testing
-- Security groups allowing ICMP between VPCs
-- SSM access for remote management
-- Verified cross-VPC communication via Transit Gateway
+- Hub-and-spoke topology connecting 2 VPCs (10.1.0.0/16, 10.2.0.0/16)
+- ICMP cross-VPC connectivity verified, SSM access
+
+---
+
+## Global / Governance
+
+### AWS Control Tower (plan)
+
+- Multi-region governance: us-east-1 (home), us-west-2, eu-west-1
+- OU hierarchy: Platform, Landing Zones (Dev/QA/Prod), Sandbox
+- Guardrail strategy: preventive SCPs + detective Config rules per OU
+- Account vending via AFT (Account Factory for Terraform)
+- [plan.md](terraform/live/aws/global/control-tower/plan.md)
+
+---
+
+## Azure Infrastructure
+
+### Region Failover
+
+- Multi-region VMs (East US 2 + West US 2) with Traffic Manager priority routing
+- Azure SQL with geo-replication, ZRS managed disks, NAT Gateway
+
+### Azure Landing Zone (plan)
+
+- Management Group hierarchy: Platform, Landing Zones (Corp/Online), Sandbox
+- Hub-and-spoke: Azure Firewall Premium, DNS Resolver, VPN/ER Gateway
+- Policy strategy: built-in initiatives (Azure Security Benchmark, NIST 800-53) + custom policies
+- Subscription vending flow with auto-applied policies and monitoring
+- [plan.md](terraform/live/azure/global/landing-zone/plan.md)
+
+---
+
+## Migration Plans
+
+### AWS EC2 + RDS → Azure
+
+- EC2 → Azure VM via Azure Migrate (agentless, near-zero downtime)
+- RDS SQL Server → Azure SQL MI via Azure DMS (online CDC migration)
+- Resource mapping, sizing tables, cutover sequence, rollback plan
+- [plan.md](terraform/live/azure/aws-azure-migrate/plan.md)
+
+### On-Premises VMware + SQL Server → Azure
+
+- VMware VMs → Azure VMs via Azure Migrate appliance (OVA on ESXi)
+- SQL Server → Azure SQL MI / SQL DB via Azure DMS
+- SQL target selection guide, DMS online migration flow
+- Hub-and-spoke network with ExpressRoute/VPN during migration
+- [plan.md](terraform/live/azure/onprem-to-azure/plan.md)
 
 ---
 
@@ -315,9 +316,6 @@ flowchart LR
     F -->|plan| G([Done])
     F -->|apply| H[Apply]
     F -->|destroy| I[Destroy]
-    H --> J([Deployed])
-    I --> K([Torn Down])
-
     style A fill:#24292e,color:#fff
     style B fill:#ff9900,color:#fff
     style D fill:#1904da,color:#fff
@@ -325,17 +323,15 @@ flowchart LR
     style I fill:#f44336,color:#fff
 ```
 
-Each stack has its own workflow with:
-
 | Feature | Details |
 |---------|---------|
-| **Auth** | AWS OIDC — no static credentials |
-| **Security** | Trivy infrastructure scanning, SARIF reports |
-| **Quality** | SonarCloud code analysis |
-| **State** | S3 backend with native S3 locking, AES-256 encryption |
-| **Environments** | dev, qa, prod via tfvars |
-| **Timeout** | 15-minute max per run |
-| **Trigger** | Manual dispatch, PR, or push to master |
+| Auth | AWS OIDC — no static credentials |
+| Security | Trivy infrastructure scanning, SARIF reports |
+| Quality | SonarCloud code analysis |
+| State | S3 backend with native S3 locking (`use_lockfile = true`), AES-256 |
+| Environments | dev, qa, prod via tfvars |
+| Terraform | >= 1.10 required |
+| Trigger | Manual dispatch, PR, or push to master |
 
 ---
 
@@ -343,14 +339,14 @@ Each stack has its own workflow with:
 
 | Module | Resources | Purpose |
 |--------|-----------|---------|
-| **network/vpc** | VPC, Subnets, IGW, NAT, Route Tables, Flow Logs | Network foundation with public/private subnet pattern |
-| **network/transit-gateway** | Transit Gateway, VPC Attachments | Hub-and-spoke VPC connectivity |
-| **compute/ec2** | EC2, IAM Role, Security Group, KMS | Compute with Route53 + DynamoDB access, IMDSv2 |
-| **containers/eks** | EKS Cluster, Node Group, IAM Roles, OIDC/IRSA, Access Entry | Managed Kubernetes with IRSA, logging, admin access |
-| **containers/ecs** | ECS Cluster, Fargate Task Def, Service, CloudWatch | Container orchestration with Container Insights |
-| **database/dynamodb** | Global Table, Replicas, Streams | Cross-region replication with PITR |
-| **ai/bedrock** | Bedrock Agent, IAM, Alias | AI agent using Amazon Titan text model |
-| **iam** | 15+ pre-defined IAM Roles | Roles for EKS, SageMaker, CodeBuild, SSM, etc. |
+| `aws/network/vpc` | VPC, Subnets, IGW, NAT, Route Tables, Flow Logs | Network foundation |
+| `aws/network/transit-gateway` | Transit Gateway, VPC Attachments | Hub-and-spoke VPC connectivity |
+| `aws/compute/ec2` | EC2, IAM Role, Security Group, KMS | Compute with IMDSv2, encrypted EBS |
+| `aws/containers/eks` | EKS Cluster, Node Group, OIDC/IRSA, Access Entry | Managed Kubernetes |
+| `aws/containers/ecs` | ECS Cluster, Fargate Task Def, Service, CloudWatch | Serverless containers |
+| `aws/database/dynamodb` | Global Table, Replicas, Streams | Cross-region replication with PITR |
+| `aws/ai/bedrock` | Bedrock Agent, IAM, Alias | AI agent (Amazon Nova) |
+| `aws/iam` | 15+ IAM Roles | EKS, SageMaker, CodeBuild, SSM, etc. |
 
 ---
 
@@ -366,18 +362,17 @@ mindmap
     Network
       Private subnets
       NAT Gateway
-      Restricted security groups
+      VPC endpoints
       VPC Flow Logs
     Encryption
       KMS for EBS volumes
-      AES-256 state files
+      S3 native state locking
       ACM for TLS
-      Linkerd mTLS between pods
+      Linkerd mTLS
     Compute
       IMDSv2 enforced
       Least-privilege IAM
-      IRSA for pod-level access
-      Restricted default SG
+      IRSA pod-level access
       Non-root containers
     Scanning
       Trivy infrastructure
@@ -387,32 +382,35 @@ mindmap
 
 ---
 
+## State Management
+
+| Component | Value |
+|-----------|-------|
+| S3 Bucket | `terraform-state-925185632967` |
+| Locking | S3 native (`use_lockfile = true`) — DynamoDB decommissioned |
+| Versioning | Enabled |
+| Encryption | AES-256 |
+| Key Pattern | `{stack}/{environment}/terraform.tfstate` |
+
+---
+
 ## Quick Start
 
-### Prerequisites
-- AWS CLI configured with appropriate permissions
-- Terraform >= 1.0
-- GitHub repo with Actions enabled + OIDC provider configured
-
-### Deploy locally
-
 ```bash
-# Navigate to a stack
-cd terraform/stacks/builds/app1
+# Navigate to any stack
+cd terraform/live/aws/stacks/app1
 
-# Initialize and deploy
+# Initialize (migrates backend if needed)
 terraform init
+
+# Plan
 terraform plan -var-file="vars/dev.tfvars"
+
+# Apply
 terraform apply -var-file="vars/dev.tfvars"
 
-# Tear down
+# Destroy
 terraform destroy -var-file="vars/dev.tfvars"
-```
-
-### Create a new stack
-
-```bash
-./scripts/create-stack.sh <stack-name>
 ```
 
 ### Required GitHub Secrets
@@ -424,28 +422,10 @@ terraform destroy -var-file="vars/dev.tfvars"
 
 ---
 
-## State Management
-
-| Component | Value |
-|-----------|-------|
-| **S3 Bucket** | `terraform-state-925185632967` |
-| **DynamoDB Table** | Decommissioned — using S3 native locking |
-| **Versioning** | Enabled |
-| **Encryption** | AES-256 |
-| **Key Pattern** | `{stack}/{environment}/terraform.tfstate` |
-
----
-
-## Additional Documentation
-
-- [DIAGRAMS.md](DIAGRAMS.md) — Full collection of Mermaid architecture and workflow diagrams
-
----
-
 ## Contributing
 
 1. Create a feature branch from `master`
 2. Make changes and test with `terraform plan`
-3. Create a pull request — CI runs Trivy + SonarCloud automatically
+3. Open a pull request — CI runs Trivy + SonarCloud automatically
 4. Address any security or quality findings
-5. Merge after review and approval
+5. Merge after review
