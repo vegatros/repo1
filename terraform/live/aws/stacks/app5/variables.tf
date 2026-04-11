@@ -13,7 +13,7 @@ variable "environment" {
 variable "project_name" {
   description = "Project name"
   type        = string
-  default     = "app6-s3-website"
+  default     = "app5-s3-website"
 }
 
 variable "bucket_name" {

@@ -1,5 +1,5 @@
 environment          = "prod"
-project_name         = "myapp7-prod"
+project_name         = "myapp6-prod"
 aws_region           = "us-east-1"
 vpc_cidr             = "10.9.0.0/16"
 public_subnet_cidrs  = ["10.9.1.0/24", "10.9.2.0/24"]

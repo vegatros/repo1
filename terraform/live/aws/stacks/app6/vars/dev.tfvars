@@ -1,5 +1,5 @@
 environment          = "dev"
-project_name         = "myapp7-dev"
+project_name         = "myapp6-dev"
 aws_region           = "us-east-1"
 vpc_cidr             = "10.7.0.0/16"
 public_subnet_cidrs  = ["10.7.1.0/24", "10.7.2.0/24"]

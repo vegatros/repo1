@@ -22,10 +22,10 @@ graph TB
             APP2["App2 — EKS + Linkerd"]
             APP3["App3 — Multi-Region"]
             APP4["App4 — ECS Fargate"]
-            APP6["App6 — S3 + CloudFront"]
-            APP7["App7 — EKS + ArgoCD"]
-            APP8["App8 — VPN + Jenkins"]
-            APP10["App10 — Lambda Container"]
+            APP5["App5 — S3 + CloudFront"]
+            APP6["App6 — EKS + ArgoCD"]
+            APP7["App7 — VPN + Jenkins"]
+            APP8["App8 — Lambda Container"]
         end
         subgraph AWSAI ["AI / ML"]
             BEDROCK["Bedrock Agent\nAmazon Nova"]
@@ -93,10 +93,10 @@ repo1/
 │   │   │   │   ├── app2/              #   EKS + Linkerd mesh, NGINX Ingress, Helm
 │   │   │   │   ├── app3/              #   Multi-region, Global Accelerator, DynamoDB
 │   │   │   │   ├── app4/              #   ECS Fargate cluster
-│   │   │   │   ├── app6/              #   S3 static website + CloudFront
-│   │   │   │   ├── app7/              #   EKS + ArgoCD GitOps
-│   │   │   │   ├── app8/              #   Site-to-Site VPN + Jenkins CI/CD
-│   │   │   │   └── app10/             #   Lambda container (Node.js)
+│   │   │   │   ├── app5/              #   S3 static website + CloudFront
+│   │   │   │   ├── app6/              #   EKS + ArgoCD GitOps
+│   │   │   │   ├── app7/              #   Site-to-Site VPN + Jenkins CI/CD
+│   │   │   │   └── app8/              #   Lambda container (Node.js)
 │   │   │   ├── ai/
 │   │   │   │   ├── app-bedrock/       #   Bedrock agent (Amazon Nova)
 │   │   │   │   ├── app-sagemaker/     #   SageMaker MLOps pipeline
@@ -186,20 +186,20 @@ graph TB
 
 - Serverless containers, Container Insights, CloudWatch logging
 
-### App6 — S3 Static Website + CloudFront
+### App5 — S3 Static Website + CloudFront
 
 - CloudFront + ACM TLS, Origin Access Control, HTTP→HTTPS redirect
 
-### App7 — EKS + ArgoCD GitOps
+### App6 — EKS + ArgoCD GitOps
 
 - ArgoCD declarative sync, multi-env (dev/qa/prod), self-healing rollbacks
 
-### App8 — Site-to-Site VPN + Jenkins
+### App7 — Site-to-Site VPN + Jenkins
 
 - AWS Site-to-Site VPN to on-premises network
 - Jenkins CI/CD server on EC2 with pipeline automation
 
-### App10 — Lambda Container
+### App8 — Lambda Container
 
 - Containerized Node.js Lambda via ECR, API Gateway trigger
 

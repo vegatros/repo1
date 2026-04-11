@@ -1,5 +1,5 @@
 environment          = "qa"
-project_name         = "myapp7-qa"
+project_name         = "myapp6-qa"
 aws_region           = "us-east-1"
 vpc_cidr             = "10.8.0.0/16"
 public_subnet_cidrs  = ["10.8.1.0/24", "10.8.2.0/24"]
