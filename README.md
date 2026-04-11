@@ -143,7 +143,7 @@ repo1/
 
 ```mermaid
 graph TB
-    Internet((Internet)) --> R53[Route53\nfuturev.io]
+    Internet((Internet)) --> R53[Route53]
     R53 --> ALB[ALB\nHTTP→HTTPS]
     subgraph VPC ["VPC — 10.0.0.0/16"]
         subgraph Public ["Public Subnets"]

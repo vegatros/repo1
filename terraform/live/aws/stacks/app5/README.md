@@ -6,7 +6,7 @@ Serverless static website hosted on S3 with CloudFront CDN and custom domain.
 
 ```mermaid
 graph TB
-    Users((Users)) --> R53[Route53<br/>futurev.io]
+    Users((Users)) --> R53[Route53]
     R53 --> CF[CloudFront CDN<br/>HTTPS + Custom Domain]
     
     subgraph AWS["AWS Cloud"]

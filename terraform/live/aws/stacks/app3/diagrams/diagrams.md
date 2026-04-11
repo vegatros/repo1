@@ -10,7 +10,7 @@
                                          ▼
                         ┌────────────────────────────────┐
                         │           Route 53             │
-                        │      futurev.io (A)     │
+                        │         (A Record)              │
                         │    Zone: Z3LLP0B81D4CRA        │
                         └────────────────┬───────────────┘
                                          │ Alias record
@@ -52,7 +52,7 @@
 ## Traffic Flow
 
 ```
-User Request (futurev.io)
+User Request
          │
          ▼
    Route 53 DNS lookup
@@ -81,7 +81,7 @@ User Request (futurev.io)
 ### Route 53
 | Property       | Value                       |
 |----------------|-----------------------------|
-| Domain         | futurev.io           |
+| Domain         | (configured via variables)  |
 | Record Type    | A (Alias)                   |
 | Hosted Zone ID | Z3LLP0B81D4CRA              |
 | Target         | Global Accelerator DNS name |
