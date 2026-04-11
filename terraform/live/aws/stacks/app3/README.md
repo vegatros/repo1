@@ -12,7 +12,7 @@ Multi-region active-active deployment using AWS Global Accelerator, Route 53, an
 - **2 VPCs**: One in us-west-2 (10.3.0.0/16), one in us-east-1 (10.4.0.0/16)
 - **2 EC2 Instances**: Amazon Linux with Nginx and Let's Encrypt SSL in each region
 - **AWS Global Accelerator**: Provides static anycast IPs and intelligent traffic routing on port 443
-- **Route 53**: DNS management with existing hosted zone (cloudconscious.io)
+- **Route 53**: DNS management with existing hosted zone (futurev.io)
 - **DynamoDB Global Tables**: Cross-region replicated database with sub-second latency
 - **Let's Encrypt SSL**: Automated certificate provisioning and renewal via Route53 DNS challenge
 - **IAM Roles**: EC2 instances have Route53 and DynamoDB permissions
@@ -93,7 +93,7 @@ aws dynamodb get-item \
 2. Certbot requests certificate from Let's Encrypt
 3. Creates DNS TXT record in Route53 for validation
 4. Let's Encrypt validates domain ownership
-5. Certificate installed at `/etc/letsencrypt/live/cloudconscious.io/`
+5. Certificate installed at `/etc/letsencrypt/live/futurev.io/`
 6. Nginx configured with SSL on port 443
 7. Cron job runs twice daily to check for renewal
 
@@ -102,7 +102,7 @@ aws dynamodb get-item \
 ### Prerequisites
 1. AWS account with appropriate permissions
 2. S3 bucket for Terraform state: `terraform-state-925185632967`
-3. Existing Route 53 hosted zone: cloudconscious.io (Z3LLP0B81D4CRA)
+3. Existing Route 53 hosted zone: futurev.io (Z3LLP0B81D4CRA)
 4. Valid AMI IDs for both regions
 5. IAM permissions for EC2 to manage Route53 records
 
@@ -158,7 +158,7 @@ instance_type = "t3.micro"
 After deployment:
 - `global_accelerator_dns`: Global Accelerator DNS name
 - `global_accelerator_ips`: Static anycast IP addresses (2 IPs)
-- `domain_name`: cloudconscious.io
+- `domain_name`: futurev.io
 - `ec2_west_public_ip`: Direct EC2 IP in us-west-2
 - `ec2_east_public_ip`: Direct EC2 IP in us-east-1
 - `dynamodb_table_name`: DynamoDB global table name
@@ -172,14 +172,14 @@ After deployment:
 curl https://afd3ea9b16c5b1fb9.awsglobalaccelerator.com
 
 # Test via domain
-curl https://cloudconscious.io
+curl https://futurev.io
 
 # Test individual regions (HTTPS)
 curl https://<ec2_west_public_ip>
 curl https://<ec2_east_public_ip>
 
 # Check SSL certificate
-openssl s_client -connect cloudconscious.io:443 -servername cloudconscious.io
+openssl s_client -connect futurev.io:443 -servername futurev.io
 ```
 
 Each response shows the region and instance ID serving the request.
@@ -254,7 +254,7 @@ Each response shows the region and instance ID serving the request.
 
 ### HTTPS not working
 - Check SSL certificate: `openssl s_client -connect <instance-ip>:443`
-- Verify certificate files exist: `ls -la /etc/letsencrypt/live/cloudconscious.io/`
+- Verify certificate files exist: `ls -la /etc/letsencrypt/live/futurev.io/`
 - Check nginx SSL configuration: `nginx -t`
 - Review user data log: `tail -f /var/log/user-data.log`
 
@@ -267,7 +267,7 @@ Each response shows the region and instance ID serving the request.
 ### DNS not resolving
 - Verify Route 53 record points to Global Accelerator
 - Check hosted zone ID is correct (Z3LLP0B81D4CRA)
-- Test DNS: `dig cloudconscious.io`
+- Test DNS: `dig futurev.io`
 
 ## Files
 

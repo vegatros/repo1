@@ -6,7 +6,7 @@ Serverless static website hosted on S3 with CloudFront CDN and custom domain.
 
 ```mermaid
 graph TB
-    Users((Users)) --> R53[Route53<br/>cloudconscious.io]
+    Users((Users)) --> R53[Route53<br/>futurev.io]
     R53 --> CF[CloudFront CDN<br/>HTTPS + Custom Domain]
     
     subgraph AWS["AWS Cloud"]
@@ -16,7 +16,7 @@ graph TB
         ACM[ACM Certificate<br/>TLS/SSL<br/>us-east-1]
         
         subgraph Content["Website Content"]
-            S3 --> HTML[index.html<br/>cloudconscious-landing]
+            S3 --> HTML[index.html<br/>futurev-landing]
             S3 --> ERR[error.html]
         end
     end
@@ -36,7 +36,7 @@ graph TB
 ## Features
 
 - HTTPS by default via CloudFront
-- Custom domain: cloudconscious.io + www
+- Custom domain: futurev.io + www
 - Global CDN distribution
 - Custom error pages
 - Gzip compression
@@ -63,7 +63,7 @@ terraform destroy -var-file="vars/dev.tfvars"
 - `bucket_name`: S3 bucket name
 - `bucket_website_endpoint`: S3 website endpoint
 - `cloudfront_domain_name`: CloudFront domain
-- `website_url`: https://cloudconscious.io
+- `website_url`: https://futurev.io
 - `acm_certificate_arn`: SSL certificate ARN
 
 ## Upload Content
@@ -84,6 +84,6 @@ aws cloudfront create-invalidation \
 ## DNS Configuration
 
 The domain uses Route53 hosted zone `Z3LLP0B81D4CRA` with:
-- A record: cloudconscious.io → CloudFront
-- A record: www.cloudconscious.io → CloudFront
+- A record: futurev.io → CloudFront
+- A record: www.futurev.io → CloudFront
 - CNAME: ACM validation record (auto-created)

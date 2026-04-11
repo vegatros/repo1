@@ -7,7 +7,7 @@ image:
 ingress:
   enabled: true
   hosts:
-    - host: app.cloudconscious.io
+    - host: app.futurev.io
       paths:
         - path: /
           pathType: Prefix

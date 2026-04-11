@@ -43,17 +43,17 @@ certbot certonly \
     --non-interactive \
     --agree-tos \
     --email vegatros@gmail.com \
-    --domains cloudconscious.io
+    --domains futurev.io
 
 # Configure nginx with the certificate
 cat > /etc/nginx/conf.d/ssl.conf <<'EOF'
 server {
     listen 443 ssl;
-    server_name cloudconscious.io;
+    server_name futurev.io;
     root /usr/share/nginx/html;
 
-    ssl_certificate /etc/letsencrypt/live/cloudconscious.io/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/cloudconscious.io/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/futurev.io/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/futurev.io/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
 
@@ -64,7 +64,7 @@ server {
 
 server {
     listen 80;
-    server_name cloudconscious.io;
+    server_name futurev.io;
     return 301 https://$host$request_uri;
 }
 EOF

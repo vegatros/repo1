@@ -135,7 +135,7 @@ resource "aws_globalaccelerator_endpoint_group" "east" {
 resource "aws_route53_record" "accelerator" {
   provider = aws.us-west-2
   zone_id  = "Z3LLP0B81D4CRA"
-  name     = "cloudconscious.io"
+  name     = "futurev.io"
   type     = "A"
 
   alias {

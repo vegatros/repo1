@@ -10,7 +10,7 @@ output "global_accelerator_ips" {
 
 output "domain_name" {
   description = "Configured domain name"
-  value       = "cloudconscious.io"
+  value       = "futurev.io"
 }
 
 output "ec2_west_public_ip" {

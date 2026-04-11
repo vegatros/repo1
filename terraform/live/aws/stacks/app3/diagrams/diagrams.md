@@ -10,7 +10,7 @@
                                          ▼
                         ┌────────────────────────────────┐
                         │           Route 53             │
-                        │      cloudconscious.io (A)     │
+                        │      futurev.io (A)     │
                         │    Zone: Z3LLP0B81D4CRA        │
                         └────────────────┬───────────────┘
                                          │ Alias record
@@ -52,7 +52,7 @@
 ## Traffic Flow
 
 ```
-User Request (cloudconscious.io)
+User Request (futurev.io)
          │
          ▼
    Route 53 DNS lookup
@@ -81,7 +81,7 @@ User Request (cloudconscious.io)
 ### Route 53
 | Property       | Value                       |
 |----------------|-----------------------------|
-| Domain         | cloudconscious.io           |
+| Domain         | futurev.io           |
 | Record Type    | A (Alias)                   |
 | Hosted Zone ID | Z3LLP0B81D4CRA              |
 | Target         | Global Accelerator DNS name |

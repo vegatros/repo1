@@ -5,5 +5,5 @@ vpc_cidr        = "10.0.0.0/16"
 instance_type   = "t3.micro"
 instance_count  = 2
 key_name        = "myapp-dev-key"
-domain_name     = "dev.cloudconscious.io"
+domain_name     = "dev.futurev.io"
 route53_zone_id = "Z3LLP0B81D4CRA"

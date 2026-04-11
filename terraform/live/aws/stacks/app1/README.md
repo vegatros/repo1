@@ -27,7 +27,7 @@ App1 is a production-ready web hosting stack that deploys Nginx web servers acro
 - **Private Subnets**: 2 subnets (10.0.10.0/24, 10.0.11.0/24) for EC2 instances
 - **Internet Gateway**: Direct internet connectivity for public subnets
 - **NAT Gateway**: Outbound internet access for private subnets
-- **Route53**: DNS management for cloudconscious.io
+- **Route53**: DNS management for futurev.io
 
 ### Compute
 - **EC2 Instances**: Amazon Linux 2023 with Nginx
@@ -67,7 +67,7 @@ environment     = "dev"
 project_name    = "myapp-dev"
 instance_type   = "t2.nano"
 instance_count  = 2
-domain_name     = "dev.cloudconscious.io"
+domain_name     = "dev.futurev.io"
 ```
 
 **QA** (`vars/qa.tfvars`):
@@ -76,7 +76,7 @@ environment     = "qa"
 project_name    = "myapp-qa"
 instance_type   = "t2.micro"
 instance_count  = 2
-domain_name     = "qa.cloudconscious.io"
+domain_name     = "qa.futurev.io"
 ```
 
 **Prod** (`vars/prod.tfvars`):
@@ -85,7 +85,7 @@ environment     = "prod"
 project_name    = "myapp-prod"
 instance_type   = "t3.medium"
 instance_count  = 3
-domain_name     = "cloudconscious.io"
+domain_name     = "futurev.io"
 ```
 
 ### Deploy Infrastructure
@@ -120,7 +120,7 @@ Actions → Terraform App1 → Run workflow
 ### Web Server
 
 Nginx serves static content from `/usr/share/nginx/html/`:
-- **Homepage**: `index.html` (CloudConscious landing page)
+- **Homepage**: `index.html` (FutureV landing page)
 - **Resume**: `resume.html`
 
 User data script (`user_data.sh`) automatically:
@@ -131,9 +131,9 @@ User data script (`user_data.sh`) automatically:
 
 ### Access URLs
 
-- **Dev**: https://dev.cloudconscious.io
-- **QA**: https://qa.cloudconscious.io
-- **Prod**: https://cloudconscious.io
+- **Dev**: https://dev.futurev.io
+- **QA**: https://qa.futurev.io
+- **Prod**: https://futurev.io
 
 ## Monitoring & Health Checks
 
@@ -277,7 +277,7 @@ After deployment, Terraform outputs:
 │   ├── qa.tfvars       # QA environment variables
 │   └── prod.tfvars     # Prod environment variables
 ├── html/
-│   ├── cloudconscious.html  # Homepage
+│   ├── futurev.html  # Homepage
 │   └── resume.html          # Resume page
 ├── schedule/
 │   ├── lambda_start.py      # Lambda function to start instances

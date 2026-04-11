@@ -174,8 +174,8 @@ resource "aws_s3_object" "index" {
   bucket       = aws_s3_bucket.website.id
   key          = "index.html"
   content_type = "text/html"
-  source       = "${path.module}/html/cloudconscious-landing.html"
-  etag         = filemd5("${path.module}/html/cloudconscious-landing.html")
+  source       = "${path.module}/html/futurev-landing.html"
+  etag         = filemd5("${path.module}/html/futurev-landing.html")
 }
 
 # Sample error.html

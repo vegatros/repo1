@@ -24,7 +24,7 @@ variable "bucket_name" {
 variable "domain_name" {
   description = "Domain name for the website"
   type        = string
-  default     = "cloudconscious.io"
+  default     = "futurev.io"
 }
 
 variable "hosted_zone_id" {
