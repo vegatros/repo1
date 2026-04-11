@@ -129,7 +129,7 @@ aws dynamodb get-item \
 - **Auto-Renewal**: Certificates renew automatically every 12 hours (90-day validity)
 - **Protocols**: TLS 1.2 and 1.3
 - **Ciphers**: HIGH security cipher suites
-- **Email**: vegatros@gmail.com (renewal notifications)
+- **Email**: <admin-email> (renewal notifications)
 
 ### How It Works
 1. Instance launches with nginx on port 443

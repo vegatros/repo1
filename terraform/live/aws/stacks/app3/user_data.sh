@@ -42,7 +42,7 @@ certbot certonly \
     --dns-route53 \
     --non-interactive \
     --agree-tos \
-    --email vegatros@gmail.com \
+    --email <admin-email> \
     --domains futurev.io
 
 # Configure nginx with the certificate
