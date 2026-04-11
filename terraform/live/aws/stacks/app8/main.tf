@@ -1,155 +1,48 @@
-# VPC Module
-module "vpc" {
-  source = "../../../modules/network/vpc"
-
-  project_name = var.project_name
-  vpc_cidr     = var.vpc_cidr
-  azs          = var.azs
-
-  public_subnet_cidrs  = var.public_subnet_cidrs
-  private_subnet_cidrs = var.private_subnet_cidrs
-
-  enable_nat_gateway = true
+# VPC
+resource "aws_vpc" "main" {
+  cidr_block           = var.vpc_cidr
+  enable_dns_hostnames = true
+  enable_dns_support   = true
 }
 
-# Customer Gateway (Your local network)
-resource "aws_customer_gateway" "main" {
-  bgp_asn    = 65000
-  ip_address = var.customer_gateway_ip
-  type       = "ipsec.1"
+data "aws_availability_zones" "available" { state = "available" }
 
-  tags = {
-    Name = "${var.project_name}-cgw"
+resource "aws_subnet" "public" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.public_subnet_cidrs[0]
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = true
+}
+
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main.id
   }
 }
 
-# Virtual Private Gateway
-resource "aws_vpn_gateway" "main" {
-  vpc_id = module.vpc.vpc_id
-
-  tags = {
-    Name = "${var.project_name}-vgw"
-  }
+resource "aws_route_table_association" "public" {
+  subnet_id      = aws_subnet.public.id
+  route_table_id = aws_route_table.public.id
 }
 
-# VPN Gateway Attachment
-resource "aws_vpn_gateway_attachment" "main" {
-  vpc_id         = module.vpc.vpc_id
-  vpn_gateway_id = aws_vpn_gateway.main.id
-}
-
-# Site-to-Site VPN Connection
-resource "aws_vpn_connection" "main" {
-  vpn_gateway_id      = aws_vpn_gateway.main.id
-  customer_gateway_id = aws_customer_gateway.main.id
-  type                = "ipsec.1"
-  static_routes_only  = true
-
-  tags = {
-    Name = "${var.project_name}-vpn"
-  }
-}
-
-# VPN Connection Route
-resource "aws_vpn_connection_route" "home" {
-  destination_cidr_block = var.on_premise_cidr
-  vpn_connection_id      = aws_vpn_connection.main.id
-}
-
-# Enable VPN route propagation
-resource "aws_vpn_gateway_route_propagation" "private" {
-  vpn_gateway_id = aws_vpn_gateway.main.id
-  route_table_id = module.vpc.private_route_table_ids[0]
-}
-
-# Secrets Manager for Jenkins credentials
-resource "aws_secretsmanager_secret" "jenkins_credentials" {
-  name                    = "${var.project_name}-jenkins-credentials"
-  description             = "Jenkins and Linux user credentials"
-  recovery_window_in_days = 7
-}
-
-resource "aws_secretsmanager_secret_version" "jenkins_credentials" {
-  secret_id = aws_secretsmanager_secret.jenkins_credentials.id
-  secret_string = jsonencode({
-    linux_password   = var.linux_password
-    jenkins_username = var.jenkins_username
-    jenkins_password = var.jenkins_password
-  })
-}
-
-# IAM policy for Secrets Manager access
-resource "aws_iam_role_policy" "secrets_access" {
-  name = "${var.project_name}-secrets-access"
-  role = aws_iam_role.ssm.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue",
-          "secretsmanager:DescribeSecret"
-        ]
-        Resource = aws_secretsmanager_secret.jenkins_credentials.arn
-      }
-    ]
-  })
-}
-
-# AWS Key Pair
-resource "aws_key_pair" "jenkins" {
-  key_name   = "${var.project_name}-jenkins-key"
-  public_key = file("~/.ssh/temp_key.pub")
-}
-
-# Test EC2 instance in private subnet
-resource "aws_instance" "test" {
-  ami                    = data.aws_ami.redhat.id
-  instance_type          = "t3.medium"
-  subnet_id              = module.vpc.private_subnet_ids[0]
-  vpc_security_group_ids = [aws_security_group.test_instance.id]
-  iam_instance_profile   = aws_iam_instance_profile.ssm.name
-  key_name               = aws_key_pair.jenkins.key_name
-  user_data = base64encode(templatefile("${path.module}/user_data.sh", {
-    secret_name = aws_secretsmanager_secret.jenkins_credentials.name
-    region      = var.aws_region
-  }))
-
-  tags = {
-    Name = "${var.project_name}-jenkins-server"
-  }
-}
-
-# Security group for test instance
-resource "aws_security_group" "test_instance" {
-  name        = "${var.project_name}-test-instance-sg"
-  description = "Security group for test instance"
-  vpc_id      = module.vpc.vpc_id
+# Security Group
+resource "aws_security_group" "nanoclaw" {
+  name        = "${var.project_name}-sg"
+  description = "Security group for nanoclaw EC2"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
+    description = "SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = [var.on_premise_cidr]
-    description = "SSH from on-premise"
-  }
-
-  ingress {
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = [var.on_premise_cidr]
-    description = "Jenkins from on-premise"
-  }
-
-  ingress {
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = [var.on_premise_cidr]
-    description = "ICMP from on-premise"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -158,56 +51,89 @@ resource "aws_security_group" "test_instance" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  tags = {
-    Name = "${var.project_name}-test-instance-sg"
-  }
 }
 
-# IAM role for SSM access
-resource "aws_iam_role" "ssm" {
-  name = "${var.project_name}-ssm-role"
-
+# IAM Role with SSM access
+resource "aws_iam_role" "nanoclaw" {
+  name = "${var.project_name}-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      }
-    ]
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
+    }]
   })
 }
 
 resource "aws_iam_role_policy_attachment" "ssm" {
-  role       = aws_iam_role.ssm.name
+  role       = aws_iam_role.nanoclaw.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
-resource "aws_iam_instance_profile" "ssm" {
-  name = "${var.project_name}-ssm-profile"
-  role = aws_iam_role.ssm.name
+resource "aws_iam_instance_profile" "nanoclaw" {
+  name = "${var.project_name}-profile"
+  role = aws_iam_role.nanoclaw.name
 }
 
-data "aws_ami" "redhat" {
+# Latest Amazon Linux 2023 AMI
+data "aws_ami" "al2023" {
   most_recent = true
-  owners      = ["309956199498"] # Red Hat
-
+  owners      = ["amazon"]
   filter {
     name   = "name"
-    values = ["RHEL-9*_HVM-*-x86_64-*"]
+    values = ["al2023-ami-*-x86_64"]
   }
-
   filter {
     name   = "architecture"
     values = ["x86_64"]
   }
+}
 
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
+# EC2 Instance
+resource "aws_instance" "nanoclaw" {
+  ami                    = data.aws_ami.al2023.id
+  instance_type          = var.instance_type
+  subnet_id              = aws_subnet.public.id
+  vpc_security_group_ids = [aws_security_group.nanoclaw.id]
+  iam_instance_profile   = aws_iam_instance_profile.nanoclaw.name
+  key_name               = var.key_name != "" ? var.key_name : null
+
+  associate_public_ip_address = true
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
+
+  root_block_device {
+    volume_size = 30
+    volume_type = "gp3"
+    encrypted   = true
+  }
+
+  user_data = <<-EOF
+    #!/bin/bash
+    set -e
+
+    # Install Docker
+    dnf install -y docker git
+    systemctl enable docker && systemctl start docker
+    usermod -aG docker ec2-user
+
+    # Install Node.js 22
+    dnf install -y nodejs22 nodejs22-npm
+
+    # Clone nanoclaw
+    su - ec2-user -c 'git clone https://github.com/qwibitai/nanoclaw.git /home/ec2-user/nanoclaw'
+
+    # Install dependencies
+    su - ec2-user -c 'cd /home/ec2-user/nanoclaw && npm install'
+
+    echo "NanoClaw ready. SSH in and run: cd nanoclaw && claude"
+  EOF
+
+  tags = {
+    Name = "${var.project_name}-ec2"
   }
 }

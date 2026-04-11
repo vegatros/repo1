@@ -1,64 +1,39 @@
-variable "aws_region" {
-  description = "AWS region"
+variable "project_name" {
+  description = "Project name for resource naming"
   type        = string
 }
 
 variable "environment" {
-  description = "Environment name"
+  description = "Environment name (dev, qa, prod)"
   type        = string
 }
 
-variable "project_name" {
-  description = "Project name"
+variable "aws_region" {
+  description = "AWS region"
   type        = string
+  default     = "us-east-1"
 }
 
 variable "vpc_cidr" {
-  description = "CIDR block for VPC"
+  description = "VPC CIDR block"
   type        = string
   default     = "10.10.0.0/16"
-}
-
-variable "azs" {
-  description = "Availability zones"
-  type        = list(string)
-}
-
-variable "private_subnet_cidrs" {
-  description = "Private subnet CIDR blocks"
-  type        = list(string)
 }
 
 variable "public_subnet_cidrs" {
   description = "Public subnet CIDR blocks"
   type        = list(string)
+  default     = []
 }
 
-variable "customer_gateway_ip" {
-  description = "Public IP address of your local network gateway"
+variable "instance_type" {
+  description = "EC2 instance type"
   type        = string
+  default     = "t3.small"
 }
 
-variable "on_premise_cidr" {
-  description = "CIDR block of your on-premise network"
+variable "key_name" {
+  description = "SSH key pair name"
   type        = string
-  default     = "192.168.1.0/24"
-}
-
-variable "linux_password" {
-  description = "Password for Linux user cada5000"
-  type        = string
-  sensitive   = true
-}
-
-variable "jenkins_username" {
-  description = "Jenkins admin username"
-  type        = string
-  default     = "cada5000"
-}
-
-variable "jenkins_password" {
-  description = "Jenkins admin password"
-  type        = string
-  sensitive   = true
+  default     = ""
 }

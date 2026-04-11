@@ -1,34 +1,76 @@
+variable "project_name" {
+  description = "Project name for resource naming"
+  type        = string
+}
+
+variable "environment" {
+  description = "Environment name (dev, qa, prod)"
+  type        = string
+}
+
 variable "aws_region" {
   description = "AWS region"
   type        = string
   default     = "us-east-1"
 }
 
-variable "environment" {
-  description = "Environment name"
+variable "vpc_cidr" {
+  description = "VPC CIDR block"
   type        = string
-  default     = "dev"
+  default     = "10.1.0.0/16"
 }
 
-variable "project_name" {
-  description = "Project name"
+variable "instance_type" {
+  description = "EKS node instance type"
   type        = string
-  default     = "app6-s3-website"
+  default     = "t3.medium"
 }
 
-variable "bucket_name" {
-  description = "S3 bucket name for static website"
-  type        = string
+variable "desired_size" {
+  description = "Desired number of nodes"
+  type        = number
+  default     = 2
 }
 
-variable "domain_name" {
-  description = "Domain name for the website"
-  type        = string
-  default     = "cloudconscious.io"
+variable "min_size" {
+  description = "Minimum number of nodes"
+  type        = number
+  default     = 1
 }
 
-variable "hosted_zone_id" {
-  description = "Route53 hosted zone ID"
+variable "max_size" {
+  description = "Maximum number of nodes"
+  type        = number
+  default     = 3
+}
+
+variable "private_subnet_cidrs" {
+  description = "Private subnet CIDR blocks for EKS nodes"
+  type        = list(string)
+  default     = []
+}
+
+variable "public_subnet_cidrs" {
+  description = "Public subnet CIDR blocks for NLB and NAT"
+  type        = list(string)
+  default     = []
+}
+
+variable "admin_arns" {
+  description = "List of IAM ARNs for EKS cluster admin access"
+  type        = list(string)
+  default     = []
+}
+
+variable "argocd_chart_version" {
+  description = "Argo CD Helm chart version"
   type        = string
-  default     = "Z3LLP0B81D4CRA"
+  default     = "7.7.5"
+}
+
+variable "argocd_admin_password_bcrypt" {
+  description = "Bcrypt-hashed admin password for Argo CD (generate with: htpasswd -nbBC 10 '' <password> | tr -d ':')"
+  type        = string
+  sensitive   = true
+  default     = ""
 }

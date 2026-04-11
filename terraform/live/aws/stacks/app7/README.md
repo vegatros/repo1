@@ -1,270 +1,303 @@
-# App7 — EKS with Argo CD (GitOps)
+# App8 - Site-to-Site VPN
 
-This stack deploys an EKS cluster with [Argo CD](https://argo-cd.readthedocs.io/) for GitOps-based continuous delivery. Application deployments are defined as Argo CD `Application` CRDs that sync Helm charts from this repository to the cluster.
+AWS Site-to-Site VPN connection from your local Linux machine to AWS VPC.
 
----
-
-## Architecture Diagram
-
-```mermaid
-graph TB
-    Internet((Internet)) --> ALB[AWS Load Balancer<br/>Optional Ingress]
-
-    subgraph VPC ["VPC"]
-        subgraph Public ["Public Subnets"]
-            ALB
-            NAT[NAT Gateway]
-        end
-
-        subgraph Private ["Private Subnets"]
-            subgraph EKS ["EKS Cluster"]
-                CP[Control Plane<br/>API + Audit Logging<br/>OIDC Provider]
-
-                subgraph NodeGroup ["Managed Node Group"]
-                    Node1[Worker Nodes<br/>t3.medium / t3.large]
-                end
-
-                subgraph ArgoCD ["Argo CD — argocd namespace"]
-                    Server[Argo CD Server<br/>UI + API]
-                    Repo[Repo Server<br/>Git Sync]
-                    Controller[Application<br/>Controller]
-                    Redis[Redis<br/>Cache]
-                end
-
-                subgraph Apps ["Application Namespaces"]
-                    subgraph Dev ["app7-dev"]
-                        DevApp[App Pods<br/>via Helm Chart]
-                    end
-                    subgraph QA ["app7-qa"]
-                        QAApp[App Pods<br/>via Helm Chart]
-                    end
-                    subgraph Prod ["app7-prod"]
-                        ProdApp[App Pods<br/>via Helm Chart]
-                    end
-                end
-            end
-        end
-    end
-
-    subgraph AWS ["AWS Services"]
-        OIDC[OIDC Provider<br/>IRSA]
-        IAM[IAM Roles<br/>Cluster + Node<br/>+ ArgoCD IRSA]
-        S3State[(S3 State<br/>Bucket)]
-        CW[CloudWatch<br/>Logs]
-    end
-
-    subgraph GitRepo ["Git Repository"]
-        HelmChart[Helm Chart<br/>+ values-ENV.yaml]
-        ArgoCDManifests[ArgoCD Application<br/>Manifests]
-    end
-
-    Server --> Repo
-    Repo -->|Git Poll / Webhook| GitRepo
-    Controller -->|Sync & Reconcile| Apps
-    Controller -->|Reads| ArgoCDManifests
-
-    ALB --> Server
-    ALB --> DevApp & QAApp & ProdApp
-    NAT -.-> Private
-
-    CP -.->|IRSA| OIDC
-    OIDC -.->|Assume Role| IAM
-    CP -->|Audit + API Logs| CW
-
-    style VPC fill:#e3f2fd
-    style Public fill:#c8e6c9
-    style Private fill:#ffccbc
-    style EKS fill:#b39ddb
-    style ArgoCD fill:#e1bee7
-    style Apps fill:#90caf9
-    style Dev fill:#a5d6a7
-    style QA fill:#fff59d
-    style Prod fill:#ef9a9a
-    style AWS fill:#fff3e0
-    style GitRepo fill:#e8eaf6
-    style ALB fill:#2196f3,color:#fff
-    style Server fill:#00897b,color:#fff
-    style Controller fill:#00897b,color:#fff
-```
-
----
-
-## GitOps Workflow
-
-```mermaid
-sequenceDiagram
-    participant Dev as Developer
-    participant GH as GitHub
-    participant ArgoCD as Argo CD
-    participant EKS as EKS Cluster
-
-    Dev->>GH: Push code / Merge PR
-    Note over GH: Helm chart or values updated
-
-    ArgoCD->>GH: Poll for changes (3 min interval)
-    GH-->>ArgoCD: Return latest commit
-
-    ArgoCD->>ArgoCD: Detect drift (OutOfSync)
-    ArgoCD->>ArgoCD: Render Helm template with values-ENV.yaml
-
-    alt Auto-Sync Enabled (dev/qa)
-        ArgoCD->>EKS: Apply manifests automatically
-        EKS-->>ArgoCD: Resources reconciled
-    else Manual Sync (prod option)
-        ArgoCD->>ArgoCD: Wait for approval
-        Dev->>ArgoCD: Click "Sync" in UI
-        ArgoCD->>EKS: Apply manifests
-        EKS-->>ArgoCD: Resources reconciled
-    end
-
-    ArgoCD->>ArgoCD: Health check (Synced + Healthy)
-```
-
----
-
-## Infrastructure Provisioning Flow
-
-```mermaid
-flowchart TD
-    Start([Trigger terraform-app7 Workflow]) --> Select[Select Environment & Action]
-    Select --> Auth[AWS OIDC Authentication]
-    Auth --> Init[Terraform Init<br/>S3 Backend + S3 Native Lock]
-    Init --> Scan[Trivy Security Scan]
-    Scan --> Plan[Terraform Plan<br/>-var-file vars/ENV.tfvars]
-
-    Plan --> Action{Action?}
-    Action -->|plan| Done1([Plan Output])
-    Action -->|apply| Apply[Terraform Apply]
-    Action -->|destroy| Destroy[Terraform Destroy]
-
-    Apply --> VPC[Create VPC<br/>Public + Private Subnets]
-    VPC --> Cluster[Create EKS Cluster<br/>+ Node Group]
-    Cluster --> Argo[Install Argo CD<br/>via Helm]
-    Argo --> IRSA[Create IRSA Role<br/>for Argo CD]
-    IRSA --> Done2([Stack Ready])
-
-    Destroy --> Remove[Tear Down All Resources]
-    Remove --> Done3([Destroyed])
-
-    style Start fill:#4caf50
-    style Done1 fill:#2196f3
-    style Done2 fill:#4caf50
-    style Done3 fill:#f44336
-    style Argo fill:#9c27b0
-    style Scan fill:#ff9800
-```
-
----
-
-## Directory Structure
+## Architecture
 
 ```
-terraform/stacks/app7/
-├── main.tf                  # VPC + EKS module composition
-├── argocd.tf                # Argo CD Helm release + IRSA role
-├── variables.tf             # Input variables
-├── outputs.tf               # Stack outputs
-├── versions.tf              # Provider requirements
-├── backend.tf               # S3 state backend
-├── providers.tf             # Kubernetes + Helm provider config
-├── vars/
-│   ├── dev.tfvars           # Dev environment (10.7.0.0/16)
-│   ├── qa.tfvars            # QA environment  (10.8.0.0/16)
-│   └── prod.tfvars          # Prod environment (10.9.0.0/16)
-├── argocd/
-│   ├── application-dev.yaml   # ArgoCD Application CRD — dev
-│   ├── application-qa.yaml    # ArgoCD Application CRD — qa
-│   └── application-prod.yaml  # ArgoCD Application CRD — prod
-└── helm/app-chart/
-    ├── Chart.yaml
-    ├── values.yaml            # Default values
-    ├── values-dev.yaml        # Dev overrides
-    ├── values-qa.yaml         # QA overrides
-    ├── values-prod.yaml       # Prod overrides
-    └── templates/
-        ├── _helpers.tpl
-        ├── deployment.yaml
-        ├── service.yaml
-        ├── ingress.yaml
-        ├── serviceaccount.yaml
-        ├── hpa.yaml
-        ├── pdb.yaml
-        ├── networkpolicy.yaml
-        └── configmap.yaml
+┌─────────────────────────────────────────────────────────────────┐
+│                         AWS VPC (10.10.0.0/16)                  │
+│                                                                 │
+│  ┌──────────────────┐              ┌──────────────────┐        │
+│  │  Public Subnets  │              │ Private Subnets  │        │
+│  │  10.10.101.0/24  │              │  10.10.1.0/24    │        │
+│  │  10.10.102.0/24  │              │  10.10.2.0/24    │        │
+│  │                  │              │                  │        │
+│  │  ┌────────────┐  │              │  ┌────────────┐  │        │
+│  │  │ NAT Gateway│  │              │  │ Test EC2   │  │        │
+│  │  └────────────┘  │              │  │ Instance   │  │        │
+│  └──────────────────┘              └──────────────────┘        │
+│           │                                  ▲                  │
+│           │                                  │                  │
+│  ┌────────▼──────────┐              ┌───────┴────────┐         │
+│  │ Internet Gateway  │              │ Virtual Private│         │
+│  └───────────────────┘              │    Gateway     │         │
+└─────────────────────────────────────┴────────┬───────┴─────────┘
+                                               │
+                                               │ IPsec Tunnels
+                                               │ (2 tunnels)
+                                               │
+                                      ┌────────▼────────┐
+                                      │ Customer Gateway│
+                                      │  68.74.135.188  │
+                                      └────────┬────────┘
+                                               │
+                                      ┌────────▼────────┐
+                                      │  Your Local     │
+                                      │  Linux Machine  │
+                                      │ 192.168.1.0/24  │
+                                      └─────────────────┘
 ```
 
----
+## Infrastructure Components
 
-## Environment Configuration
+- **VPC**: 10.10.0.0/16 in us-east-1
+- **Private Subnets**: 10.10.1.0/24, 10.10.2.0/24
+- **Public Subnets**: 10.10.101.0/24, 10.10.102.0/24
+- **Virtual Private Gateway**: Attached to VPC
+- **Customer Gateway**: Your public IP (68.74.135.188)
+- **VPN Connection**: 2 IPsec tunnels for redundancy
+- **Test EC2 Instance**: In private subnet for connectivity testing
 
-| Parameter | Dev | QA | Prod |
-|-----------|-----|-----|------|
-| VPC CIDR | 10.7.0.0/16 | 10.8.0.0/16 | 10.9.0.0/16 |
-| Instance Type | t3.medium | t3.medium | t3.large |
-| Node Count | 1 | 1–3 | 2–5 |
-| ArgoCD Replicas | 1 | 1 | 2 (HA) |
-| Redis HA | No | No | Yes |
-| Auto-Prune | Yes | Yes | No |
-| Auto Self-Heal | Yes | Yes | Yes |
-| HPA | Disabled | Disabled | Enabled (3–10) |
-| PDB | Disabled | Enabled (min 1) | Enabled (min 2) |
-| Network Policy | Disabled | Disabled | Enabled |
+## Prerequisites
 
----
+- Linux machine with root/sudo access
+- strongSwan or Libreswan installed
+- Your public IP: 68.74.135.188
+- Local network: 192.168.1.0/24
 
-## Usage
-
-### Deploy Infrastructure
+## Deployment
 
 ```bash
-# Initialize
-cd terraform/stacks/app7
-terraform init -reconfigure
+# Initialize Terraform
+terraform init
 
-# Plan
+# Plan deployment
 terraform plan -var-file="vars/dev.tfvars"
 
-# Apply
+# Deploy infrastructure
 terraform apply -var-file="vars/dev.tfvars"
+
+# Download VPN configuration
+aws ec2 describe-vpn-connections \
+  --vpn-connection-ids $(terraform output -raw vpn_connection_id) \
+  --query 'VpnConnections[0].CustomerGatewayConfiguration' \
+  --output text > vpn-config.xml
 ```
 
-### Configure kubectl
+## VPN Configuration on Linux
+
+### Option 1: strongSwan (Recommended)
+
+1. **Install strongSwan**:
+```bash
+sudo apt-get update
+sudo apt-get install strongswan strongswan-pki libstrongswan-extra-plugins
+```
+
+2. **Configure IPsec** (`/etc/ipsec.conf`):
+```bash
+config setup
+    charondebug="ike 2, knl 2, cfg 2, net 2, esp 2, dmn 2, mgr 2"
+
+conn aws-tunnel1
+    type=tunnel
+    auto=start
+    keyexchange=ikev1
+    authby=secret
+    left=%defaultroute
+    leftid=68.74.135.188
+    right=34.199.146.50
+    rightsubnet=10.10.0.0/16
+    ike=aes128-sha1-modp1024!
+    esp=aes128-sha1-modp1024!
+    keyingtries=%forever
+    dpddelay=10
+    dpdtimeout=30
+    dpdaction=restart
+
+conn aws-tunnel2
+    type=tunnel
+    auto=start
+    keyexchange=ikev1
+    authby=secret
+    left=%defaultroute
+    leftid=68.74.135.188
+    right=34.224.187.194
+    rightsubnet=10.10.0.0/16
+    ike=aes128-sha1-modp1024!
+    esp=aes128-sha1-modp1024!
+    keyingtries=%forever
+    dpddelay=10
+    dpdtimeout=30
+    dpdaction=restart
+```
+
+3. **Configure Secrets** (`/etc/ipsec.secrets`):
+```bash
+# Get pre-shared keys from Terraform output
+terraform output vpn_config
+
+# Add to /etc/ipsec.secrets:
+68.74.135.188 34.199.146.50 : PSK "ImbBSSceoNDiWnq6394sa..Lt8BNA8Vn"
+68.74.135.188 34.224.187.194 : PSK "bEIUXZRZaj1D7DXtTNwwmrE63.73tg7U"
+```
+
+4. **Enable IP Forwarding**:
+```bash
+sudo sysctl -w net.ipv4.ip_forward=1
+echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
+```
+
+5. **Start VPN**:
+```bash
+sudo ipsec restart
+sudo ipsec status
+```
+
+### Option 2: Libreswan
+
+1. **Install Libreswan**:
+```bash
+sudo apt-get update
+sudo apt-get install libreswan
+```
+
+2. **Configure** (`/etc/ipsec.d/aws-tunnel1.conf`):
+```bash
+conn aws-tunnel1
+    type=tunnel
+    authby=secret
+    left=%defaultroute
+    leftid=68.74.135.188
+    right=34.199.146.50
+    rightsubnet=10.10.0.0/16
+    ike=aes128-sha1;modp1024
+    phase2alg=aes128-sha1;modp1024
+    auto=start
+```
+
+3. **Add secrets** (`/etc/ipsec.d/aws.secrets`):
+```bash
+68.74.135.188 34.199.146.50: PSK "ImbBSSceoNDiWnq6394sa..Lt8BNA8Vn"
+```
+
+4. **Start VPN**:
+```bash
+sudo systemctl restart ipsec
+sudo ipsec status
+```
+
+## Testing Connectivity
+
+1. **Check VPN tunnel status**:
+```bash
+sudo ipsec status
+```
+
+2. **Ping test EC2 instance**:
+```bash
+# Get instance private IP
+terraform output test_instance_private_ip
+
+# Ping from your local machine
+ping 10.10.1.60
+```
+
+3. **SSH to test instance** (via SSM):
+```bash
+aws ssm start-session --target i-0243005322e5550ec
+```
+
+## Troubleshooting
+
+### Tunnel not connecting
+
+1. **Check firewall rules**:
+```bash
+# Allow UDP 500 and 4500 for IPsec
+sudo ufw allow 500/udp
+sudo ufw allow 4500/udp
+```
+
+2. **Verify your public IP hasn't changed**:
+```bash
+curl -4 ifconfig.me
+# Should be: 68.74.135.188
+```
+
+3. **Check strongSwan logs**:
+```bash
+sudo journalctl -u strongswan -f
+```
+
+4. **Verify AWS tunnel status**:
+```bash
+aws ec2 describe-vpn-connections \
+  --vpn-connection-ids $(terraform output -raw vpn_connection_id) \
+  --query 'VpnConnections[0].VgwTelemetry'
+```
+
+### Can't ping EC2 instance
+
+1. **Verify security group allows ICMP**:
+```bash
+terraform show | grep -A 10 "test_instance_sg"
+```
+
+2. **Check route propagation**:
+```bash
+aws ec2 describe-route-tables \
+  --filters "Name=vpc-id,Values=$(terraform output -raw vpc_id)"
+```
+
+3. **Verify EC2 instance is running**:
+```bash
+aws ec2 describe-instances \
+  --instance-ids i-0243005322e5550ec \
+  --query 'Reservations[0].Instances[0].State.Name'
+```
+
+## Outputs
 
 ```bash
-aws eks update-kubeconfig --name myapp7-dev --region us-east-1
+# VPC ID
+terraform output vpc_id
+
+# VPN Connection ID
+terraform output vpn_connection_id
+
+# Customer Gateway ID
+terraform output customer_gateway_id
+
+# Virtual Private Gateway ID
+terraform output vpn_gateway_id
+
+# Test instance private IP
+terraform output test_instance_private_ip
+
+# VPN tunnel configuration (sensitive)
+terraform output vpn_config
 ```
 
-### Access Argo CD UI
+## Cost Considerations
 
-```bash
-# Get initial admin password
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+- **VPN Connection**: ~$0.05/hour (~$36/month)
+- **NAT Gateway**: ~$0.045/hour + data transfer (~$32/month)
+- **EC2 t2.micro**: Free tier eligible or ~$8.50/month
+- **Data Transfer**: $0.09/GB outbound
 
-# Port-forward the server
-kubectl port-forward svc/argocd-server -n argocd 8080:443
+**Estimated monthly cost**: ~$76/month
 
-# Open https://localhost:8080 (user: admin)
-```
-
-### Deploy Applications via Argo CD
-
-```bash
-# Apply the ArgoCD Application manifest
-kubectl apply -f argocd/application-dev.yaml
-```
-
-### Destroy Infrastructure
+## Cleanup
 
 ```bash
 terraform destroy -var-file="vars/dev.tfvars"
 ```
 
----
+## Security Features
 
-## Prerequisites
+- IPsec encryption with AES-128 and SHA-1
+- Pre-shared key authentication
+- Dead Peer Detection (DPD) for tunnel monitoring
+- VPC Flow Logs with KMS encryption
+- Private subnet isolation
+- SSM access (no SSH keys required)
 
-- AWS CLI configured with appropriate permissions
-- Terraform >= 1.0
-- kubectl
-- Helm (for local chart testing)
-- S3 backend bucket (shared across stacks, using S3 native locking)
+## Notes
+
+- Two tunnels provide redundancy (active/passive)
+- Static routing configured for 192.168.1.0/24
+- BGP ASN 65000 used for Customer Gateway
+- VPN route propagation enabled on private route table
+- Test instance has SSM agent for remote access

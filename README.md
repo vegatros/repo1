@@ -123,12 +123,12 @@ repo1/
 │       │   ├── database/dynamodb/     #   Global tables, streams, PITR
 │       │   ├── ai/bedrock/            #   Bedrock agent, IAM, alias
 │       │   └── iam/                   #   Roles, managed policies
-│       └── azure/                     #   (in progress)
+│       └── azure/
+│           └── compute/vm/            #   Linux VM, NIC, optional public IP + data disk
 ├── .github/workflows/                 # CI/CD pipelines
-│   ├── terraform-app1.yml
-│   ├── terraform-app2.yml
-│   ├── terraform-app3.yml
-│   └── code-scan.yml
+│   ├── terraform-sagemaker.yml        #   SageMaker deploy pipeline
+│   ├── terraform-audit.yml            #   Security & AI audit pipeline
+│   └── code-scan.yml                  #   Code quality & security scan
 └── scripts/
     ├── create-stack.sh                # Scaffold new stacks
     ├── check-workflow.sh              # Validate workflow status

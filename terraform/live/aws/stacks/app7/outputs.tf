@@ -3,37 +3,72 @@ output "vpc_id" {
   value       = module.vpc.vpc_id
 }
 
-output "cluster_name" {
-  description = "EKS cluster name"
-  value       = module.eks.cluster_name
+output "vpc_cidr" {
+  description = "VPC CIDR block"
+  value       = var.vpc_cidr
 }
 
-output "cluster_endpoint" {
-  description = "EKS cluster endpoint"
-  value       = module.eks.cluster_endpoint
+output "vpn_connection_id" {
+  description = "VPN Connection ID"
+  value       = aws_vpn_connection.main.id
 }
 
-output "cluster_security_group_id" {
-  description = "Security group ID attached to the EKS cluster"
-  value       = module.eks.cluster_security_group_id
+output "customer_gateway_id" {
+  description = "Customer Gateway ID"
+  value       = aws_customer_gateway.main.id
 }
 
-output "node_group_id" {
-  description = "EKS node group ID"
-  value       = module.eks.node_group_id
+output "vpn_gateway_id" {
+  description = "Virtual Private Gateway ID"
+  value       = aws_vpn_gateway.main.id
 }
 
-output "oidc_provider_arn" {
-  description = "OIDC provider ARN for IRSA"
-  value       = module.eks.oidc_provider_arn
+output "test_instance_private_ip" {
+  description = "Test instance private IP"
+  value       = aws_instance.test.private_ip
 }
 
-output "argocd_namespace" {
-  description = "Namespace where Argo CD is installed"
-  value       = helm_release.argocd.namespace
+output "jenkins_url" {
+  description = "Jenkins dashboard URL"
+  value       = "http://${aws_instance.test.private_ip}:8080"
 }
 
-output "argocd_url" {
-  description = "Argo CD server URL (retrieve NLB DNS after deploy)"
-  value       = "Run: kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'"
+output "ssh_command" {
+  description = "SSH command to connect"
+  value       = "ssh -i ~/.ssh/temp_key cada5000@${aws_instance.test.private_ip}"
+}
+
+output "secrets_manager_name" {
+  description = "AWS Secrets Manager secret name"
+  value       = aws_secretsmanager_secret.jenkins_credentials.name
+}
+
+output "get_credentials_command" {
+  description = "Command to retrieve credentials from Secrets Manager"
+  value       = "aws secretsmanager get-secret-value --secret-id ${aws_secretsmanager_secret.jenkins_credentials.name} --region ${var.aws_region} --query SecretString --output text | jq"
+}
+
+output "jenkins_credentials" {
+  description = "Jenkins access information"
+  value = {
+    url      = "http://${aws_instance.test.private_ip}:8080"
+    note     = "Credentials stored in AWS Secrets Manager: ${aws_secretsmanager_secret.jenkins_credentials.name}"
+    retrieve = "aws secretsmanager get-secret-value --secret-id ${aws_secretsmanager_secret.jenkins_credentials.name} --region ${var.aws_region} --query SecretString --output text | jq"
+  }
+}
+
+output "vpn_config" {
+  description = "VPN configuration details"
+  value = {
+    tunnel1_address = aws_vpn_connection.main.tunnel1_address
+    tunnel1_psk     = aws_vpn_connection.main.tunnel1_preshared_key
+    tunnel2_address = aws_vpn_connection.main.tunnel2_address
+    tunnel2_psk     = aws_vpn_connection.main.tunnel2_preshared_key
+  }
+  sensitive = true
+}
+
+output "download_vpn_config_command" {
+  description = "Command to download VPN configuration"
+  value       = "aws ec2 describe-vpn-connections --vpn-connection-ids ${aws_vpn_connection.main.id} --query 'VpnConnections[0].CustomerGatewayConfiguration' --output text > vpn-config.xml"
 }

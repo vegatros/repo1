@@ -1,76 +1,64 @@
-variable "project_name" {
-  description = "Project name for resource naming"
+variable "aws_region" {
+  description = "AWS region"
   type        = string
 }
 
 variable "environment" {
-  description = "Environment name (dev, qa, prod)"
+  description = "Environment name"
   type        = string
 }
 
-variable "aws_region" {
-  description = "AWS region"
+variable "project_name" {
+  description = "Project name"
   type        = string
-  default     = "us-east-1"
 }
 
 variable "vpc_cidr" {
-  description = "VPC CIDR block"
+  description = "CIDR block for VPC"
   type        = string
-  default     = "10.1.0.0/16"
+  default     = "10.10.0.0/16"
 }
 
-variable "instance_type" {
-  description = "EKS node instance type"
-  type        = string
-  default     = "t3.medium"
-}
-
-variable "desired_size" {
-  description = "Desired number of nodes"
-  type        = number
-  default     = 2
-}
-
-variable "min_size" {
-  description = "Minimum number of nodes"
-  type        = number
-  default     = 1
-}
-
-variable "max_size" {
-  description = "Maximum number of nodes"
-  type        = number
-  default     = 3
+variable "azs" {
+  description = "Availability zones"
+  type        = list(string)
 }
 
 variable "private_subnet_cidrs" {
-  description = "Private subnet CIDR blocks for EKS nodes"
+  description = "Private subnet CIDR blocks"
   type        = list(string)
-  default     = []
 }
 
 variable "public_subnet_cidrs" {
-  description = "Public subnet CIDR blocks for NLB and NAT"
+  description = "Public subnet CIDR blocks"
   type        = list(string)
-  default     = []
 }
 
-variable "admin_arns" {
-  description = "List of IAM ARNs for EKS cluster admin access"
-  type        = list(string)
-  default     = []
-}
-
-variable "argocd_chart_version" {
-  description = "Argo CD Helm chart version"
+variable "customer_gateway_ip" {
+  description = "Public IP address of your local network gateway"
   type        = string
-  default     = "7.7.5"
 }
 
-variable "argocd_admin_password_bcrypt" {
-  description = "Bcrypt-hashed admin password for Argo CD (generate with: htpasswd -nbBC 10 '' <password> | tr -d ':')"
+variable "on_premise_cidr" {
+  description = "CIDR block of your on-premise network"
+  type        = string
+  default     = "192.168.1.0/24"
+}
+
+variable "linux_password" {
+  description = "Password for Linux user cada5000"
   type        = string
   sensitive   = true
-  default     = ""
+}
+
+variable "jenkins_username" {
+  description = "Jenkins admin username"
+  type        = string
+  default     = "cada5000"
+}
+
+variable "jenkins_password" {
+  description = "Jenkins admin password"
+  type        = string
+  sensitive   = true
 }
