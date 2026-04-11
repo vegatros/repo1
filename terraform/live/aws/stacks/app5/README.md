@@ -16,7 +16,7 @@ graph TB
         ACM[ACM Certificate<br/>TLS/SSL<br/>us-east-1]
         
         subgraph Content["Website Content"]
-            S3 --> HTML[index.html<br/>futurev-landing]
+            S3 --> HTML[index.html]
             S3 --> ERR[error.html]
         end
     end
