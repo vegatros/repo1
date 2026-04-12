@@ -208,30 +208,31 @@ graph TB
 
 - ArgoCD declarative sync, multi-env (dev/qa/prod), self-healing rollbacks
 
-### App7 — Site-to-Site VPN + Jenkins
+### App7 — Site-to-Site VPN
 
 ```mermaid
 graph TB
-    OnPrem[On-Premises\nNetwork] <-->|IPSec VPN| VGW[Virtual Private Gateway]
+    OnPrem[On-Premises\nNetwork\n192.168.1.0/24] <-->|IPSec VPN\nTunnel 1 + 2| VGW[Virtual Private Gateway]
+    CGW[Customer Gateway] --> VGW
     subgraph VPC ["VPC — 10.10.0.0/16"]
         subgraph Public ["Public Subnets"]
-            Jenkins[Jenkins EC2\nCI/CD Server]
+            NAT[NAT Gateway]
         end
         subgraph Private ["Private Subnets"]
-            App[App Servers]
+            App[Private App Servers]
         end
         VGW
     end
-    CGW[Customer Gateway\n68.74.135.x] --> VGW
-    Jenkins --> App
+    VGW -->|route propagation| App
     style VPC fill:#e3f2fd
     style Public fill:#c8e6c9
     style Private fill:#ffccbc
     style VGW fill:#ff9900,color:#fff
+    style CGW fill:#ff9900,color:#fff
 ```
 
-- AWS Site-to-Site VPN to on-premises network
-- Jenkins CI/CD server on EC2 with pipeline automation
+- AWS Site-to-Site VPN to on-premises network (IPSec, static routes)
+- Dual tunnels for redundancy, route propagation to private subnets
 
 ### App8 — Lambda Container
 
