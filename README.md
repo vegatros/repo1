@@ -94,6 +94,36 @@ graph TB
 
 ### App2 — EKS + Linkerd Service Mesh
 
+```mermaid
+graph TB
+    Internet((Internet)) --> NLB[NLB]
+    NLB --> NGINX[NGINX Ingress Controller]
+    subgraph VPC ["VPC — 10.1.0.0/16"]
+        subgraph Public ["Public Subnets"]
+            NLB
+            NAT[NAT Gateway]
+        end
+        subgraph Private ["Private Subnets"]
+            subgraph EKS ["EKS Cluster"]
+                NGINX
+                subgraph Mesh ["Linkerd mTLS"]
+                    P1[Pod + Sidecar]
+                    P2[Pod + Sidecar]
+                end
+                PROM[Prometheus]
+                GRAF[Grafana]
+            end
+        end
+    end
+    NGINX --> P1 & P2
+    OIDC[OIDC / IRSA] -.-> EKS
+    style VPC fill:#e3f2fd
+    style Public fill:#c8e6c9
+    style Private fill:#ffccbc
+    style Mesh fill:#f3e5f5
+    style EKS fill:#fff9c4
+```
+
 - EKS in private subnets, NGINX Ingress on NLB
 - Linkerd mTLS between all pods, IRSA via OIDC
 - Production Helm chart: HPA, PDB, NetworkPolicy, non-root containers
@@ -101,28 +131,119 @@ graph TB
 
 ### App3 — Multi-Region Active-Active
 
+```mermaid
+graph TB
+    Internet((Internet)) --> R53[Route53]
+    R53 --> GA[Global Accelerator\n50/50 split]
+    GA -->|50%| EC2W[EC2 Nginx\nus-west-2]
+    GA -->|50%| EC2E[EC2 Nginx\nus-east-1]
+    EC2W --> DDBW[(DynamoDB\nprimary)]
+    EC2E --> DDBE[(DynamoDB\nreplica)]
+    DDBW <-->|bi-directional replication| DDBE
+    style GA fill:#ff9900,color:#fff
+    style DDBW fill:#9c27b0,color:#fff
+    style DDBE fill:#9c27b0,color:#fff
+```
+
 - Global Accelerator 50/50 traffic split across us-east-1 / us-west-2
 - DynamoDB global tables with cross-region stream replication
 - Route53 → Global Accelerator → regional EC2 fleets
 
 ### App4 — ECS Fargate
 
+```mermaid
+graph TB
+    Internet((Internet)) --> ALB[ALB]
+    subgraph VPC ["VPC"]
+        subgraph Public ["Public Subnets"]
+            ALB
+        end
+        subgraph Private ["Private Subnets"]
+            subgraph ECS ["ECS Cluster"]
+                T1[Fargate Task]
+                T2[Fargate Task]
+            end
+        end
+    end
+    ALB --> T1 & T2
+    CW[CloudWatch\nContainer Insights] -.-> ECS
+    style VPC fill:#e3f2fd
+    style Public fill:#c8e6c9
+    style Private fill:#ffccbc
+    style ECS fill:#fff9c4
+```
+
 - Serverless containers, Container Insights, CloudWatch logging
 
 ### App5 — S3 Static Website + CloudFront
+
+```mermaid
+graph TB
+    Users((Users)) --> R53[Route53]
+    R53 --> CF[CloudFront CDN\nHTTPS + OAC]
+    CF --> S3[S3 Bucket\nStatic Website]
+    ACM[ACM TLS\nus-east-1] -.-> CF
+    style CF fill:#ff9900,color:#fff
+    style S3 fill:#569a31,color:#fff
+```
 
 - CloudFront + ACM TLS, Origin Access Control, HTTP→HTTPS redirect
 
 ### App6 — EKS + ArgoCD GitOps
 
+```mermaid
+graph TB
+    Git[GitHub Repo] -->|push| ArgoCD[ArgoCD]
+    subgraph VPC ["VPC"]
+        subgraph EKS ["EKS Cluster"]
+            ArgoCD -->|sync| Dev[Dev Namespace]
+            ArgoCD -->|sync| QA[QA Namespace]
+            ArgoCD -->|sync| Prod[Prod Namespace]
+        end
+    end
+    ArgoCD -->|self-heal rollback| Prod
+    style EKS fill:#fff9c4
+    style ArgoCD fill:#f06292,color:#fff
+```
+
 - ArgoCD declarative sync, multi-env (dev/qa/prod), self-healing rollbacks
 
 ### App7 — Site-to-Site VPN + Jenkins
+
+```mermaid
+graph TB
+    OnPrem[On-Premises\nNetwork] <-->|IPSec VPN| VGW[Virtual Private Gateway]
+    subgraph VPC ["VPC — 10.10.0.0/16"]
+        subgraph Public ["Public Subnets"]
+            Jenkins[Jenkins EC2\nCI/CD Server]
+        end
+        subgraph Private ["Private Subnets"]
+            App[App Servers]
+        end
+        VGW
+    end
+    CGW[Customer Gateway\n68.74.135.x] --> VGW
+    Jenkins --> App
+    style VPC fill:#e3f2fd
+    style Public fill:#c8e6c9
+    style Private fill:#ffccbc
+    style VGW fill:#ff9900,color:#fff
+```
 
 - AWS Site-to-Site VPN to on-premises network
 - Jenkins CI/CD server on EC2 with pipeline automation
 
 ### App8 — Lambda Container
+
+```mermaid
+graph TB
+    Client((Client)) --> APIGW[API Gateway]
+    APIGW --> Lambda[Lambda\nNode.js Container]
+    ECR[ECR\nContainer Image] -.->|deploy| Lambda
+    style APIGW fill:#ff9900,color:#fff
+    style Lambda fill:#f9a825,color:#000
+    style ECR fill:#1565c0,color:#fff
+```
 
 - Containerized Node.js Lambda via ECR, API Gateway trigger
 
