@@ -2,36 +2,33 @@
 
 ## Architecture Overview
 
-```mermaid
-mindmap
-  root((OCI Security))
-    Identity
-      IAM Compartments
-      Groups & Policies
-      Dynamic Groups
-      Instance Principals
-      IDCS Federation
-    Network
-      Security Lists
-      NSGs
-      VCN Flow Logs
-      WAF
-      Bastion Service
-    Data Protection
-      Vault / KMS
-      Customer-Managed Keys
-      Object Storage Policies
-      Data Safe
-    Compute
-      Shielded Instances
-      Secure Boot + vTPM
-      OS Management Hub
-      OKE Image Scanning
-    Governance
-      Cloud Guard
-      Security Zones
-      Audit Service
-      Vulnerability Scanning
+```
+                          ┌─────────────────────────────────────────────────┐
+                          │              OCI Security                        │
+                          └──────┬──────────┬──────────┬──────────┬─────────┘
+                                 │          │          │          │
+               ┌─────────────────┘  ┌───────┘  ┌──────┘  ┌───────┘
+               ▼                    ▼           ▼         ▼
+    ┌─────────────────┐  ┌────────────────┐  ┌──────────────────┐  ┌──────────────────┐
+    │    Identity     │  │    Network     │  │ Data Protection  │  │   Governance     │
+    ├─────────────────┤  ├────────────────┤  ├──────────────────┤  ├──────────────────┤
+    │ IAM Compartments│  │ Security Lists │  │  Vault / KMS     │  │  Cloud Guard     │
+    │ Groups/Policies │  │ NSGs           │  │  Customer Keys   │  │  Security Zones  │
+    │ Dynamic Groups  │  │ VCN Flow Logs  │  │  Object Storage  │  │  Audit Service   │
+    │ Instance Princ. │  │ WAF            │  │  Data Safe       │  │  Vuln Scanning   │
+    │ IDCS Federation │  │ Bastion Svc    │  │                  │  │                  │
+    └─────────────────┘  └────────────────┘  └──────────────────┘  └──────────────────┘
+                                                      │
+                                          ┌───────────┘
+                                          ▼
+                               ┌─────────────────────┐
+                               │      Compute        │
+                               ├─────────────────────┤
+                               │ Shielded Instances  │
+                               │ Secure Boot + vTPM  │
+                               │ OS Management Hub   │
+                               │ OKE Image Scanning  │
+                               └─────────────────────┘
 ```
 
 ---
