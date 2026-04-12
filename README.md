@@ -9,7 +9,7 @@ Production-grade Terraform infrastructure across AWS and Azure, covering applica
 ```
 repo1/
 ├── terraform/
-│   ├── live/                          # All deployed infrastructure
+│   ├── provider/
 │   │   ├── aws/
 │   │   │   ├── stacks/                # AWS application stacks
 │   │   │   │   ├── app1/              #   ALB + EC2, Lambda scheduler, ACM/TLS
@@ -18,7 +18,7 @@ repo1/
 │   │   │   │   ├── app4/              #   ECS Fargate cluster
 │   │   │   │   ├── app5/              #   S3 static website + CloudFront
 │   │   │   │   ├── app6/              #   EKS + ArgoCD GitOps
-│   │   │   │   ├── app7/              #   Site-to-Site VPN + Jenkins CI/CD
+│   │   │   │   ├── app7/              #   Site-to-Site VPN
 │   │   │   │   └── app8/              #   Lambda container (Node.js)
 │   │   │   ├── ai/
 │   │   │   │   ├── app-bedrock/       #   Bedrock agent (Amazon Nova)
@@ -27,15 +27,22 @@ repo1/
 │   │   │   ├── network/
 │   │   │   │   └── tgw/               #   Transit Gateway, 2 VPCs
 │   │   │   ├── global/
-│   │   │   │   └── control-tower/     #   Control Tower plan (multi-region)
+│   │   │   │   └── control-tower/     #   Control Tower plan + guardrails
 │   │   │   └── security/
 │   │   │       └── cloudtrail/        #   Real-time CloudTrail monitoring
-│   │   └── azure/
-│   │       ├── region-failover/       #   Multi-region VMs + Traffic Manager
-│   │       ├── global/
-│   │       │   └── landing-zone/      #   Azure Landing Zone plan
-│   │       ├── aws-azure-migrate/     #   AWS EC2 + RDS → Azure migration plan
-│   │       └── onprem-to-azure/       #   VMware + SQL Server → Azure plan
+│   │   ├── azure/
+│   │   │   ├── stacks/
+│   │   │   │   └── region-failover/   #   Multi-region VMs + Traffic Manager
+│   │   │   ├── global/
+│   │   │   │   └── landing-zone/      #   Azure Landing Zone plan
+│   │   │   ├── migrate/
+│   │   │   │   ├── aws-azure-migrate/ #   AWS EC2 + RDS → Azure migration plan
+│   │   │   │   └── onprem-to-azure/   #   VMware + SQL Server → Azure plan
+│   │   │   └── security/              #   Azure security plan (Defender, Policy, KV)
+│   │   ├── gcp/
+│   │   │   └── security/              #   GCP security plan (SCC, Org Policy, KMS)
+│   │   └── oracle/
+│   │       └── security/              #   OCI security plan (Cloud Guard, Vault, IAM)
 │   └── modules/
 │       ├── aws/
 │       │   ├── network/vpc/           #   VPC, subnets, IGW, NAT, flow logs
