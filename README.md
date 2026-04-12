@@ -71,8 +71,6 @@ repo1/
 
 ### App1 — EC2 with ALB & Lambda Scheduler
 
-> 📐 [draw.io diagram](terraform/provider/aws/stacks/app1/diagrams/app1-architecture.drawio)
-
 ```mermaid
 graph TB
     Internet((Internet)) --> R53[Route53]
