@@ -1,0 +1,5 @@
+vercel_api_token = "<your-vercel-api-token>"
+github_repo      = "<owner>/<repo>"
+domain           = "app1.futurev.io"
+aws_lambda_url   = "<your-lambda-function-url>"
+dynamodb_table   = "app3-dev-data"
