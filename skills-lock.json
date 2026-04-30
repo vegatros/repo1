@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "aws-diagrams": {
+      "source": "eraserlabs/eraser-io",
+      "sourceType": "github",
+      "computedHash": "4039a606e65c7f3c773fca639dbcd0814efe580a2dae15c8a73a3e9e02439b1f"
+    }
+  }
+}
