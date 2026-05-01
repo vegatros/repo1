@@ -64,7 +64,12 @@ jobs:
 
       - name: Terraform Plan
         working-directory: terraform/provider/aws/stacks/app1
-        run: terraform plan -var-file="vars/${{ inputs.environment }}.tfvars" -out=tfplan
+        run: |
+          terraform plan \
+            -var-file="vars/${{ inputs.environment }}.tfvars" \
+            -replace="module.ec2.aws_instance.this[0]" \
+            -replace="module.ec2.aws_instance.this[1]" \
+            -out=tfplan
 
       - name: Terraform Apply
         if: inputs.action == 'apply'
