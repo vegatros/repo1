@@ -70,6 +70,11 @@ jobs:
         working-directory: terraform/provider/aws/stacks/app1
         run: terraform apply -auto-approve tfplan
 
+      - name: Show ALB URL
+        if: inputs.action == 'apply'
+        working-directory: terraform/provider/aws/stacks/app1
+        run: terraform output -raw alb_url
+
       - name: Terraform Destroy
         if: inputs.action == 'destroy'
         working-directory: terraform/provider/aws/stacks/app1
