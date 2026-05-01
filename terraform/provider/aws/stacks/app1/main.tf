@@ -23,16 +23,16 @@ resource "aws_security_group" "alb" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTP from internet"
+    cidr_blocks = ["68.74.135.188/32"]
+    description = "HTTP from my IP"
   }
 
   ingress {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTPS from internet"
+    cidr_blocks = ["68.74.135.188/32"]
+    description = "HTTPS from my IP"
   }
 
   egress {
