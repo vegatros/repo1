@@ -143,6 +143,7 @@ resource "aws_instance" "this" {
   iam_instance_profile        = aws_iam_instance_profile.ec2.name
   key_name                    = var.key_name != "" ? var.key_name : null
   user_data                   = var.user_data != "" ? var.user_data : null
+  user_data_replace_on_change = true
   associate_public_ip_address = false
 
   metadata_options {
