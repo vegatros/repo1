@@ -113,9 +113,9 @@ resource "aws_security_group" "ec2" {
     from_port       = 80
     to_port         = 80
     protocol        = "tcp"
-    cidr_blocks     = var.alb_security_group_id != "" ? [] : ["0.0.0.0/0"]
     security_groups = var.alb_security_group_id != "" ? [var.alb_security_group_id] : []
-    description     = "HTTP from ALB or internet"
+    cidr_blocks     = var.alb_security_group_id != "" ? [] : ["0.0.0.0/0"]
+    description     = "HTTP from ALB"
   }
 
   egress {
@@ -143,7 +143,7 @@ resource "aws_instance" "this" {
   iam_instance_profile        = aws_iam_instance_profile.ec2.name
   key_name                    = var.key_name != "" ? var.key_name : null
   user_data                   = var.user_data != "" ? var.user_data : null
-  associate_public_ip_address = true
+  associate_public_ip_address = false
 
   metadata_options {
     http_endpoint = "enabled"
