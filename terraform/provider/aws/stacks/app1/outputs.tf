@@ -30,5 +30,5 @@ output "alb_dns_name" {
 
 output "alb_url" {
   description = "Application Load Balancer URL"
-  value       = var.domain_name != "" ? "https://${var.domain_name}" : "http://${aws_lb.main.dns_name}"
+  value       = "http://${aws_lb.main.dns_name}"
 }
