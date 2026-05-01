@@ -1,17 +1,13 @@
 #!/bin/bash
 dnf update -y
-dnf install -y nginx git
+dnf install -y nginx
 
-# Download futurev HTML as home page
-curl -o /usr/share/nginx/html/index.html \
-  https://raw.githubusercontent.com/vegatros/q/master/terraform/stacks/app1/html/futurev.html
+cat > /usr/share/nginx/html/index.html <<'EOF'
+<!DOCTYPE html>
+<html><head><title>App1</title></head>
+<body><h1>App1 - Connected</h1><p>Instance: $(hostname)</p></body>
+</html>
+EOF
 
-# Download resume page
-curl -o /usr/share/nginx/html/resume.html \
-  https://raw.githubusercontent.com/vegatros/q/master/terraform/stacks/app1/html/resume.html
-
-# Start and enable nginx
 systemctl start nginx
 systemctl enable nginx
-
-echo "Nginx configured with futurev home page" > /var/log/nginx-setup.log
