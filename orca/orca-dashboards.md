@@ -4,11 +4,67 @@ Recommended custom dashboard configurations for Security Teams, Executives/CISO,
 
 ---
 
+## Dashboard Audience & Data Flow
+
+```mermaid
+flowchart TB
+    Orca[Orca Platform\nSideScanning™] --> Data[(Unified Risk Data)]
+    Data --> SecOps[Security Operations\nDashboard]
+    Data --> Exec[Executive / CISO\nDashboard]
+    Data --> CloudEng[Cloud Engineering\nDashboard]
+    Data --> CBO[CBO / Business Risk\nDashboard]
+
+    SecOps --> A1[SOC Analysts]
+    SecOps --> A2[Security Engineers]
+    Exec --> A3[CISO]
+    Exec --> A4[Board of Directors]
+    CloudEng --> A5[DevOps]
+    CloudEng --> A6[Platform Team]
+    CBO --> A7[CFO]
+    CBO --> A8[Risk Committee]
+
+    style Orca fill:#0066cc,color:#fff
+    style Data fill:#9c27b0,color:#fff
+    style SecOps fill:#f44336,color:#fff
+    style Exec fill:#ff9800,color:#fff
+    style CloudEng fill:#4caf50,color:#fff
+    style CBO fill:#2196f3,color:#fff
+```
+
+---
+
 ## 1. Security Operations Dashboard
 
 **Audience:** Security Analysts, SOC Team, Security Engineers  
 **Purpose:** Day-to-day threat monitoring, vulnerability triage, and incident response  
 **Refresh:** Real-time / hourly
+
+### Widget Flow
+
+```mermaid
+flowchart LR
+    subgraph Detection ["Detection & Monitoring"]
+        CDR[CDR Events]
+        Malware[Malware Scan]
+        Suspicious[Suspicious Activity]
+    end
+    subgraph Triage ["Triage & Prioritization"]
+        Score[Security Score]
+        Alerts[Critical Alerts]
+        Paths[Attack Paths]
+    end
+    subgraph Response ["Response & Tracking"]
+        MTTR[MTTR Trend]
+        Aging[Alert Aging]
+        Remediation[Remediation Queue]
+    end
+
+    Detection --> Triage --> Response
+
+    style Detection fill:#ffcdd2
+    style Triage fill:#fff9c4
+    style Response fill:#c8e6c9
+```
 
 ### Layout (3-column grid)
 
@@ -37,6 +93,34 @@ Recommended custom dashboard configurations for Security Teams, Executives/CISO,
 **Purpose:** High-level risk posture, trends, compliance status, and benchmarking  
 **Refresh:** Daily
 
+### Security Score Breakdown
+
+```mermaid
+mindmap
+  root((Orca Security\nScore))
+    Suspicious Activity
+      Malware %
+      Shell history anomalies
+      Unwanted applications
+    IAM
+      Inactive privileged identities
+      Unused permissions
+      Users without MFA
+      Leaked credentials
+    Data at Risk
+      Internet-facing PII
+      Malware + PII co-location
+      Unencrypted buckets
+      Broad bucket access
+    Vulnerable Assets
+      Internet-facing critical CVEs
+      Unsupported compute
+      Neglected assets
+    Responsiveness
+      Avg time to respond
+      Unresolved critical alerts
+```
+
 ### Layout (2-column grid, emphasis on large visuals)
 
 | Row | Left | Right |
@@ -63,6 +147,37 @@ Recommended custom dashboard configurations for Security Teams, Executives/CISO,
 **Audience:** Cloud Engineers, DevOps, Platform Team  
 **Purpose:** Misconfigurations, vulnerability remediation, infrastructure hygiene  
 **Refresh:** Real-time / hourly
+
+### Infrastructure Risk Categories
+
+```mermaid
+flowchart TB
+    subgraph CSPM ["CSPM — Misconfigurations"]
+        SG[Security Groups\n0.0.0.0/0]
+        Encrypt[Unencrypted\nStorage]
+        Public[Public-Facing\nAssets]
+    end
+    subgraph CWPP ["CWPP — Workload Protection"]
+        CVE[Critical CVEs]
+        Container[Container\nVulnerabilities]
+        K8s[Kubernetes\nRisks]
+    end
+    subgraph CIEM ["CIEM — Identity"]
+        Overpriv[Overprivileged\nRoles]
+        Unused[Unused\nPermissions]
+        Keys[Exposed\nAccess Keys]
+    end
+
+    CSPM --> Remediate[Remediation\nVelocity]
+    CWPP --> Remediate
+    CIEM --> Remediate
+    Remediate --> Posture[Improved\nPosture]
+
+    style CSPM fill:#e3f2fd
+    style CWPP fill:#fce4ec
+    style CIEM fill:#fff3e0
+    style Posture fill:#c8e6c9
+```
 
 ### Layout (3-column grid)
 
@@ -92,6 +207,33 @@ Recommended custom dashboard configurations for Security Teams, Executives/CISO,
 **Purpose:** Business impact of security risks, data protection, compliance for revenue  
 **Refresh:** Weekly
 
+### Business Risk Translation
+
+```mermaid
+flowchart LR
+    subgraph Technical ["Technical Risks"]
+        Vuln[Vulnerabilities]
+        Misconfig[Misconfigurations]
+        DataExp[Data Exposure]
+    end
+    subgraph Translation ["Risk Quantification"]
+        Financial[Financial\nExposure $$]
+        Compliance[Compliance\nGap %]
+        SLA[SLA\nBreach Risk]
+    end
+    subgraph Business ["Business Impact"]
+        Revenue[Revenue\nProtection]
+        Trust[Customer\nTrust]
+        Regulatory[Regulatory\nFines]
+    end
+
+    Technical --> Translation --> Business
+
+    style Technical fill:#ffcdd2
+    style Translation fill:#fff9c4
+    style Business fill:#c8e6c9
+```
+
 ### Layout (2-column grid, large tiles)
 
 | Row | Left | Right |
@@ -110,6 +252,27 @@ Recommended custom dashboard configurations for Security Teams, Executives/CISO,
 - **Compliance Status** — Focus on frameworks tied to revenue (SOC 2 for SaaS sales, PCI for payments, HIPAA for healthcare contracts)
 - **Business Unit Comparison** — Which teams/products carry the most risk
 - **Security ROI** — Score improvement over time correlated with security investments
+
+---
+
+## Dashboard Lifecycle & Governance
+
+```mermaid
+flowchart TB
+    Define[Define Requirements\nper Audience] --> Build[Build in Orca UI\nor Terraform]
+    Build --> Review[Review with\nStakeholders]
+    Review --> Deploy[Deploy via\nTerraform Provider]
+    Deploy --> Monitor[Monitor &\nIterate]
+    Monitor --> Define
+
+    Deploy --> RBAC[Apply RBAC\nBusiness Units]
+    Deploy --> Schedule[Set Refresh\nCadence]
+
+    style Define fill:#e3f2fd
+    style Build fill:#fff9c4
+    style Deploy fill:#c8e6c9
+    style Monitor fill:#f3e5f5
+```
 
 ---
 
